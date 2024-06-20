@@ -3,12 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:immolink_mobile/bloc/currencies/currency_bloc.dart';
 import 'package:immolink_mobile/bloc/languages/localization_bloc.dart';
+import 'package:immolink_mobile/utils/iteneray.dart';
+import 'package:immolink_mobile/utils/route_name.dart';
 import 'package:immolink_mobile/views/screens/home_screen.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() {
-  
-   runApp(
+  runApp(
     MultiBlocProvider(
       providers: [
         BlocProvider<LocalizationBloc>(
@@ -53,8 +54,20 @@ class MyApp extends StatelessWidget {
           Locale('ar'), // Arabic
         ],
         locale: state.locale,
+        localeResolutionCallback: (deviceLocale, supportedLocales) {
+          for (var locale in supportedLocales) {
+            if (locale.languageCode == deviceLocale?.languageCode &&
+                locale.countryCode == deviceLocale?.countryCode) {
+              return deviceLocale;
+            }
+          }
+
+          return supportedLocales.first;
+        },
+        onGenerateRoute: CustomeRoute.allRoutes,
         // home: const MyHomePage(title: 'Flutter Demo Home Page'),
-        home: const HomeScreen(),
+        // home: const HomeScreen(),
+        initialRoute: homeRoute,
       );
     });
   }

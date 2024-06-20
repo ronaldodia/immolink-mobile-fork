@@ -42,6 +42,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   bloc: ^8.1.4
+  google_maps_flutter: ^2.7.0
+  location: ^6.0.2
 
 dev_dependencies:
   flutter_test:

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:immolink_mobile/bloc/currencies/currency_bloc.dart';
-import 'package:immolink_mobile/bloc/currencies/currency_event.dart';
-import 'package:immolink_mobile/bloc/currencies/currency_state.dart';
 import 'package:immolink_mobile/models/Currency.dart';
-import 'package:immolink_mobile/views/screens/language_screen.dart';
+import 'package:immolink_mobile/views/screens/account_screen.dart';
+import 'package:immolink_mobile/views/screens/chat_screen.dart';
+import 'package:immolink_mobile/views/screens/home_content_screen.dart';
+import 'package:immolink_mobile/views/screens/map_screen.dart';
+import 'package:immolink_mobile/views/widgets/default_appbar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +14,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex  = 0;
   final List<Currency> currencies = [
     Currency(
       code: 'MRU',
@@ -39,84 +39,53 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ];
 
+  final List<Widget> _screens = [
+    const HomeContentScreen(),
+    const AccountScreen(),
+    const MapScreen(),
+    const ChatScreen(),
+  ];
+
+  void _onTap(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    Currency? selectedCurrency = currencies[2];
     return Scaffold(
       drawer: const Drawer(
         elevation: 16.0,
       ),
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.name),
-        actions: [
-          BlocBuilder<CurrencyBloc, CurrencyState>(
-            builder: (context, state) {
-              if (state is CurrencyInitial || state is CurrencyChangedState) {
-                final selectedCurrency = state is CurrencyInitial
-                    ? state.selectedCurrency
-                    : (state as CurrencyChangedState).selectedCurrency;
-                final currencies = state is CurrencyInitial
-                    ? state.currencies
-                    : (state as CurrencyChangedState).currencies;
+      body:_screens[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex, //New
+        onTap: _onTap,
 
-                return DropdownButton<Currency>(
-                  value: selectedCurrency,
-                  items: currencies.map((Currency currency) {
-                    return DropdownMenuItem<Currency>(
-                      value: currency,
-                      child: Row(
-                        children: [
-                          Image.asset(
-                            currency.imageUrl,
-                            width: 24,
-                            height: 24,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            currency.code,
-                            style: const TextStyle(color: Colors.black),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (Currency? newValue) {
-                    if (newValue != null) {
-                      context
-                          .read<CurrencyBloc>()
-                          .add(ChangeCurrency(newValue));
-                    }
-                  },
-                );
-              }
-              return const Center(child: CircularProgressIndicator());
-            },
+        selectedItemColor: Colors.green,
+        unselectedItemColor: Colors.black,
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
           ),
-          IconButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return const LanguageScreen();
-                }));
-              },
-              icon: const Icon(Icons.language)),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Account',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map),
+            label: 'Maps',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'Chats',
+          ),
         ],
       ),
-      body: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(AppLocalizations.of(context)!.hello_world,
-                style: Theme.of(context).textTheme.headlineMedium),
-            Text(AppLocalizations.of(context)!.language,
-                style: Theme.of(context).textTheme.titleMedium),
-            Text(AppLocalizations.of(context)!.example_text,
-                style: Theme.of(context).textTheme.titleMedium),
-          ],
-        ),
-      ),
-    );
+      appBar:  const DefaultAppBar(),
+      );
   }
 }
+
