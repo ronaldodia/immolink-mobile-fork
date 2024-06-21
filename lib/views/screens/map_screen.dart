@@ -23,6 +23,7 @@ class _MapScreenState extends State<MapScreen> {
   String? selectedMoughataa;
   String? selectedLotissement;
   Set<Polygon> polygons = {};
+  bool isLoading = false;
 
   Map<String, List<String>> lotissements = {
     "Plan_Arafatt": [
@@ -129,7 +130,13 @@ class _MapScreenState extends State<MapScreen> {
       return;
     }
 
-    print('lot: $lot, lotissement: $selectedLotissement, et moughataa: $selectedMoughataa'); 
+    print(
+        'lot: $lot, lotissement: $selectedLotissement, et moughataa: $selectedMoughataa');
+
+    setState(() {
+      isLoading = true;
+    });
+
     final url = Uri.parse(
         'https://gis.digissimmo.org/api/features?lot=$lot&lotissement=$selectedLotissement&moughataa=$selectedMoughataa');
     final response = await http.get(url);
@@ -162,7 +169,8 @@ class _MapScreenState extends State<MapScreen> {
                 if (bounds == null) {
                   bounds = _getPolygonBounds(polygonCoords);
                 } else {
-                  bounds = _expandBounds(bounds, _getPolygonBounds(polygonCoords));
+                  bounds =
+                      _expandBounds(bounds, _getPolygonBounds(polygonCoords));
                 }
               }
             }
@@ -171,23 +179,30 @@ class _MapScreenState extends State<MapScreen> {
             });
 
             if (bounds != null) {
-              mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+              mapController
+                  ?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
             }
-
-            return;
           }
         }
       }
       // Handle no data found
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aucune donnée trouvée pour le lot spécifié.')),
-      );
+      else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Aucune donnée trouvée pour le lot spécifié.')),
+        );
+      }
     } else {
       // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erreur lors de la récupération des données.')),
+        const SnackBar(
+            content: Text('Erreur lors de la récupération des données.')),
       );
     }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   LatLngBounds _getPolygonBounds(List<LatLng> polygonCoords) {
@@ -243,72 +258,80 @@ class _MapScreenState extends State<MapScreen> {
       appBar: AppBar(
         title: const Text('Map Search'),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: DropdownButtonFormField<String>(
-              decoration: const InputDecoration(labelText: 'Moughataa'),
-              value: selectedMoughataa,
-              onChanged: (value) {
-                setState(() {
-                  selectedMoughataa = value;
-                  selectedLotissement =
-                      null; // Reset lotissement when moughataa changes
-                });
-              },
-              items: lotissements.keys.map((moughataa) {
-                return DropdownMenuItem(
-                  value: moughataa,
-                  child: Text(moughataa),
-                );
-              }).toList(),
-            ),
-          ),
-          if (selectedMoughataa != null)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Lotissement'),
-                value: selectedLotissement,
-                onChanged: (value) {
-                  setState(() {
-                    selectedLotissement = value;
-                  });
-                },
-                items: lotissements[selectedMoughataa]!.map((lotissement) {
-                  return DropdownMenuItem(
-                    value: lotissement,
-                    child: Text(lotissement),
-                  );
-                }).toList(),
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(labelText: 'Moughataa'),
+                  value: selectedMoughataa,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedMoughataa = value;
+                      selectedLotissement =
+                          null; // Reset lotissement when moughataa changes
+                    });
+                  },
+                  items: lotissements.keys.map((moughataa) {
+                    return DropdownMenuItem(
+                      value: moughataa,
+                      child: Text(moughataa),
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: lotController,
-              decoration: const InputDecoration(labelText: 'Numéro de Lot'),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: searchLot,
-            child: const Text('Rechercher'),
-          ),
-          Expanded(
-            child: currentPosition == null
-                ? const Center(child: CircularProgressIndicator())
-                : GoogleMap(
-                    onMapCreated: (GoogleMapController controller) {
-                      mapController = controller;
+              if (selectedMoughataa != null)
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(labelText: 'Lotissement'),
+                    value: selectedLotissement,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLotissement = value;
+                      });
                     },
-                    initialCameraPosition:
-                        CameraPosition(target: currentPosition!, zoom: 20),
-                    mapType: MapType.satellite,
-                    myLocationEnabled: true,
-                    polygons: polygons,
+                    items: lotissements[selectedMoughataa]!.map((lotissement) {
+                      return DropdownMenuItem(
+                        value: lotissement,
+                        child: Text(lotissement),
+                      );
+                    }).toList(),
                   ),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextFormField(
+                  controller: lotController,
+                  decoration: const InputDecoration(labelText: 'Numéro de Lot'),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: searchLot,
+                child: const Text('Rechercher'),
+              ),
+              Expanded(
+                child: currentPosition == null
+                    ? const Center(child: CircularProgressIndicator())
+                    : GoogleMap(
+                        onMapCreated: (GoogleMapController controller) {
+                          mapController = controller;
+                        },
+                        initialCameraPosition:
+                            CameraPosition(target: currentPosition!, zoom: 18),
+                        mapType: MapType.satellite,
+                        myLocationEnabled: true,
+                        polygons: polygons,
+                      ),
+              ),
+            ],
           ),
+          if (isLoading)
+            const Center(
+              child: CircularProgressIndicator(),
+            ),
         ],
       ),
     );
