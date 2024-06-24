@@ -1,15 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  const MapScreen({Key? key}) : super(key: key);
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  _MapScreenState createState() => _MapScreenState();
 }
 
 class _MapScreenState extends State<MapScreen> {
@@ -24,70 +25,36 @@ class _MapScreenState extends State<MapScreen> {
   String? selectedLotissement;
   Set<Polygon> polygons = {};
   bool isLoading = false;
+  bool isFetchingLocationDetails = false;
 
-  Map<String, List<String>> lotissements = {
-    "Plan_Arafatt": [
-      "11_A",
-      "11_B",
-      "12_Arafatt",
-      "13_Arafatt",
-      "15_Arafatt",
-      "5_Arafatt",
-      "6_Arafatt",
-      "A_Carrefour",
-      "B_Carrefour",
-      "Cimetiere",
-      "Complement_EXT_ARAFATT",
-      "C_CARREFOUR",
-      "C_EXT_carrefour_phase_2",
-      "D_Carrefour",
-      "Extension Secteur A",
-      "E_Carrefour",
-      "F_Modifie_Partie_A",
-      "Secteur 9",
-      "Secteur_1",
-      "Secteur_2_3",
-      "Secteur_3_Extension",
-      "Secteur_4_Extension",
-      "secteur_4",
-      "Secteur_5_EXT",
-      "Secteur_6_Extension",
-      "Secteur_7",
-      "Secteur_8",
-      "Zone_Carrefour_Ext"
-    ],
-    // Ajoutez les autres moughataa ici...
-    "plan_Ksar": [
-      "Centrale_Chinoise",
-      "Complement Madrid",
-      "C_5",
-      "C_6",
-      "Douane",
-      "Gare routiere KSAR",
-      "GBM",
-      "Ksar_A1_A5_ET_B1_B4",
-      "Ksar_Ancien",
-      "Ksar_Ouest",
-      "Ksar_Socomatale",
-      "Liaison_F_nord_Ksar_Ouest",
-      "liaison_ksar_extension",
-      "SOCOGIM_KSAR",
-      "Zone Entrepot et Commerciale"
-    ],
-    // Ajoutez les autres moughataa ici...
-  };
+  // New variables for selected location info panel
+  bool isPanelVisible = false;
+  String? panelInfo;
+  Polygon? selectedPolygon;
+
+ Map<String, List<String>> lotissements = {};
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance
-        .addPostFrameCallback((_) async => await fetchLocationUpdate());
+        ?.addPostFrameCallback((_) async => await fetchLocationUpdate());
+        fetchLotissements();
   }
 
   @override
   void dispose() {
     locationSubscription?.cancel();
     super.dispose();
+  }
+  
+
+  Future<void> fetchLotissements() async {
+    final String response = await rootBundle.loadString('assets/data/address.json');
+    final data = await json.decode(response) as Map<String, dynamic>;
+    setState(() {
+      lotissements = data.map((key, value) => MapEntry(key, List<String>.from(value)));
+    });
   }
 
   Future<void> fetchLocationUpdate() async {
@@ -126,12 +93,8 @@ class _MapScreenState extends State<MapScreen> {
     if (selectedMoughataa == null ||
         selectedLotissement == null ||
         lot.isEmpty) {
-      // Afficher un message d'erreur ou retourner
       return;
     }
-
-    print(
-        'lot: $lot, lotissement: $selectedLotissement, et moughataa: $selectedMoughataa');
 
     setState(() {
       isLoading = true;
@@ -184,16 +147,13 @@ class _MapScreenState extends State<MapScreen> {
             }
           }
         }
-      }
-      // Handle no data found
-      else {
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('Aucune donnée trouvée pour le lot spécifié.')),
         );
       }
     } else {
-      // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('Erreur lors de la récupération des données.')),
@@ -252,86 +212,248 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  // New method to fetch location details on map tap
+  Future<void> fetchLocationDetails(LatLng position) async {
+    setState(() {
+      isFetchingLocationDetails = true;
+      isPanelVisible = false; // Hide the panel before fetching new data
+    });
+
+    final url = Uri.parse(
+        'https://gis.digissimmo.org/api/location?longitude=${position.longitude}&latitude=${position.latitude}');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data.isNotEmpty) {
+        final properties = data[0]['properties'];
+        final geometry = data[0]['geometry'];
+
+        if (geometry != null) {
+          final coordinates = geometry['coordinates'];
+          if (coordinates != null && coordinates.isNotEmpty) {
+            Set<Polygon> newPolygons = {};
+            List<LatLng> polygonCoords = [];
+            for (var point in coordinates[0][0]) {
+              polygonCoords.add(LatLng(point[1], point[0]));
+            }
+            final polygon = Polygon(
+              polygonId: const PolygonId('selectedPolygon'),
+              points: polygonCoords,
+              fillColor: Colors.red.withOpacity(0.3),
+              strokeColor: Colors.red,
+              strokeWidth: 2,
+            );
+            newPolygons.add(polygon);
+
+            setState(() {
+              polygons = newPolygons;
+              selectedPolygon = polygon;
+              panelInfo =
+                  'Lot: ${properties['l']}\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
+              isPanelVisible = true;
+            });
+          }
+        }
+      }
+    }
+
+    setState(() {
+      isFetchingLocationDetails = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    // Adjusted width for responsive design
+    double formFieldWidth = screenWidth * 0.45;
+
+    // Adjusted spacing for responsive design
+    double formFieldSpacing = screenWidth * 0.03;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Map Search'),
-      ),
       body: Stack(
         children: [
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(labelText: 'Moughataa'),
-                  value: selectedMoughataa,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedMoughataa = value;
-                      selectedLotissement =
-                          null; // Reset lotissement when moughataa changes
-                    });
-                  },
-                  items: lotissements.keys.map((moughataa) {
-                    return DropdownMenuItem(
-                      value: moughataa,
-                      child: Text(moughataa),
-                    );
-                  }).toList(),
-                ),
-              ),
-              if (selectedMoughataa != null)
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(labelText: 'Lotissement'),
-                    value: selectedLotissement,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLotissement = value;
-                      });
+          Positioned.fill(
+            child: currentPosition == null
+                ? const Center(child: CircularProgressIndicator())
+                : GoogleMap(
+                    mapToolbarEnabled: false,
+                    myLocationButtonEnabled: false,
+                    onMapCreated: (GoogleMapController controller) {
+                      mapController = controller;
                     },
-                    items: lotissements[selectedMoughataa]!.map((lotissement) {
-                      return DropdownMenuItem(
-                        value: lotissement,
-                        child: Text(lotissement),
-                      );
-                    }).toList(),
+                    initialCameraPosition:
+                        CameraPosition(target: currentPosition!, zoom: 18),
+                    mapType: MapType.satellite,
+                    myLocationEnabled:
+                        true, // Disabled here to customize button
+                    polygons: polygons,
+                    onTap: (position) async {
+                      setState(() {
+                        isPanelVisible =
+                            false; // Hide the panel before fetching new data
+                      });
+                      await fetchLocationDetails(position);
+                    },
                   ),
-                ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextFormField(
-                  controller: lotController,
-                  decoration: const InputDecoration(labelText: 'Numéro de Lot'),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: searchLot,
-                child: const Text('Rechercher'),
-              ),
-              Expanded(
-                child: currentPosition == null
-                    ? const Center(child: CircularProgressIndicator())
-                    : GoogleMap(
-                        onMapCreated: (GoogleMapController controller) {
-                          mapController = controller;
-                        },
-                        initialCameraPosition:
-                            CameraPosition(target: currentPosition!, zoom: 18),
-                        mapType: MapType.satellite,
-                        myLocationEnabled: true,
-                        polygons: polygons,
-                      ),
-              ),
-            ],
           ),
           if (isLoading)
             const Center(
               child: CircularProgressIndicator(),
             ),
+          if (isFetchingLocationDetails)
+            const Center(
+              child: CircularProgressIndicator(),
+            ),
+          if (isPanelVisible && panelInfo != null)
+            Positioned(
+              bottom: 10,
+              left: 10,
+              right: 10,
+              child: Card(
+                color: Colors.white.withOpacity(0.9),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(panelInfo!),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              setState(() {
+                                isPanelVisible = false;
+                                polygons.remove(selectedPolygon);
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Implement route functionality
+                        },
+                        child: const Text('Itinéraire'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          Positioned(
+            top: 70,
+            left: 10,
+            right: 10,
+            child: SingleChildScrollView(
+              child: Card(
+                color: Colors.white.withOpacity(0.9),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              isExpanded: true,
+                              decoration:
+                                  const InputDecoration(labelText: 'Moughataa'),
+                              value: selectedMoughataa,
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedMoughataa = value;
+                                  selectedLotissement = null;
+                                });
+                              },
+                              items: lotissements.keys.map((moughataa) {
+                                return DropdownMenuItem(
+                                  value: moughataa,
+                                  child: Text(moughataa),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          SizedBox(width: formFieldSpacing),
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                  labelText: 'Lotissement'),
+                              value: selectedLotissement,
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedLotissement = value;
+                                });
+                              },
+                              items: selectedMoughataa != null
+                                  ? lotissements[selectedMoughataa]!
+                                      .map((lotissement) {
+                                      return DropdownMenuItem(
+                                        value: lotissement,
+                                        child: Text(lotissement),
+                                      );
+                                    }).toList()
+                                  : [],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: lotController,
+                              decoration: const InputDecoration(
+                                  labelText: 'Numéro de Lot'),
+                            ),
+                          ),
+                          SizedBox(width: formFieldSpacing),
+                          ElevatedButton(
+                            onPressed: searchLot,
+                            child: isLoading
+                                ? const SizedBox(
+                                    width: 16.0,
+                                    height: 16.0,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.0,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text('Rechercher'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 5,
+            right: 5,
+            child: FloatingActionButton(
+              backgroundColor: Colors.white.withOpacity(0.3),
+              onPressed: () async {
+                if (currentPosition != null) {
+                  mapController?.animateCamera(
+                    CameraUpdate.newLatLng(currentPosition!),
+                  );
+                }
+              },
+              child: const Icon(Icons.person),
+            ),
+          ),
         ],
       ),
     );
