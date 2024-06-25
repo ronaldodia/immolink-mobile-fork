@@ -1,7 +1,22 @@
 {
-    "name": "فلاتر لوكاليزيشن",
+    "name": "ImmoLink Mobile",
     "hello_world": "مرحبا بالعالم",
-    "example_text": "هذا مثال على التوطين في الرفرفة",
+    "example_text": "هذا مثال على تطبيق إيمولينك موبايل",
     "world_text": "هذا العالم جميل جداً",
-    "language": "لغة"
-}
+    "language": "اللغة",
+    "search": "بحث",
+    "loading": "جارٍ التحميل...",
+    "location_not_found": "لم يتم العثور على أي بيانات للقطعة المحددة.",
+    "location_error": "حدث خطأ أثناء استرداد البيانات.",
+    "lot_number": "رقم القطعة",
+    "moughataa": "المقاطعة",
+    "lotissement": "التقسيم",
+    "lot": "القطعة",
+    "area": "المساحة",
+    "index": "المؤشر",
+    "moughataa_label": "المقاطعة",
+    "lotissement_label": "التقسيم",
+    "search_button": "بحث",
+    "route": "المسار"
+  }
+  

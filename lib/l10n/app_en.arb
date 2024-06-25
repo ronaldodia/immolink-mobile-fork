@@ -1,7 +1,22 @@
 {
     "name": "ImmoLink Mobile",
     "hello_world": "Hello World",
-    "example_text": "This is example of ImmoLink Mobile",
+    "example_text": "This is an example of ImmoLink Mobile",
     "world_text": "This world is so beautiful",
-    "language": "Language"
-}
+    "language": "Language",
+    "search": "Search",
+    "loading": "Loading...",
+    "location_not_found": "No data found for the specified lot.",
+    "location_error": "An error occurred while retrieving data.",
+    "lot_number": "Lot Number",
+    "moughataa": "Moughataa",
+    "lotissement": "Lotissement",
+    "lot": "Lot",
+    "area": "Area",
+    "index": "Index",
+    "moughataa_label": "Moughataa",
+    "lotissement_label": "Lotissement",
+    "search_button": "Search",
+    "route": "Route"
+  }
+  

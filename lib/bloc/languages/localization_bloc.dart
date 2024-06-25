@@ -11,6 +11,9 @@ class LocalizationBloc extends Bloc<LocalizationEvent, LocalizationState> {
   LocalizationBloc() : super(LocalizationState.initial()) {
     on<LoadSavedLocalization>(getLanguage);
     on<LoadLocalization>(changeLanguage);
+
+    // Ajoutez l'événement LoadSavedLocalization ici
+    add(LoadSavedLocalization());
   }
 
   void changeLanguage(LoadLocalization event, Emitter<LocalizationState> emit) {
@@ -19,13 +22,12 @@ class LocalizationBloc extends Bloc<LocalizationEvent, LocalizationState> {
     emit(LocalizationState(event.locale));
   }
 
-  Future<void> getLanguage(
-      LoadSavedLocalization event, Emitter<LocalizationState> emit) async {
+  Future<void> getLanguage(LoadSavedLocalization event, Emitter<LocalizationState> emit) async {
     Locale saveLocale = await getLocale();
     emit(LocalizationState(saveLocale));
   }
 
-  saveLocale(Locale locale) async {
+  Future<void> saveLocale(Locale locale) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('language', locale.languageCode);
   }

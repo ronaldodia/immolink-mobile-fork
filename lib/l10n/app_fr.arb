@@ -1,7 +1,21 @@
 {
-    "name": "ImmoLink Mobile",
-    "hello_world": "Bonjour le monde",
-    "example_text": "Ceci est un exemple de ImmoLink Mobile",
-    "world_text": "Ce monde est si beau",
-    "language": "Langue"
+  "name": "ImmoLink Mobile",
+  "hello_world": "Bonjour le monde",
+  "example_text": "Ceci est un exemple de ImmoLink Mobile",
+  "world_text": "Ce monde est si beau",
+  "language": "Langue",
+  "search": "Rechercher",
+  "loading": "Chargement...",
+  "location_not_found": "Aucune donnée trouvée pour le lot spécifié.",
+  "location_error": "Erreur lors de la récupération des données.",
+  "lot_number": "Numéro de Lot",
+  "moughataa": "Moughataa",
+  "lotissement": "Lotissement",
+  "lot": "Lot",
+  "area": "Superficie",
+  "index": "Index",
+  "moughataa_label": "Moughataa",
+  "lotissement_label": "Lotissement",
+  "search_button": "Rechercher",
+  "route": "Itinéraire"
 }

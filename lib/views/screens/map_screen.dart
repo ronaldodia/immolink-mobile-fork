@@ -2,9 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:immolink_mobile/bloc/languages/localization_bloc.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
+import 'dart:math' as math;
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -30,16 +34,20 @@ class _MapScreenState extends State<MapScreen> {
   // New variables for selected location info panel
   bool isPanelVisible = false;
   String? panelInfo;
+  String? panelInfoAr;
+  String? panelInfoEn;
   Polygon? selectedPolygon;
 
- Map<String, List<String>> lotissements = {};
+  Map<String, dynamic> lotissements = {};
+  List<String> moughataaNames = [];
+  bool isArabic = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance
         ?.addPostFrameCallback((_) async => await fetchLocationUpdate());
-        fetchLotissements();
+    fetchLotissements();
   }
 
   @override
@@ -47,13 +55,39 @@ class _MapScreenState extends State<MapScreen> {
     locationSubscription?.cancel();
     super.dispose();
   }
-  
+
+  double calculatePolygonArea(List<LatLng> coordinates) {
+    if (coordinates.length < 3) {
+      return 0.0;
+    }
+
+    const double radius = 6378137; // Rayon de la Terre en mètres
+    double area = 0.0;
+
+    for (int i = 0; i < coordinates.length; i++) {
+      final LatLng p1 = coordinates[i];
+      final LatLng p2 = coordinates[(i + 1) % coordinates.length];
+
+      double lat1 = p1.latitude * math.pi / 180.0;
+      double lon1 = p1.longitude * math.pi / 180.0;
+      double lat2 = p2.latitude * math.pi / 180.0;
+      double lon2 = p2.longitude * math.pi / 180.0;
+
+      area += (lon2 - lon1) * (2 + math.sin(lat1) + math.sin(lat2));
+    }
+
+    area = area * radius * radius / 2.0;
+    return area.abs(); // Retourne la valeur absolue de l'aire
+  }
 
   Future<void> fetchLotissements() async {
-    final String response = await rootBundle.loadString('assets/data/address.json');
+    final String response =
+        await rootBundle.loadString('assets/data/address.json');
     final data = await json.decode(response) as Map<String, dynamic>;
     setState(() {
-      lotissements = data.map((key, value) => MapEntry(key, List<String>.from(value)));
+      // lotissements = data.map((key, value) => MapEntry(key, List<String>.from(value)));
+      lotissements = data;
+       moughataaNames = lotissements.keys.toList();
     });
   }
 
@@ -107,16 +141,17 @@ class _MapScreenState extends State<MapScreen> {
       final data = json.decode(response.body);
       if (data.isNotEmpty) {
         final geometry = data[0]['geometry'];
+        final properties = data[0]['properties']; // Get properties for the lot
         if (geometry != null) {
           final coordinates = geometry['coordinates'];
           if (coordinates != null && coordinates.isNotEmpty) {
             Set<Polygon> newPolygons = {};
+            List<LatLng> polygonCoords = [];
             LatLngBounds? bounds;
 
             int polygonIdCounter = 1;
             for (var multipolygon in coordinates) {
               for (var polygon in multipolygon) {
-                List<LatLng> polygonCoords = [];
                 for (var point in polygon) {
                   polygonCoords.add(LatLng(point[1], point[0]));
                 }
@@ -139,6 +174,15 @@ class _MapScreenState extends State<MapScreen> {
             }
             setState(() {
               polygons = newPolygons;
+              double area = calculatePolygonArea(polygonCoords);
+              String areaText = area.toStringAsFixed(2); // Format area
+
+              panelInfo =
+                  'Lot: ${properties['l']}\nSuperficie: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
+                  panelInfoAr = 'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']}';
+                  panelInfoEn = 'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
+
+              isPanelVisible = true; // Show the panel with lot info
             });
 
             if (bounds != null) {
@@ -245,16 +289,35 @@ class _MapScreenState extends State<MapScreen> {
             );
             newPolygons.add(polygon);
 
+            double area = calculatePolygonArea(polygonCoords);
+            String areaText =
+                area.toStringAsFixed(2); // Convert to hectares and format
+
             setState(() {
               polygons = newPolygons;
               selectedPolygon = polygon;
               panelInfo =
-                  'Lot: ${properties['l']}\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
+                  'Lot: ${properties['l']}\nSuperficie: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
+                  panelInfoAr = 'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']}';
+                  panelInfoEn = 'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
+
               isPanelVisible = true;
             });
           }
         }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content:
+                  Text('Aucune donnée trouvée pour l\'emplacement spécifié.')),
+        );
       }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text(
+                'Erreur lors de la récupération des détails de l\'emplacement.')),
+      );
     }
 
     setState(() {
@@ -265,13 +328,11 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
-
-    // Adjusted width for responsive design
-    double formFieldWidth = screenWidth * 0.45;
 
     // Adjusted spacing for responsive design
     double formFieldSpacing = screenWidth * 0.03;
+    bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    
 
     return Scaffold(
       body: Stack(
@@ -308,47 +369,6 @@ class _MapScreenState extends State<MapScreen> {
             const Center(
               child: CircularProgressIndicator(),
             ),
-          if (isPanelVisible && panelInfo != null)
-            Positioned(
-              bottom: 10,
-              left: 10,
-              right: 10,
-              child: Card(
-                color: Colors.white.withOpacity(0.9),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(panelInfo!),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () {
-                              setState(() {
-                                isPanelVisible = false;
-                                polygons.remove(selectedPolygon);
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Implement route functionality
-                        },
-                        child: const Text('Itinéraire'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
           Positioned(
             top: 70,
             left: 10,
@@ -365,8 +385,9 @@ class _MapScreenState extends State<MapScreen> {
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               isExpanded: true,
-                              decoration:
-                                  const InputDecoration(labelText: 'Moughataa'),
+                              decoration: InputDecoration(
+                                  labelText:
+                                      AppLocalizations.of(context)!.moughataa),
                               value: selectedMoughataa,
                               onChanged: (value) {
                                 setState(() {
@@ -374,10 +395,17 @@ class _MapScreenState extends State<MapScreen> {
                                   selectedLotissement = null;
                                 });
                               },
-                              items: lotissements.keys.map((moughataa) {
-                                return DropdownMenuItem(
-                                  value: moughataa,
-                                  child: Text(moughataa),
+                              items: moughataaNames.map((name) {
+                                final arabicName =
+                                    lotissements[name]['arabicName'];
+                                final saxonName =
+                                    lotissements[name]['name'];
+                                    print('langue: ${Localizations.localeOf(context).languageCode}');
+                                return DropdownMenuItem<String>(
+                                  value: name,
+                                  child: Text(isArabic
+                                      ? arabicName
+                                      : saxonName),
                                 );
                               }).toList(),
                             ),
@@ -386,23 +414,21 @@ class _MapScreenState extends State<MapScreen> {
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               isExpanded: true,
-                              decoration: const InputDecoration(
-                                  labelText: 'Lotissement'),
+                              decoration:  InputDecoration(
+                                  labelText: AppLocalizations.of(context)!.lotissement),
                               value: selectedLotissement,
                               onChanged: (value) {
                                 setState(() {
                                   selectedLotissement = value;
                                 });
                               },
-                              items: selectedMoughataa != null
-                                  ? lotissements[selectedMoughataa]!
-                                      .map((lotissement) {
-                                      return DropdownMenuItem(
-                                        value: lotissement,
-                                        child: Text(lotissement),
-                                      );
-                                    }).toList()
-                                  : [],
+                              items: (lotissements[selectedMoughataa]?['lotissements'] ?? [])
+                        .map<DropdownMenuItem<String>>((lot) {
+                      return DropdownMenuItem<String>(
+                        value: lot,
+                        child: Text(lot),
+                      );
+                    }).toList(),
                             ),
                           ),
                         ],
@@ -413,8 +439,8 @@ class _MapScreenState extends State<MapScreen> {
                           Expanded(
                             child: TextFormField(
                               controller: lotController,
-                              decoration: const InputDecoration(
-                                  labelText: 'Numéro de Lot'),
+                              decoration:  InputDecoration(
+                                  labelText: AppLocalizations.of(context)!.lot_number),
                             ),
                           ),
                           SizedBox(width: formFieldSpacing),
@@ -429,7 +455,7 @@ class _MapScreenState extends State<MapScreen> {
                                       color: Colors.white,
                                     ),
                                   )
-                                : const Text('Rechercher'),
+                                :  Text(AppLocalizations.of(context)!.search_button),
                           ),
                         ],
                       ),
@@ -443,7 +469,7 @@ class _MapScreenState extends State<MapScreen> {
             top: 5,
             right: 5,
             child: FloatingActionButton(
-              backgroundColor: Colors.white.withOpacity(0.3),
+              backgroundColor: Colors.white.withOpacity(0.8),
               onPressed: () async {
                 if (currentPosition != null) {
                   mapController?.animateCamera(
@@ -451,9 +477,94 @@ class _MapScreenState extends State<MapScreen> {
                   );
                 }
               },
-              child: const Icon(Icons.person),
+              child: const Icon(
+                Icons.man,
+                size: 40,
+                color: Colors.black,
+              ),
             ),
           ),
+          if (isPanelVisible)
+            Positioned(
+              bottom: 20,
+              left: 10,
+              right: 10,
+              child: Container(
+                padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(8.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            isArabic
+                                      ? panelInfoAr!
+                                      : panelInfo!
+                          , style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              setState(() {
+                                isPanelVisible = false;
+                                polygons.remove(selectedPolygon);
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Row(
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              // Implement route functionality
+                            },
+                            child: const Text('Itinéraire'),
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              // Implement route functionality
+                            },
+                            child: const Text('Ajouter'),
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              // Implement route functionality
+                            },
+                            child: IconButton(
+                                onPressed: () {},
+                                icon: const Icon(Icons.share)),
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
