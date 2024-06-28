@@ -2,9 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:immolink_mobile/bloc/languages/localization_bloc.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'dart:math' as math;
@@ -17,7 +15,8 @@ class MapScreen extends StatefulWidget {
   _MapScreenState createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen>
+    with AutomaticKeepAliveClientMixin<MapScreen> {
   static const googlePlex = LatLng(-15.9597407, 18.0780228);
   final locationController = Location();
   LatLng? currentPosition;
@@ -87,7 +86,7 @@ class _MapScreenState extends State<MapScreen> {
     setState(() {
       // lotissements = data.map((key, value) => MapEntry(key, List<String>.from(value)));
       lotissements = data;
-       moughataaNames = lotissements.keys.toList();
+      moughataaNames = lotissements.keys.toList();
     });
   }
 
@@ -123,7 +122,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> searchLot() async {
-    final lot = lotController.text;
+    final lot = lotController.text.toString();
     if (selectedMoughataa == null ||
         selectedLotissement == null ||
         lot.isEmpty) {
@@ -134,8 +133,15 @@ class _MapScreenState extends State<MapScreen> {
       isLoading = true;
     });
 
+    final encodedLot = Uri.encodeComponent(lot);
+    final encodedLotissement = Uri.encodeComponent(selectedLotissement!);
+    final encodedMoughataa = Uri.encodeComponent(selectedMoughataa!);
+    print(
+        'lot: ${encodedLot}, lotissement: ${encodedLotissement}, :moughataa: ${encodedMoughataa}');
+
     final url = Uri.parse(
-        'https://gis.digissimmo.org/api/features?lot=$lot&lotissement=$selectedLotissement&moughataa=$selectedMoughataa');
+        'https://gis.digissimmo.org/api/features?lot=$encodedLot&lotissement=$encodedLotissement&moughataa=$encodedMoughataa');
+        print(url);
     final response = await http.get(url);
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -179,8 +185,10 @@ class _MapScreenState extends State<MapScreen> {
 
               panelInfo =
                   'Lot: ${properties['l']}\nSuperficie: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
-                  panelInfoAr = 'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']}';
-                  panelInfoEn = 'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
+              panelInfoAr =
+                  'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']}';
+              panelInfoEn =
+                  'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
 
               isPanelVisible = true; // Show the panel with lot info
             });
@@ -298,8 +306,10 @@ class _MapScreenState extends State<MapScreen> {
               selectedPolygon = polygon;
               panelInfo =
                   'Lot: ${properties['l']}\nSuperficie: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
-                  panelInfoAr = 'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']}';
-                  panelInfoEn = 'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
+              panelInfoAr =
+                  'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']}';
+              panelInfoEn =
+                  'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
 
               isPanelVisible = true;
             });
@@ -327,12 +337,12 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     double screenWidth = MediaQuery.of(context).size.width;
 
     // Adjusted spacing for responsive design
     double formFieldSpacing = screenWidth * 0.03;
     bool isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    
 
     return Scaffold(
       body: Stack(
@@ -398,14 +408,13 @@ class _MapScreenState extends State<MapScreen> {
                               items: moughataaNames.map((name) {
                                 final arabicName =
                                     lotissements[name]['arabicName'];
-                                final saxonName =
-                                    lotissements[name]['name'];
-                                    print('langue: ${Localizations.localeOf(context).languageCode}');
+                                final saxonName = lotissements[name]['name'];
+                                print(
+                                    'langue: ${Localizations.localeOf(context).languageCode}');
                                 return DropdownMenuItem<String>(
                                   value: name,
-                                  child: Text(isArabic
-                                      ? arabicName
-                                      : saxonName),
+                                  child:
+                                      Text(isArabic ? arabicName : saxonName),
                                 );
                               }).toList(),
                             ),
@@ -414,21 +423,24 @@ class _MapScreenState extends State<MapScreen> {
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               isExpanded: true,
-                              decoration:  InputDecoration(
-                                  labelText: AppLocalizations.of(context)!.lotissement),
+                              decoration: InputDecoration(
+                                  labelText: AppLocalizations.of(context)!
+                                      .lotissement),
                               value: selectedLotissement,
                               onChanged: (value) {
                                 setState(() {
                                   selectedLotissement = value;
                                 });
                               },
-                              items: (lotissements[selectedMoughataa]?['lotissements'] ?? [])
-                        .map<DropdownMenuItem<String>>((lot) {
-                      return DropdownMenuItem<String>(
-                        value: lot,
-                        child: Text(lot),
-                      );
-                    }).toList(),
+                              items: (lotissements[selectedMoughataa]
+                                          ?['lotissements'] ??
+                                      [])
+                                  .map<DropdownMenuItem<String>>((lot) {
+                                return DropdownMenuItem<String>(
+                                  value: lot,
+                                  child: Text(lot),
+                                );
+                              }).toList(),
                             ),
                           ),
                         ],
@@ -439,8 +451,9 @@ class _MapScreenState extends State<MapScreen> {
                           Expanded(
                             child: TextFormField(
                               controller: lotController,
-                              decoration:  InputDecoration(
-                                  labelText: AppLocalizations.of(context)!.lot_number),
+                              decoration: InputDecoration(
+                                  labelText:
+                                      AppLocalizations.of(context)!.lot_number),
                             ),
                           ),
                           SizedBox(width: formFieldSpacing),
@@ -455,7 +468,8 @@ class _MapScreenState extends State<MapScreen> {
                                       color: Colors.white,
                                     ),
                                   )
-                                :  Text(AppLocalizations.of(context)!.search_button),
+                                : Text(AppLocalizations.of(context)!
+                                    .search_button),
                           ),
                         ],
                       ),
@@ -513,9 +527,15 @@ class _MapScreenState extends State<MapScreen> {
                         children: [
                           Text(
                             isArabic
-                                      ? panelInfoAr!
-                                      : panelInfo!
-                          , style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
+                                ? panelInfoAr!
+                                : (Localizations.localeOf(context)
+                                            .languageCode ==
+                                        'en'
+                                    ? panelInfoEn!
+                                    : panelInfo!),
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
                           IconButton(
                             icon: const Icon(Icons.close),
                             onPressed: () {
@@ -569,4 +589,8 @@ class _MapScreenState extends State<MapScreen> {
       ),
     );
   }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 }

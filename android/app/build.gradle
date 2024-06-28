@@ -23,6 +23,12 @@ if (flutterVersionName == null) {
     flutterVersionName = "1.0"
 }
 
+// def keystoreProperties = new Properties()
+// def keystorePropertiesFile = rootProject.file('key.properties')
+// if (keystorePropertiesFile.exists()) {
+//       keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+// }
+
 android {
     namespace = "com.example.immolink_mobile"
     compileSdk = flutter.compileSdkVersion
@@ -52,6 +58,15 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
+    }
+
+    signingConfigs {
+            debug {
+                keyAlias 'key'
+                keyPassword 'immoPlace2024'
+                storeFile file('key.jks')
+                storePassword 'immoPlace2024'
+            }
     }
 
     buildTypes {
