@@ -33,6 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final phoneNumberController = TextEditingController();
 
   PhoneNumber? _phoneNumber;
+  final _emailFormKey = GlobalKey<FormState>();
+  final _phoneFormKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -285,53 +287,80 @@ class _LoginScreenState extends State<LoginScreen> {
       BuildContext context, double textSize, double buttonHeight) {
     var textScaleFactor = MediaQuery.of(context).textScaleFactor;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TextField(
-            controller: emailController,
-            decoration: const InputDecoration(labelText: 'Email'),
-            style: TextStyle(fontSize: textSize),
-          ),
-          TextField(
-            controller: passwordFormEmailController,
-            decoration: const InputDecoration(labelText: 'Password'),
-            obscureText: true,
-            style: TextStyle(fontSize: textSize),
-          ),
-          SizedBox(height: buttonHeight * 1.0),
-          BlocListener<ProfileBloc, ProfileState>(
-            listener: (context, state){
-              if(state is AuthLoanding){
-                const Center(child: CircularProgressIndicator(color: Colors.blue,),);
-              }else if(state is AuthSuccessFull){
-                Navigator.of(context).pushReplacementNamed(accountRoute);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Welcome', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 30),)));
-              }else if(state is AuthError){
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 30),)));
-              }
-            },
-            child: ElevatedButton(
-              onPressed: () {
-                print('Email: ${emailController.text}');
-                print('Password: ${passwordFormEmailController.text}');
-
-                _authBlocEmail!.add(LoginEvent(email: emailController.text, phone: '', password: passwordFormEmailController.text));
-
+    return Form(
+      key: _emailFormKey,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextFormField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+              style: TextStyle(fontSize: textSize),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your email';
+                }
+                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                  return 'Please enter a valid email address';
+                }
+                return null;
               },
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                    horizontal: buttonHeight * 2, vertical: buttonHeight * 0.5),
-                textStyle: TextStyle(fontSize: textSize),
+            ),
+            TextFormField(
+              controller: passwordFormEmailController,
+              decoration: const InputDecoration(labelText: 'Password'),
+              obscureText: true,
+              style: TextStyle(fontSize: textSize),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your password';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: buttonHeight * 1.0),
+            BlocListener<ProfileBloc, ProfileState>(
+              listener: (context, state){
+                if(state is AuthLoanding){
+                  const Center(child: CircularProgressIndicator(color: Colors.blue,),);
+                }else if(state is AuthSuccessFull){
+                  Navigator.of(context).pushReplacementNamed(accountRoute);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Welcome', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 30),)));
+                }else if(state is AuthError){
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 30),)));
+                }
+              },
+              child: ElevatedButton(
+                onPressed: () {
+                if (_emailFormKey.currentState!.validate()) {
+                    final email = emailController.text;
+                    final password = passwordFormEmailController.text;
+                    print('Email: $email');
+                    print('Password: $password');
+
+                    _authBlocEmail!.add(LoginEvent(email: emailController.text, phone: '', password: passwordFormEmailController.text));
+                }
+
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                      vertical: buttonHeight * 0.2,
+                      horizontal: buttonHeight * 0.5),
+                  backgroundColor: Colors.blueAccent,
+                ),
+                child: Text(
+                  'Login',
+                  style: TextStyle(
+                      color: Colors.white, fontSize: textScaleFactor * 14),
+                ),
               ),
-              child: const Text('Login with Phone Number'),
+
             ),
 
-          ),
-
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -342,75 +371,102 @@ class _LoginScreenState extends State<LoginScreen> {
     // Initializing PhoneNumber with Mauritania's country code
     final PhoneNumber initialPhoneNumber = PhoneNumber(isoCode: 'MR');
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          InternationalPhoneNumberInput(
-            autoFocus: true,
-            initialValue: initialPhoneNumber,
-            onInputChanged: (PhoneNumber number) {
-              print('Phone Number: ${number.phoneNumber}');
-              setState(() {
-                _phoneNumber = number;
-              });
-            },
-            onInputValidated: (bool value) {
-              print(value);
-            },
-            selectorConfig: const SelectorConfig(
-                selectorType: PhoneInputSelectorType.DIALOG,
-                setSelectorButtonAsPrefixIcon: true,
-                useBottomSheetSafeArea: true),
-            ignoreBlank: false,
-            autoValidateMode: AutovalidateMode.disabled,
-            selectorTextStyle: const TextStyle(color: Colors.black),
-            textFieldController: phoneNumberController,
-            formatInput: false,
-            keyboardType: const TextInputType.numberWithOptions(
-                signed: true, decimal: true),
-            inputDecoration: const InputDecoration(labelText: 'Phone Number'),
-            locale: Localizations.localeOf(context).languageCode,
-          ),
-          TextField(
-            controller: passwordController,
-            decoration: const InputDecoration(labelText: 'Password'),
-            obscureText: true,
-            style: TextStyle(fontSize: textScaleFactor * 14),
-          ),
-          SizedBox(height: buttonHeight * 1.0),
-          BlocListener<ProfileBlocPhone, ProfileState>(
-            listener: (context, state){
-              if(state is AuthLoanding){
-                const Center(child: CircularProgressIndicator(color: Colors.blue,),);
-              }else if(state is AuthSuccessFull){
-                Navigator.of(context).pushReplacementNamed(accountRoute);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Welcome', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 30),)));
-              }else if(state is AuthError){
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 30),)));
-              }
-            },
-            child: ElevatedButton(
-              onPressed: () {
-                print('Phone: ${_phoneNumber?.phoneNumber}');
-                print('Password: ${passwordController.text}');
-                final phoneNumber = _phoneNumber?.phoneNumber!.replaceAll('+', '');
-                print('Phone Final: $phoneNumber');
-
-                _authBloc!.add(LoginEvent(email: '', phone: phoneNumber, password: passwordController.text));
-
+    return Form(
+      key: _phoneFormKey,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            InternationalPhoneNumberInput(
+              autoFocus: true,
+              initialValue: initialPhoneNumber,
+              onInputChanged: (PhoneNumber number) {
+                print('Phone Number: ${number.phoneNumber}');
+                setState(() {
+                  _phoneNumber = number;
+                });
               },
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                    horizontal: buttonHeight * 2, vertical: buttonHeight * 0.5),
-                textStyle: TextStyle(fontSize: textSize),
-              ),
-              child: const Text('Login with Phone Number'),
+              onInputValidated: (bool value) {
+                print(value);
+              },
+              selectorConfig: const SelectorConfig(
+                  selectorType: PhoneInputSelectorType.DIALOG,
+                  setSelectorButtonAsPrefixIcon: true,
+                  useBottomSheetSafeArea: true),
+              ignoreBlank: false,
+              autoValidateMode: AutovalidateMode.disabled,
+              selectorTextStyle: const TextStyle(color: Colors.black),
+              textFieldController: phoneNumberController,
+              formatInput: false,
+              keyboardType: const TextInputType.numberWithOptions(
+                  signed: true, decimal: true),
+              inputDecoration: const InputDecoration(labelText: 'Phone Number'),
+              locale: Localizations.localeOf(context).languageCode,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your phone number';
+                }
+                return null;
+              },
             ),
+            TextFormField(
+              controller: passwordController,
+              decoration: const InputDecoration(labelText: 'Password'),
+              obscureText: true,
+              style: TextStyle(fontSize: textScaleFactor * 14),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your password';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: buttonHeight * 1.0),
+            BlocListener<ProfileBlocPhone, ProfileState>(
+              listener: (context, state){
+                if(state is AuthLoanding){
+                  const Center(child: CircularProgressIndicator(color: Colors.blue,),);
+                }else if(state is AuthSuccessFull){
+                  Navigator.of(context).pushReplacementNamed(accountRoute);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Welcome', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 30),)));
+                }else if(state is AuthError){
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 30),)));
+                }
+              },
+              child: SizedBox(
+                width: double.infinity,
+                height: buttonHeight,
+                child: ElevatedButton(
+                  onPressed: () {
+                  if (_phoneFormKey.currentState!.validate()) {
 
-          ),
-        ],
+                    final phoneNumber = _phoneNumber?.phoneNumber!.replaceAll('+', '');
+                    final password = passwordController.text;
+                    print('Phone: ${_phoneNumber?.phoneNumber}');
+                    print('Password: $password');
+                    print('Phone Final: $phoneNumber');
+
+                    _authBloc!.add(LoginEvent(email: '', phone: phoneNumber, password: password));
+                  }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                        vertical: buttonHeight * 0.2,
+                        horizontal: buttonHeight * 0.5),
+                    backgroundColor: Colors.blueAccent,
+                  ),
+                  child: Text(
+                    'Login',
+                    style: TextStyle(
+                        color: Colors.white, fontSize: textScaleFactor * 14),
+                  ),
+                ),
+              ),
+
+            ),
+          ],
+        ),
       ),
     );
   }

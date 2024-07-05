@@ -38,9 +38,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   PhoneNumber? _phoneNumber;
 
+  // Form keys
+  final _emailFormKey = GlobalKey<FormState>();
+  final _phoneFormKey = GlobalKey<FormState>();
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _registerWithEmailBloc = BlocProvider.of<RegisterWithEmailBloc>(context);
     _registerWithPhoneBloc = BlocProvider.of<RegisterWithPhoneBloc>(context);
@@ -60,20 +63,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _registerWithEmail(BuildContext context, displayName, email,
-      password, confirmPassword) async {
+  Future<void> _registerWithEmail(BuildContext context, displayName, email, password, confirmPassword) async {
     final response = await http.post(
       Uri.parse('https://daar.server1.digissimmo.org/mobile/google/callback'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'email': email!,
-        'full_name': displayName!,
-        'password': password!,
-        'confirm_password': confirmPassword!,
-        'permission': 'customer',
-      }),
+      headers: <String, String>{ 'Content-Type': 'application/json; charset=UTF-8', },
+      body: jsonEncode(<String, String>{ 'email': email!, 'full_name': displayName!, 'password': password!, 'confirm_password': confirmPassword!, 'permission': 'customer', }),
     );
 
     final data = json.decode(response.body);
@@ -89,20 +83,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Future<void> _registerPhoneNumber(BuildContext context, displayName,
-      phoneNumber, password, confirmPassword) async {
+  Future<void> _registerPhoneNumber(BuildContext context, displayName, phoneNumber, password, confirmPassword) async {
     final response = await http.post(
       Uri.parse('https://daar.server1.digissimmo.org/mobile/google/callback'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'phone': phoneNumber!,
-        'full_name': displayName!,
-        'password': password!,
-        'confirm_password': confirmPassword!,
-        'permission': 'customer',
-      }),
+      headers: <String, String>{ 'Content-Type': 'application/json; charset=UTF-8', },
+      body: jsonEncode(<String, String>{ 'phone': phoneNumber!, 'full_name': displayName!, 'password': password!, 'confirm_password': confirmPassword!, 'permission': 'customer', }),
     );
 
     final data = json.decode(response.body);
@@ -125,9 +110,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     var screenHeight = MediaQuery.of(context).size.height;
     var textScaleFactor = MediaQuery.of(context).textScaleFactor;
     var buttonHeight = screenSize.height * 0.05;
-    var textSize =
-        screenSize.width * 0.035;
-
+    var textSize = screenSize.width * 0.035;
 
     return Scaffold(
       appBar: AppBar(title: const Text("Register")),
@@ -137,9 +120,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
-                height: screenHeight * 0.05,
-              ),
+              SizedBox(height: screenHeight * 0.05),
               SizedBox(
                 width: screenWidth * 0.9,
                 child: TextButton(
@@ -149,8 +130,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         vertical: buttonHeight * 0.5,
                         horizontal: buttonHeight * 0.5),
                   ),
-                  onPressed: () =>
-                      Navigator.of(context).pushReplacementNamed(loginRoute),
+                  onPressed: () => Navigator.of(context).pushReplacementNamed(loginRoute),
                   child: Text(
                     'I have account !',
                     style: TextStyle(
@@ -158,18 +138,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ),
-              SizedBox(
-                height: screenHeight * 0.05,
-              ),
+              SizedBox(height: screenHeight * 0.05),
 
               SizedBox(
                 child: _isEmailRegister
                     ? _registerWithEmailPassword(context, textSize, buttonHeight)
-                    : _registerWithPhoneNumber(context,  textSize, buttonHeight),
+                    : _registerWithPhoneNumber(context, textSize, buttonHeight),
               ),
-              SizedBox(
-                height: screenHeight * 0.05,
-              ),
+              SizedBox(height: screenHeight * 0.05),
               TextButton(
                 onPressed: () {
                   setState(() {
@@ -208,16 +184,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       Platform.isIOS
                           ? SizedBox(
-                              height: screenHeight * 0.1,
-                              width: screenHeight * 0.1,
-                              child: IconButton(
-                                onPressed: () {
-                                  // Implement Apple login here
-                                },
-                                icon: Image.asset(
-                                    'assets/icons/social/apple.png'),
-                              ),
-                            )
+                        height: screenHeight * 0.1,
+                        width: screenHeight * 0.1,
+                        child: IconButton(
+                          onPressed: () {
+                            // Implement Apple login here
+                          },
+                          icon: Image.asset('assets/icons/social/apple.png'),
+                        ),
+                      )
                           : const SizedBox(height: 0.0),
                     ],
                   ),
@@ -236,74 +211,115 @@ class _RegisterScreenState extends State<RegisterScreen> {
     var screenHeight = MediaQuery.of(context).size.height;
     var textScaleFactor = MediaQuery.of(context).textScaleFactor;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(
-          horizontal: screenWidth * 0.04, vertical: screenHeight * 0.01),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TextField(
-            controller: fullNameEmailController,
-            decoration: const InputDecoration(labelText: 'Full Name'),
-            style: TextStyle(fontSize: textScaleFactor * 14),
-          ),
-          SizedBox(height: screenHeight * 0.02),
-          TextField(
-            controller: emailController,
-            decoration: const InputDecoration(labelText: 'Email'),
-            style: TextStyle(fontSize: textScaleFactor * 14),
-          ),
-          SizedBox(height: screenHeight * 0.02),
-          TextField(
-            controller: passwordEmailController,
-            decoration: const InputDecoration(labelText: 'Password'),
-            obscureText: true,
-            style: TextStyle(fontSize: textScaleFactor * 14),
-          ),
-          SizedBox(height: screenHeight * 0.02),
-          TextField(
-            controller: passwordEmailConfirmController,
-            decoration: const InputDecoration(labelText: 'Confirm Password'),
-            obscureText: true,
-            style: TextStyle(fontSize: textScaleFactor * 14),
-          ),
-          SizedBox(height: screenHeight * 0.02),
-          BlocListener<RegisterWithEmailBloc, RegisterState>(
-            listener: (context, state){
-              if(state is RegisterAuthLoanding){
-                const Center(child: CircularProgressIndicator(color: Colors.blue,),);
-              }else if(state is RegisterAuthSuccessFull){
-                Navigator.of(context).pushReplacementNamed(accountRoute);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Welcome', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 30),)));
-              }else if(state is RegisterAuthError){
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 30),)));
-              }
-            },
-            child: ElevatedButton(
-              onPressed: () {
-                print('Full Name: ${fullNameEmailController.text}');
-                print('Email: ${emailController.text}');
-                print('Password: ${passwordEmailController.text}');
-                print('Confirm Password: ${passwordEmailConfirmController.text}');
-                print('Permission: customer');
-
-                _registerWithEmailBloc!.add(RegisterAuthEvent(full_name: fullNameEmailController.text,
-                    email: emailController.text, phone: '',
-                    password: passwordEmailController.text,
-                    confirm_password: passwordEmailConfirmController.text, permission: 'customer'));
-
+    return Form(
+      key: _emailFormKey,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.04, vertical: screenHeight * 0.01),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextFormField(
+              controller: fullNameEmailController,
+              decoration: const InputDecoration(labelText: 'Full Name'),
+              style: TextStyle(fontSize: textScaleFactor * 14),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your full name';
+                }
+                return null;
               },
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                    horizontal: buttonHeight * 2, vertical: buttonHeight * 0.5),
-                textStyle: TextStyle(fontSize: textSize),
-              ),
-              child: const Text('Login with Phone Number'),
             ),
+            SizedBox(height: screenHeight * 0.02),
+            TextFormField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+              style: TextStyle(fontSize: textScaleFactor * 14),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your email';
+                }
+                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                  return 'Please enter a valid email address';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            TextFormField(
+              controller: passwordEmailController,
+              decoration: const InputDecoration(labelText: 'Password'),
+              obscureText: true,
+              style: TextStyle(fontSize: textScaleFactor * 14),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your password';
+                }
+                if (value.length < 8) {
+                  return 'Password must be at least 8 characters long';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            TextFormField(
+              controller: passwordEmailConfirmController,
+              decoration: const InputDecoration(labelText: 'Confirm Password'),
+              obscureText: true,
+              style: TextStyle(fontSize: textScaleFactor * 14),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please confirm your password';
+                }
+                if (value != passwordEmailController.text) {
+                  return 'Passwords do not match';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            BlocBuilder<RegisterWithEmailBloc, RegisterState>(
+              builder: (context, state) {
+                return SizedBox(
+                  width: double.infinity,
+                  height: buttonHeight,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_emailFormKey.currentState!.validate()) {
+                        final displayName = fullNameEmailController.text;
+                        final email = emailController.text;
+                        final password = passwordEmailController.text;
+                        final confirmPassword = passwordEmailConfirmController.text;
 
-          ),
+                        _registerWithEmailBloc.add(RegisterAuthEvent(
+                          full_name: displayName,
+                          email: email,
+                          phone: '',
+                          password: password,
+                          confirm_password: confirmPassword,
+                          permission: 'customer'
+                        ));
 
-        ],
+                        _registerWithEmail(context, displayName, email, password, confirmPassword);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                          vertical: buttonHeight * 0.2,
+                          horizontal: buttonHeight * 0.5),
+                      backgroundColor: Colors.blueAccent,
+                    ),
+                    child: Text(
+                      'Register',
+                      style: TextStyle(
+                          color: Colors.white, fontSize: textScaleFactor * 14),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -312,65 +328,85 @@ class _RegisterScreenState extends State<RegisterScreen> {
     var screenWidth = MediaQuery.of(context).size.width;
     var screenHeight = MediaQuery.of(context).size.height;
     var textScaleFactor = MediaQuery.of(context).textScaleFactor;
+
     final PhoneNumber initialPhoneNumber = PhoneNumber(isoCode: 'MR');
 
-    final phoneNumberController = TextEditingController();
-    final fullNameController = TextEditingController();
-
-    return Padding(
-      padding: EdgeInsets.symmetric(
-          horizontal: screenWidth * 0.04, vertical: screenHeight * 0.01),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TextField(
-            controller: fullNamePhoneController,
-            decoration: const InputDecoration(labelText: 'Full Name'),
-            style: TextStyle(fontSize: textScaleFactor * 14),
-          ),
-          SizedBox(height: screenHeight * 0.02),
-          InternationalPhoneNumberInput(
-            initialValue: initialPhoneNumber,
-            onInputChanged: (PhoneNumber number) {
-              print(number.phoneNumber);
-              setState(() {
-                _phoneNumber = number;
-              });
-            },
-            onInputValidated: (bool value) {
-              print(value);
-            },
-            selectorConfig: const SelectorConfig(
-              selectorType: PhoneInputSelectorType.DROPDOWN,
+    return Form(
+      key: _phoneFormKey,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+            horizontal: 16.0, vertical: 8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextFormField(
+              controller: fullNamePhoneController,
+              decoration: const InputDecoration(labelText: 'Full Name'),
+              style: TextStyle(fontSize: textScaleFactor * 14),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your full name';
+                }
+                return null;
+              },
             ),
-            ignoreBlank: false,
-            autoValidateMode: AutovalidateMode.disabled,
-            selectorTextStyle: const TextStyle(color: Colors.black),
-            textFieldController: phoneNumberController,
-            formatInput: false,
-            keyboardType: const TextInputType.numberWithOptions(
-                signed: true, decimal: true),
-            inputDecoration: const InputDecoration(labelText: 'Phone Number'),
-            locale: Localizations.localeOf(context).languageCode,
-          ),
-          SizedBox(height: screenHeight * 0.02),
-          TextField(
-            controller: passwordPhoneController,
-            decoration: const InputDecoration(labelText: 'Password'),
-            obscureText: true,
-            style: TextStyle(fontSize: textScaleFactor * 14),
-          ),
-          SizedBox(height: buttonHeight * 1.0),
-          TextField(
-            controller: passwordPhoneConfirmController,
-            decoration: const InputDecoration(labelText: 'Password'),
-            obscureText: true,
-            style: TextStyle(fontSize: textScaleFactor * 14),
-          ),
-          SizedBox(height: buttonHeight * 1.0),
-          BlocListener<RegisterWithPhoneBloc, RegisterState>(
-            listener: (context, state){
-              if(state is RegisterAuthLoanding){
+            SizedBox(height: screenHeight * 0.02),
+            InternationalPhoneNumberInput(
+
+              onInputChanged: (PhoneNumber number) {
+                _phoneNumber = number;
+              },
+              selectorConfig: const SelectorConfig(
+                selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
+              ),
+              ignoreBlank: false,
+              autoValidateMode: AutovalidateMode.disabled,
+              selectorTextStyle: TextStyle(fontSize: textScaleFactor * 14),
+              initialValue: initialPhoneNumber,
+              textFieldController: phoneNumberController,
+              formatInput: false,
+              keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: true),
+              inputDecoration: const InputDecoration(labelText: 'Phone Number'),
+              inputBorder: const OutlineInputBorder(),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your phone number';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            TextFormField(
+              controller: passwordPhoneController,
+              decoration: const InputDecoration(labelText: 'Password'),
+              obscureText: true,
+              style: TextStyle(fontSize: textScaleFactor * 14),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your password';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            TextFormField(
+              controller: passwordPhoneConfirmController,
+              decoration: const InputDecoration(labelText: 'Confirm Password'),
+              obscureText: true,
+              style: TextStyle(fontSize: textScaleFactor * 14),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please confirm your password';
+                }
+                if (value != passwordPhoneController.text) {
+                  return 'Passwords do not match';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            BlocListener<RegisterWithPhoneBloc, RegisterState>(
+              listener: (context, state) {if(state is RegisterAuthLoanding){
                 const Center(child: CircularProgressIndicator(color: Colors.blue,),);
               }else if(state is RegisterAuthSuccessFull){
                 Navigator.of(context).pushReplacementNamed(accountRoute);
@@ -378,35 +414,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
               }else if(state is RegisterAuthError){
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 30),)));
               }
-            },
-            child: ElevatedButton(
-              onPressed: () {
-                print('Full Name: ${fullNamePhoneController.text}');
-                print('Phone: ${_phoneNumber?.phoneNumber}');
-                print('Password: ${passwordPhoneController.text}');
-                print('Confirm Password: ${passwordPhoneConfirmController.text}');
-                print('Permission: customer');
 
-                final phoneNumber = _phoneNumber?.phoneNumber!.replaceAll('+', '');
-                print('Phone Final Register: $phoneNumber');
+                },
+              child:  SizedBox(
+                width: double.infinity,
+                height: buttonHeight,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (_phoneFormKey.currentState!.validate()) {
+                      final displayName = fullNamePhoneController.text;
+                      final phoneNumber = _phoneNumber?.phoneNumber!.replaceAll('+', '');
+                      final password = passwordPhoneController.text;
+                      final confirmPassword = passwordPhoneConfirmController.text;
 
-                _registerWithPhoneBloc!.add(RegisterAuthEvent(full_name: fullNamePhoneController.text,
-                    email: '', phone: phoneNumber,
-                    password: passwordPhoneController.text,
-                    confirm_password: passwordPhoneController.text, permission: 'customer'));
-
-              },
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                    horizontal: buttonHeight * 2, vertical: buttonHeight * 0.5),
-                textStyle: TextStyle(fontSize: textSize),
-              ),
-              child: const Text('Login with Phone Number'),
+                      _registerWithPhoneBloc.add(RegisterAuthEvent(
+                          full_name: displayName,
+                          email: '',
+                          phone: phoneNumber,
+                          password: password,
+                          confirm_password: confirmPassword,
+                          permission: 'customer'
+                      ));
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                        vertical: buttonHeight * 0.2,
+                        horizontal: buttonHeight * 0.5),
+                    backgroundColor: Colors.blueAccent,
+                  ),
+                  child: Text(
+                    'Register',
+                    style: TextStyle(
+                        color: Colors.white, fontSize: textScaleFactor * 14),
+                  ),
+                ),
+              )
+              ,
             ),
-
-          ),
-
-        ],
+          ],
+        ),
       ),
     );
   }
