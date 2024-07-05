@@ -5,6 +5,7 @@ import 'package:immolink_mobile/views/screens/home_screen.dart';
 import 'package:immolink_mobile/views/screens/language_screen.dart';
 import 'package:immolink_mobile/views/screens/login_screen.dart';
 import 'package:immolink_mobile/views/screens/map_screen.dart';
+import 'package:immolink_mobile/views/screens/register_screen.dart';
 
 class CustomeRoute {
   static Route<dynamic> allRoutes(RouteSettings settings) {
@@ -18,7 +19,9 @@ class CustomeRoute {
       case accountRoute:
         return MaterialPageRoute(builder: (_) => const AccountScreen());
       case loginRoute:
-        return MaterialPageRoute(builder: (_) =>  LoginScreen());
+        return MaterialPageRoute(builder: (_) =>  const LoginScreen());
+      case registerRoute:
+        return MaterialPageRoute(builder: (_) =>  const RegisterScreen());
       case mapRoute:
         return MaterialPageRoute(builder: (_) => const MapScreen());
       // case aboutRoute:

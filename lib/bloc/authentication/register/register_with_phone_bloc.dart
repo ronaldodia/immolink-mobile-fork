@@ -6,18 +6,18 @@ import 'package:immolink_mobile/bloc/authentication/register/register_state.dart
 import 'package:immolink_mobile/repository/auth_repository.dart';
 
 
-class ProfileBloc extends Bloc<RegisterEvent, RegisterState> {
+class RegisterWithPhoneBloc extends Bloc<RegisterEvent, RegisterState> {
   final AuthRepository _authRepository;
-  ProfileBloc(this._authRepository) : super(RegisterAuthLoanding()) {
+  RegisterWithPhoneBloc(this._authRepository) : super(RegisterAuthLoanding()) {
     on<RegisterAuthEvent>((event, emit) async {
       emit(RegisterAuthLoanding());
-      final resultByEmail = await _authRepository.registerWithEmail(event.full_name, event.email, event.password, event.confirm_password, event.permission);
-      print('inside bloc: $resultByEmail');
-      if( resultByEmail == "error credentials"){
+      final resultByPhone = await _authRepository.registerWithPhone(event.full_name, event.phone, event.password, event.confirm_password, event.permission);
+      print('inside bloc: $resultByPhone');
+      if( resultByPhone == "error credentials"){
         emit(RegisterAuthError(msgError: "Missing error"));
-      }else if(resultByEmail == null){
+      }else if(resultByPhone == null){
         emit(RegisterAuthError(msgError: "Missing error"));
-      }else if(resultByEmail == "Unauthenticated"){
+      }else if(resultByPhone == "Unauthenticated"){
         emit(RegisterAuthError(msgError: "Missing error"));
       }
       else{

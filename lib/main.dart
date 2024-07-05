@@ -1,18 +1,32 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:immolink_mobile/bloc/authentication/auth_bloc.dart';
 import 'package:immolink_mobile/bloc/authentication/auth_event.dart';
-import 'package:immolink_mobile/bloc/authentication/auth_state.dart';
+import 'package:immolink_mobile/bloc/authentication/login_bloc/profile_bloc_phone.dart';
+import 'package:immolink_mobile/bloc/authentication/register/register_with_email_bloc.dart';
+import 'package:immolink_mobile/bloc/authentication/register/register_with_phone_bloc.dart';
 import 'package:immolink_mobile/bloc/currencies/currency_bloc.dart';
 import 'package:immolink_mobile/bloc/languages/localization_bloc.dart';
+import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/utils/iteneray.dart';
 import 'package:immolink_mobile/utils/route_name.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:immolink_mobile/views/screens/account_screen.dart';
-import 'package:immolink_mobile/views/screens/login_screen.dart';
 
-void main() {
+import 'bloc/authentication/login_bloc/profile_bloc.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+      options: const FirebaseOptions(
+    apiKey: "AIzaSyDs_Mi4SKQel06xGscvRMPi1EyFpdsH3IE",
+    appId: "1:487656917571:android:0026c6c192c867689422f6",
+    messagingSenderId: "487656917571",
+    projectId: "immoplace-de022",
+  ));
+
   runApp(
     MultiBlocProvider(
       providers: [
@@ -25,10 +39,26 @@ void main() {
         BlocProvider<AuthBloc>(
           create: (context) => AuthBloc()..add(AppStarted()),
         ),
+        BlocProvider(
+          create: (context) => ProfileBloc(AuthRepository()),
+        ),
+        BlocProvider(
+          create: (context) => ProfileBlocPhone(AuthRepository()),
+        ),
+        BlocProvider(
+          create: (context) => RegisterWithEmailBloc(AuthRepository()),
+        ),
+        BlocProvider(
+          create: (context) => RegisterWithPhoneBloc(AuthRepository()),
+        ),
+
       ],
       child: const MyApp(),
     ),
   );
+
+  // AuthRepository authRepository = AuthRepository();
+  // authRepository.loginWithPhone('22241905565', 'password');
 }
 
 class MyApp extends StatelessWidget {
@@ -58,20 +88,20 @@ class MyApp extends StatelessWidget {
           locale: state.locale,
           onGenerateRoute: CustomeRoute.allRoutes,
           initialRoute: loginRoute,
-          home: BlocBuilder<AuthBloc, AuthState>(
-            builder: (context, authState) {
-              if (authState is AuthInitial) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (authState is Authenticated) {
-                return const AccountScreen();
-              }
-              if (authState is Unauthenticated) {
-                return const LoginScreen();
-              }
-              return const Center(child: CircularProgressIndicator());
-            },
-          ),
+          // home: BlocBuilder<AuthBloc, AuthState>(
+          //   builder: (context, authState) {
+          //     if (authState is AuthInitial) {
+          //       return const Center(child: CircularProgressIndicator());
+          //     }
+          //     if (authState is Authenticated) {
+          //       return const AccountScreen();
+          //     }
+          //     if (authState is Unauthenticated) {
+          //       return const LoginScreen();
+          //     }
+          //     return const Center(child: CircularProgressIndicator());
+          //   },
+          // ),
         );
       },
     );

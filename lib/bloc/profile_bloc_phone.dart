@@ -1,9 +1,7 @@
 import 'package:bloc/bloc.dart';
-import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
-import 'package:immolink_mobile/bloc/authentication/login_bloc/profile_bloc.dart';
+import 'package:immolink_mobile/bloc/profile_bloc.dart';
 
-import '../../../repository/auth_repository.dart';
+import '../repository/auth_repository.dart';
 
 
 

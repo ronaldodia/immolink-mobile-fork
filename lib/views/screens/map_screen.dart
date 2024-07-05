@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:immolink_mobile/utils/config.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'dart:math' as math;
@@ -140,8 +141,8 @@ class _MapScreenState extends State<MapScreen>
         'lot: ${encodedLot}, lotissement: ${encodedLotissement}, :moughataa: ${encodedMoughataa}');
 
     final url = Uri.parse(
-        'https://gis.digissimmo.org/api/features?lot=$encodedLot&lotissement=$encodedLotissement&moughataa=$encodedMoughataa');
-        print(url);
+        '${Config.baseUrlSIG}/features?lot=$encodedLot&lotissement=$encodedLotissement&moughataa=$encodedMoughataa');
+    print(url);
     final response = await http.get(url);
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -272,7 +273,7 @@ class _MapScreenState extends State<MapScreen>
     });
 
     final url = Uri.parse(
-        'https://gis.digissimmo.org/api/location?longitude=${position.longitude}&latitude=${position.latitude}');
+        '${Config.baseUrlSIG}/location?longitude=${position.longitude}&latitude=${position.latitude}');
     final response = await http.get(url);
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
