@@ -54,6 +54,7 @@ dependencies:
   intl_phone_number_input: ^0.7.4
   firebase_core: ^3.1.1
   firebase_auth: ^5.1.1
+  flutter_native_splash: ^2.4.0
   
 
 dev_dependencies:
@@ -83,6 +84,7 @@ flutter:
     - assets/flags/mauritania.png
     - assets/flags/europe.png
     - assets/flags/usd.png
+    - assets/logo/splash.png
     - assets/icons/social/facebook.png
     - assets/icons/social/apple.png
     - assets/icons/social/google.png

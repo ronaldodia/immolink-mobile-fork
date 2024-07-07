@@ -2,7 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 import 'package:connectivity/connectivity.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:immolink_mobile/bloc/authentication/auth_bloc.dart';
@@ -11,7 +14,11 @@ import 'package:immolink_mobile/bloc/authentication/login_bloc/profile_bloc.dart
 import 'package:immolink_mobile/bloc/authentication/login_bloc/profile_bloc_phone.dart';
 import 'package:immolink_mobile/services/google_login_api.dart';
 import 'package:immolink_mobile/utils/config.dart';
+import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/utils/route_name.dart';
+import 'package:immolink_mobile/utils/spacing_styles.dart';
+import 'package:immolink_mobile/utils/t_sizes.dart';
+import 'package:immolink_mobile/views/widgets/form_divider_widget.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -184,100 +191,115 @@ class _LoginScreenState extends State<LoginScreen> {
     var screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Login")),
+      // appBar: AppBar(title: const Text("Login")),
       body: SingleChildScrollView(
         // Use SingleChildScrollView to avoid RenderFlex errors when keyboard appears
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              height: screenSize.height * 0.1,
-            ),
-            SizedBox(
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  padding: EdgeInsets.symmetric(
-                      vertical: buttonHeight * 0.5,
-                      horizontal: buttonHeight * 0.5),
-                ),
-                onPressed: () =>
-                    Navigator.of(context).pushReplacementNamed(registerRoute),
-                child: Text(
-                  'Create account ?',
-                  style: TextStyle(color: Colors.white, fontSize: textSize),
-                ),
-              ),
-            ),
-            SizedBox(
-              height: screenSize.height * 0.1,
-            ),
-            Container(
-              child: _isEmailLogin
-                  ? loginWithEmailPassword(context, textSize, buttonHeight)
-                  : loginWithPhoneNumber(context, textSize, buttonHeight),
-            ),
-            SizedBox(
-              height: screenSize.height * 0.1,
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _isEmailLogin = !_isEmailLogin;
-                });
-              },
-              child: Text(
-                _isEmailLogin
-                    ? "Se connecter avec un numéro de téléphone"
-                    : "Se connecter avec un email",
-                style: TextStyle(fontSize: textSize),
-              ),
-            ),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        child: Padding(
+          padding: SpacingStyles.paddingWithAppBarHeight,
+          child: Column(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    height: iconSize,
-                    width: iconSize,
-                    child: IconButton(
-                      onPressed: () => loginWithGoogle(context),
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: iconSize * 0.15,
-                            vertical: iconSize * 0.1),
-                      ),
-                      icon: Image.asset('assets/icons/social/google.png'),
-                    ),
-                  ),
-                  SizedBox(
-                    height: screenHeight * 0.1,
-                    width: screenHeight * 0.1,
-                    child: IconButton(
-                      onPressed: () {
-                        // Implement Facebook login here
-                      },
-                      icon: Image.asset('assets/icons/social/facebook.png'),
-                    ),
-                  ),
-                  Platform.isIOS
-                      ? SizedBox(
-                          height: screenHeight * 0.1,
-                          width: screenHeight * 0.1,
-                          child: IconButton(
-                            onPressed: () {
-                              // Implement Apple login here
-                            },
-                            icon: Image.asset('assets/icons/social/apple.png'),
-                          ),
-                        )
-                      : const SizedBox(height: 0.0),
+                  /// logo, Title & Sub-Tile
+                  const Image(image: AssetImage(TImages.darkAppLogo), height: 150,),
+                  Text(Config.appLoginTitle, style: Theme.of(context).textTheme.headlineMedium,),
+                  const SizedBox(height: TSizes.sm,),
+                  Text(Config.appLoginSubTitle, style: Theme.of(context).textTheme.bodyMedium,),
+                  // SizedBox(
+                  //   height: screenSize.height * 0.1,
+                  // ),
+                  // SizedBox(
+                  //   child: TextButton(
+                  //     style: TextButton.styleFrom(
+                  //       backgroundColor: Colors.blueAccent,
+                  //       padding: EdgeInsets.symmetric(
+                  //           vertical: buttonHeight * 0.5,
+                  //           horizontal: buttonHeight * 0.5),
+                  //     ),
+                  //     onPressed: () =>
+                  //         Navigator.of(context).pushReplacementNamed(registerRoute),
+                  //     child: Text(
+                  //       'Create account ?',
+                  //       style: TextStyle(color: Colors.white, fontSize: textSize),
+                  //     ),
+                  //   ),
+                  // ),
+
                 ],
               ),
-            ),
-          ],
+              Container(
+                child: _isEmailLogin
+                    ? loginWithEmailPassword(context, textSize, buttonHeight)
+                    : loginWithPhoneNumber(context, textSize, buttonHeight),
+              ),
+              const FormDividerWidget(deividerText: Config.loginOrSignIn),
+
+              const SizedBox(height: TSizes.spaceBtwSections,),
+
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _isEmailLogin = !_isEmailLogin;
+                  });
+                },
+                child: Text(
+                  _isEmailLogin
+                      ? "Se connecter avec un numéro de téléphone"
+                      : "Se connecter avec un email",
+                  style: TextStyle(fontSize: textSize),
+                ),
+              ),
+
+              // Footer
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(100)),
+                    child: IconButton(
+                          onPressed: () => loginWithGoogle(context),
+                          icon: const Image(
+                            width: TSizes.iconMd,
+                            height: TSizes.iconMd,
+                            image: AssetImage(TImages.google),
+                          ),
+                        ),
+                  ),
+                  const SizedBox(width: TSizes.spaceBtwItems,),
+                  Container(
+                    decoration: BoxDecoration(border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(100)),
+                    child: IconButton(
+                      onPressed: () {},
+                      icon: const Image(
+                        width: TSizes.iconMd,
+                        height: TSizes.iconMd,
+                        image: AssetImage(TImages.facebook),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: TSizes.spaceBtwItems,),
+                  Platform.isIOS ?
+                  Container(
+                    decoration: BoxDecoration(border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(100)),
+                    child: IconButton(
+                      onPressed: () {},
+                      icon: const Image(
+                        width: TSizes.iconMd,
+                        height: TSizes.iconMd,
+                        image: AssetImage(TImages.apple),
+                      ),
+                    ),
+                  ) : const SizedBox(height: 0.0),
+                  
+                ],
+              ),
+            ],
+          ),
+
         ),
       ),
     );
@@ -290,13 +312,16 @@ class _LoginScreenState extends State<LoginScreen> {
     return Form(
       key: _emailFormKey,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        padding: const EdgeInsets.symmetric(vertical: TSizes.spaceBtwSections),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          // mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextFormField(
               controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.mail_outlined),
+                  labelText: 'Email'
+              ),
               style: TextStyle(fontSize: textSize),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -308,9 +333,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 return null;
               },
             ),
+            const SizedBox(height: TSizes.spaceBtwInputFields,),
             TextFormField(
               controller: passwordFormEmailController,
-              decoration: const InputDecoration(labelText: 'Password'),
+              decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.lock_outline),
+                  suffixIcon: Icon(Icons.remove_red_eye_outlined),
+                  labelText: 'Password'),
               obscureText: true,
               style: TextStyle(fontSize: textSize),
               validator: (value) {
@@ -320,7 +349,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 return null;
               },
             ),
-            SizedBox(height: buttonHeight * 1.0),
+            const SizedBox(height: TSizes.spaceBtwInputFields / 2.0),
+            // Remember Me & Forget Password
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Checkbox(value: true, onChanged: (value){}),
+                    const Text(Config.loginRememberMe),
+                  ],
+                ),
+
+                // Forget password
+                TextButton(onPressed: (){}, child: const Text("Forget Password ?")),
+              ],
+            ),
+            const SizedBox(height: TSizes.spaceBtwSections,),
             BlocListener<ProfileBloc, ProfileState>(
               listener: (context, state){
                 if(state is AuthLoanding){
@@ -332,33 +377,40 @@ class _LoginScreenState extends State<LoginScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 30),)));
                 }
               },
-              child: ElevatedButton(
-                onPressed: () {
-                if (_emailFormKey.currentState!.validate()) {
-                    final email = emailController.text;
-                    final password = passwordFormEmailController.text;
-                    print('Email: $email');
-                    print('Password: $password');
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                  if (_emailFormKey.currentState!.validate()) {
+                      final email = emailController.text;
+                      final password = passwordFormEmailController.text;
+                      print('Email: $email');
+                      print('Password: $password');
 
-                    _authBlocEmail!.add(LoginEvent(email: emailController.text, phone: '', password: passwordFormEmailController.text));
-                }
+                      _authBlocEmail!.add(LoginEvent(email: emailController.text, phone: '', password: passwordFormEmailController.text));
+                  }
 
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(
-                      vertical: buttonHeight * 0.2,
-                      horizontal: buttonHeight * 0.5),
-                  backgroundColor: Colors.blueAccent,
-                ),
-                child: Text(
-                  'Login',
-                  style: TextStyle(
-                      color: Colors.white, fontSize: textScaleFactor * 14),
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                        vertical: buttonHeight * 0.2,
+                        horizontal: buttonHeight * 0.5),
+                    backgroundColor: Colors.blueAccent,
+                  ),
+                  child: Text(
+                    'Login',
+                    style: TextStyle(
+                        color: Colors.white, fontSize: textScaleFactor * 14),
+                  ),
                 ),
               ),
 
             ),
+            const SizedBox(height: TSizes.spaceBtwItems,),
 
+            // Create account button
+            SizedBox(width: double.infinity, child: OutlinedButton(onPressed: (){}, child: const Text("Create Account")),),
+            // const SizedBox(height: TSizes.spaceBtwSections,)
           ],
         ),
       ),
@@ -374,13 +426,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return Form(
       key: _phoneFormKey,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        padding: const EdgeInsets.symmetric(vertical: TSizes.spaceBtwSections),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          // mainAxisAlignment: MainAxisAlignment.center,
           children: [
             InternationalPhoneNumberInput(
               autoFocus: true,
-              initialValue: initialPhoneNumber,
+              // initialValue: initialPhoneNumber,
               onInputChanged: (PhoneNumber number) {
                 print('Phone Number: ${number.phoneNumber}');
                 setState(() {
@@ -410,9 +462,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 return null;
               },
             ),
+            const SizedBox(height: TSizes.spaceBtwInputFields,),
             TextFormField(
               controller: passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
+              decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.lock_outline),
+                  suffixIcon: Icon(Icons.remove_red_eye_outlined),
+                  labelText: 'Password'),
               obscureText: true,
               style: TextStyle(fontSize: textScaleFactor * 14),
               validator: (value) {
@@ -422,7 +478,24 @@ class _LoginScreenState extends State<LoginScreen> {
                 return null;
               },
             ),
-            SizedBox(height: buttonHeight * 1.0),
+            const SizedBox(height: TSizes.spaceBtwInputFields / 2.0),
+            // Remember Me & Forget Password
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Checkbox(value: true, onChanged: (value){}),
+                    const Text(Config.loginRememberMe),
+                  ],
+                ),
+
+                // Forget password
+                TextButton(onPressed: (){}, child: const Text("Forget Password ?")),
+              ],
+            ),
+            const SizedBox(height: TSizes.spaceBtwSections,),
+            // Remember Me & Forget Password
             BlocListener<ProfileBlocPhone, ProfileState>(
               listener: (context, state){
                 if(state is AuthLoanding){
@@ -465,6 +538,11 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
 
             ),
+            const SizedBox(height: TSizes.spaceBtwItems,),
+
+            // Create account button
+            SizedBox(width: double.infinity, child: OutlinedButton(onPressed: (){}, child: const Text("Create Account")),),
+            // const SizedBox(height: TSizes.spaceBtwSections,)
           ],
         ),
       ),

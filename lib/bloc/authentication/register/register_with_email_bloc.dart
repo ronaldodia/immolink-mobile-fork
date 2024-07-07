@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:immolink_mobile/bloc/authentication/register/register_event.dart';
 import 'package:immolink_mobile/bloc/authentication/register/register_state.dart';
 import 'package:immolink_mobile/repository/auth_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class RegisterWithEmailBloc extends Bloc<RegisterEvent, RegisterState> {
@@ -21,6 +22,10 @@ class RegisterWithEmailBloc extends Bloc<RegisterEvent, RegisterState> {
         emit(RegisterAuthError(msgError: "Missing error"));
       }
       else{
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', resultByEmail);
+
+        print('get auth_token ${prefs.getString('auth_token')}');
         emit(RegisterAuthSuccessFull());
       }
     });

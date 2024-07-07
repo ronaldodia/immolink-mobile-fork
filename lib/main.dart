@@ -9,10 +9,12 @@ import 'package:immolink_mobile/bloc/authentication/register/register_with_email
 import 'package:immolink_mobile/bloc/authentication/register/register_with_phone_bloc.dart';
 import 'package:immolink_mobile/bloc/currencies/currency_bloc.dart';
 import 'package:immolink_mobile/bloc/languages/localization_bloc.dart';
+import 'package:immolink_mobile/firebase_options.dart';
 import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/utils/iteneray.dart';
 import 'package:immolink_mobile/utils/route_name.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'bloc/authentication/login_bloc/profile_bloc.dart';
 
@@ -20,14 +22,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
-      options: const FirebaseOptions(
-    apiKey: "AIzaSyDs_Mi4SKQel06xGscvRMPi1EyFpdsH3IE",
-    appId: "1:487656917571:android:0026c6c192c867689422f6",
-    messagingSenderId: "487656917571",
-    projectId: "immoplace-de022",
-  ));
+  options: DefaultFirebaseOptions.currentPlatform,
+   );
 
+  final prefs = await SharedPreferences.getInstance();
+  print('get auth_token ${prefs.getString('auth_token')}');
   runApp(
+
     MultiBlocProvider(
       providers: [
         BlocProvider<LocalizationBloc>(

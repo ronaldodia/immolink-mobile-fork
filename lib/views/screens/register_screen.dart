@@ -12,6 +12,8 @@ import 'package:immolink_mobile/bloc/authentication/register/register_with_email
 import 'package:immolink_mobile/bloc/authentication/register/register_with_phone_bloc.dart';
 import 'package:immolink_mobile/services/google_login_api.dart';
 import 'package:immolink_mobile/utils/route_name.dart';
+import 'package:immolink_mobile/views/screens/email_confirmation_screen.dart';
+import 'package:immolink_mobile/views/screens/phone_confirmation_screen.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -278,45 +280,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
               },
             ),
             SizedBox(height: screenHeight * 0.02),
-            BlocBuilder<RegisterWithEmailBloc, RegisterState>(
-              builder: (context, state) {
-                return SizedBox(
-                  width: double.infinity,
-                  height: buttonHeight,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_emailFormKey.currentState!.validate()) {
-                        final displayName = fullNameEmailController.text;
-                        final email = emailController.text;
-                        final password = passwordEmailController.text;
-                        final confirmPassword = passwordEmailConfirmController.text;
-
-                        _registerWithEmailBloc.add(RegisterAuthEvent(
-                          full_name: displayName,
-                          email: email,
-                          phone: '',
-                          password: password,
-                          confirm_password: confirmPassword,
-                          permission: 'customer'
-                        ));
-
-                        _registerWithEmail(context, displayName, email, password, confirmPassword);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                          vertical: buttonHeight * 0.2,
-                          horizontal: buttonHeight * 0.5),
-                      backgroundColor: Colors.blueAccent,
-                    ),
-                    child: Text(
-                      'Register',
-                      style: TextStyle(
-                          color: Colors.white, fontSize: textScaleFactor * 14),
-                    ),
-                  ),
-                );
+            BlocListener<RegisterWithEmailBloc, RegisterState>(
+              listener: (context, state) {
+                if(state is RegisterAuthLoanding){
+                  const Center(child: CircularProgressIndicator(color: Colors.blue,),);
+                }else if(state is RegisterAuthSuccessFull){
+                  print(emailController.text);
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => EmailConfirmationScreen(email: emailController.text)));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Welcome', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 30),)));
+                }else if(state is RegisterAuthError){
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 30),)));
+                }
               },
+              child:    SizedBox(
+              width: double.infinity,
+              height: buttonHeight,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (_emailFormKey.currentState!.validate()) {
+                    final displayName = fullNameEmailController.text;
+                    final email = emailController.text;
+                    final password = passwordEmailController.text;
+                    final confirmPassword = passwordEmailConfirmController.text;
+
+                    _registerWithEmailBloc.add(RegisterAuthEvent(
+                        full_name: displayName,
+                        email: email,
+                        phone: '',
+                        password: password,
+                        confirm_password: confirmPassword,
+                        permission: 'customer'
+                    ));
+
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                      vertical: buttonHeight * 0.2,
+                      horizontal: buttonHeight * 0.5),
+                  backgroundColor: Colors.blueAccent,
+                ),
+                child: Text(
+                  'Register',
+                  style: TextStyle(
+                      color: Colors.white, fontSize: textScaleFactor * 14),
+                ),
+              ),
+            ),
             ),
           ],
         ),
@@ -409,8 +419,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               listener: (context, state) {if(state is RegisterAuthLoanding){
                 const Center(child: CircularProgressIndicator(color: Colors.blue,),);
               }else if(state is RegisterAuthSuccessFull){
-                Navigator.of(context).pushReplacementNamed(accountRoute);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Welcome', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 30),)));
+                print(phoneNumberController.text);
+                // if (emailController.text != null || emailController != '') {
+                //    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => EmailConfirmationScreen(email: emailController.text)));
+                // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Welcome', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 30),)));
+                // } else if(phoneNumberController.text != null || phoneNumberController.text !=''){
+                //    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => PhoneNumberConfirmationScreen(phoneNumber: phoneNumberController.text)));
+                // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Welcome', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 30),)));
+                // }
               }else if(state is RegisterAuthError){
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 30),)));
               }

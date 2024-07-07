@@ -5,6 +5,7 @@ import 'package:immolink_mobile/views/screens/home_screen.dart';
 import 'package:immolink_mobile/views/screens/language_screen.dart';
 import 'package:immolink_mobile/views/screens/login_screen.dart';
 import 'package:immolink_mobile/views/screens/map_screen.dart';
+import 'package:immolink_mobile/views/screens/onboarding_screen.dart';
 import 'package:immolink_mobile/views/screens/register_screen.dart';
 
 class CustomeRoute {
@@ -20,10 +21,16 @@ class CustomeRoute {
         return MaterialPageRoute(builder: (_) => const AccountScreen());
       case loginRoute:
         return MaterialPageRoute(builder: (_) =>  const LoginScreen());
+      // case loginRoute:
+      //   return MaterialPageRoute(builder: (_) =>  const LoginScreen());
+      // case loginRoute:
+      //   return MaterialPageRoute(builder: (_) =>  const LoginScreen());
       case registerRoute:
         return MaterialPageRoute(builder: (_) =>  const RegisterScreen());
       case mapRoute:
         return MaterialPageRoute(builder: (_) => const MapScreen());
+      case onBoardingRoute:
+        return MaterialPageRoute(builder: (_) => const OnboardingScreen());
       // case aboutRoute:
       //   return MaterialPageRoute(builder: (_) => const AboutScreen());
       // case settingsRoute:
