@@ -14,6 +14,14 @@ class APIBASE {
   }
 
 
+  Future<http.Response> logout(String? token) async {
+    final response = await http.post(Uri.parse('${Config.baseUrlApp}/logout'), headers: {
+      HttpHeaders.authorizationHeader: 'Bearer $token',
+    });
+    return response;
+  }
+
+
   Future <dynamic> emailRegister(dynamic body) async {
     final response = await http.post(Uri.parse('${Config.baseUrlApp}/register_email'), body: body);
     print(body);

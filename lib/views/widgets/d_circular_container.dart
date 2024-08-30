@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-class OnboardingScreen extends StatelessWidget {
-  const OnboardingScreen({Key? key}) : super(key: key);
+
+class DCircularContainer extends StatelessWidget {
+  const DCircularContainer({super.key});
 
   @override
   Widget build(BuildContext context) {

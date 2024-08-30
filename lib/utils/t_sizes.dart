@@ -1,4 +1,14 @@
+import 'package:flutter/material.dart';
+
+
 class TSizes {
+
+  static const EdgeInsetsGeometry paddingWithAppBarHeight = EdgeInsets.only(
+    top: appBarHeight,
+    left: defaultSpace,
+    bottom: defaultSpace,
+    right: defaultSpace
+  );
 
   // Pading & Margin sizes
   static  const double xs = 4.0;
@@ -31,9 +41,10 @@ class TSizes {
   static const double imageThumbSize = 80.0;
 
   // Default spaccing between sections
-  static const double defaultSpace = 14.0;
+  static const double defaultSpace = 24.0;
   static const double spaceBtwItems = 16.0;
   static const double spaceBtwSections = 32.0;
+  static const double customSpaceBtwSections = 64.0;
 
   // Border radius
   static const double borderRadiusSm  = 4.0;
@@ -46,5 +57,11 @@ class TSizes {
   // Input Field
 static const double inputFieldRadius = 12.0;
 static const double spaceBtwInputFields = 16.0;
+
+// Card Sizes
+static const double cardRadiusLg = 16.0;
+  static const double cardRadiusMd = 12.0;
+  static const double cardRadiusSm= 10.0;
+  static const double cardRadiusXs = 6.0;
 
 }

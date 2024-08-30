@@ -2,7 +2,13 @@ class Config {
   static const String baseUrlApp = 'https://daar.server1.digissimmo.org/mobile';
   static const String baseUrlSIG = 'https://gis.digissimmo.org/api';
   static const String appLoginTitle = "Welcome back,";
+  static const String registerTitle = "Let's create your account";
   static const String appLoginSubTitle = "Discover limitless choices and Unmatched Convenience.";
   static const String loginRememberMe = "Remember me";
   static const String loginOrSignIn = "Or Sign with";
+  static const String registerOr = "Register with";
+  static const String isAgreeTo = "I agree to";
+  static const String privacyPolicy = "Privacy Policy";
+  static const String textAnd = " and ";
+  static const String termsOfUse = " Terms of use";
 }

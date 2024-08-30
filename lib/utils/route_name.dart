@@ -9,3 +9,6 @@ const String registerRoute = 'register';
 const String settingsRoute = 'settings';
 const String accountRoute = 'account';
 const String onBoardingRoute = 'onboarding';
+const String forgotPasswordRoute = 'forgot_password';
+const String resetPasswordRoute = 'reset_password';
+const String verifyEmail = 'verify_email';

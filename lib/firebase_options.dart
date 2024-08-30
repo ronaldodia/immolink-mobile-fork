@@ -64,6 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '487656917571',
     projectId: 'immoplace-de022',
     storageBucket: 'immoplace-de022.appspot.com',
+    iosClientId: '487656917571-i1i355qmcc6afikoshlj8uigh7rb5hf2.apps.googleusercontent.com',
     iosBundleId: 'com.example.immolinkMobile',
   );
 
@@ -73,6 +74,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '487656917571',
     projectId: 'immoplace-de022',
     storageBucket: 'immoplace-de022.appspot.com',
+    iosClientId: '487656917571-i1i355qmcc6afikoshlj8uigh7rb5hf2.apps.googleusercontent.com',
     iosBundleId: 'com.example.immolinkMobile',
   );
 
@@ -85,4 +87,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'immoplace-de022.appspot.com',
     measurementId: 'G-MCBSSYEDWL',
   );
+
 }

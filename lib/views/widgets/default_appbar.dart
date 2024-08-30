@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:immolink_mobile/bloc/currencies/currency_bloc.dart';
-import 'package:immolink_mobile/bloc/currencies/currency_event.dart';
-import 'package:immolink_mobile/bloc/currencies/currency_state.dart';
+import 'package:get/get.dart';
+import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
+import 'package:immolink_mobile/controllers/language/language_controller.dart';
 import 'package:immolink_mobile/models/Currency.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:immolink_mobile/views/screens/language_screen.dart';
@@ -14,57 +13,54 @@ class DefaultAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      title: Text(AppLocalizations.of(context)!.name),
-      actions: [
-        BlocBuilder<CurrencyBloc, CurrencyState>(
-          builder: (context, state) {
-            if (state is CurrencyInitial || state is CurrencyChangedState) {
-              final selectedCurrency = state is CurrencyInitial
-                  ? state.selectedCurrency
-                  : (state as CurrencyChangedState).selectedCurrency;
-              final currencies = state is CurrencyInitial
-                  ? state.currencies
-                  : (state as CurrencyChangedState).currencies;
+    final CurrencyController currencyController = Get.find();
+    final LanguageController languageController = Get.find();
 
-              return DropdownButton<Currency>(
-                value: selectedCurrency,
-                items: currencies.map((Currency currency) {
-                  return DropdownMenuItem<Currency>(
-                    value: currency,
-                    child: Row(
-                      children: [
-                        Image.asset(
-                          currency.imageUrl,
-                          width: 24,
-                          height: 24,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          currency.code,
-                          style: const TextStyle(color: Colors.black),
-                        ),
-                      ],
+    return AppBar(
+      title: const Icon(Icons.person, size: 40,),
+      actions: [
+        Obx(() {
+          // Vérifier si la monnaie sélectionnée est dans la liste
+          if (!currencyController.currencies.contains(currencyController.selectedCurrency.value)) {
+            currencyController.selectedCurrency.value = currencyController.currencies.first;
+          }
+
+          return DropdownButton<Currency>(
+            value: currencyController.selectedCurrency.value,
+            items: currencyController.currencies.map((Currency currency) {
+              return DropdownMenuItem<Currency>(
+                value: currency,
+                child: Row(
+                  children: [
+                    Image.asset(
+                      currency.imageUrl,
+                      width: 24,
+                      height: 24,
                     ),
-                  );
-                }).toList(),
-                onChanged: (Currency? newValue) {
-                  if (newValue != null) {
-                    context.read<CurrencyBloc>().add(ChangeCurrency(newValue));
-                  }
-                },
+                    const SizedBox(width: 8),
+                    Text(
+                      currency.code,
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                  ],
+                ),
               );
-            }
-            return const Center(child: CircularProgressIndicator());
-          },
-        ),
-        IconButton(
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return const LanguageScreen();
-              }));
+            }).toList(),
+            onChanged: (Currency? newValue) {
+              if (newValue != null) {
+                currencyController.changeCurrency(newValue);
+              }
             },
-            icon: const Icon(Icons.language)),
+          );
+        }),
+        IconButton(
+          onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) {
+              return const LanguageScreen();
+            }));
+          },
+          icon: const Icon(Icons.language),
+        ),
       ],
     );
   }

@@ -7,18 +7,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:immolink_mobile/bloc/authentication/auth_bloc.dart';
 import 'package:immolink_mobile/bloc/authentication/auth_event.dart';
 import 'package:immolink_mobile/bloc/authentication/login_bloc/profile_bloc.dart';
 import 'package:immolink_mobile/bloc/authentication/login_bloc/profile_bloc_phone.dart';
+import 'package:immolink_mobile/controllers/login/login_controller.dart';
 import 'package:immolink_mobile/services/google_login_api.dart';
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/utils/route_name.dart';
 import 'package:immolink_mobile/utils/spacing_styles.dart';
 import 'package:immolink_mobile/utils/t_sizes.dart';
+import 'package:immolink_mobile/views/screens/register_screen.dart';
 import 'package:immolink_mobile/views/widgets/form_divider_widget.dart';
+import 'package:immolink_mobile/views/widgets/social_auth_widget.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -61,124 +65,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> loginWithGoogle(BuildContext context) async {
-    var user = await GoogleLoginApi.login();
-    if (user != null) {
-      print("ok !");
-      print(user.displayName);
-      print(user.email);
-      await _authenticateWithBackend(context, user.displayName, user.email);
-    }
-  }
-
-  Future<void> _authenticateWithBackend(
-      BuildContext context, displayName, email) async {
-    final response = await http.post(
-      Uri.parse('${Config.baseUrlApp}/google/callback'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'email': email!,
-        'full_name': displayName!,
-      }),
-    );
-
-    final data = json.decode(response.body);
-    print('data token: ${data['token']}');
-
-    final token = data['token'];
-    context.read<AuthBloc>().add(LoggedIn(token: token));
-    // context.read<ProfileBloc>().add(FetchProfile(token: token));
-    if (response.statusCode == 200) {
-      print("User authenticated with backend");
-      Navigator.of(context).pushReplacementNamed(accountRoute);
-    } else {
-      print("Failed to authenticate with backend");
-    }
-  }
-
-  void _showNoInternetDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("No Internet Connection"),
-        content:
-            const Text("Please check your internet connection and try again."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("OK"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _loginWithPhone(BuildContext context, phone, password) async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.none) {
-      _showNoInternetDialog(context);
-      return;
-    }
-
-    // Removing the '+' from the phone number
-    final phoneNumber = phone.replaceAll('+', '');
-    final response = await http.post(
-      Uri.parse('${Config.baseUrlApp}/phone_token'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'phone': phoneNumber,
-        'password': password,
-      }),
-    );
-    final data = json.decode(response.body);
-    print('data token: ${data['token']}');
-
-    final token = data['token'];
-    context.read<AuthBloc>().add(LoggedIn(token: token));
-    // context.read<ProfileBloc>().add(FetchProfile(token: token));
-    if (response.statusCode == 200) {
-      print("User authenticated with backend");
-      Navigator.of(context).pushReplacementNamed(accountRoute);
-    } else if(response.statusCode == 401){
-      showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("AUTHORIZATION"),
-        content:
-            const Text("Vous n'avez pas access a cette section"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("OK"),
-          ),
-        ],
-      ),
-    );
-    } else if(response.statusCode == 422){
-      showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Erreur de Saisi"),
-        content:
-            const Text("Veuillez saisir les bon donnees"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("OK"),
-          ),
-        ],
-      ),
-    );
-    }
-     else {
-      print("Failed to authenticate with backend");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     var screenSize = MediaQuery.of(context).size;
@@ -186,9 +72,9 @@ class _LoginScreenState extends State<LoginScreen> {
         screenSize.width * 0.035; // Adjust text size based on screen width
     var buttonHeight =
         screenSize.height * 0.05; // Adjust button height based on screen height
-    var iconSize =
-        screenSize.width * 0.2; // Adjust icon size based on screen width
-    var screenHeight = MediaQuery.of(context).size.height;
+// Adjust icon size based on screen width
+
+
 
     return Scaffold(
       // appBar: AppBar(title: const Text("Login")),
@@ -206,28 +92,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(Config.appLoginTitle, style: Theme.of(context).textTheme.headlineMedium,),
                   const SizedBox(height: TSizes.sm,),
                   Text(Config.appLoginSubTitle, style: Theme.of(context).textTheme.bodyMedium,),
-                  // SizedBox(
-                  //   height: screenSize.height * 0.1,
-                  // ),
-                  // SizedBox(
-                  //   child: TextButton(
-                  //     style: TextButton.styleFrom(
-                  //       backgroundColor: Colors.blueAccent,
-                  //       padding: EdgeInsets.symmetric(
-                  //           vertical: buttonHeight * 0.5,
-                  //           horizontal: buttonHeight * 0.5),
-                  //     ),
-                  //     onPressed: () =>
-                  //         Navigator.of(context).pushReplacementNamed(registerRoute),
-                  //     child: Text(
-                  //       'Create account ?',
-                  //       style: TextStyle(color: Colors.white, fontSize: textSize),
-                  //     ),
-                  //   ),
-                  // ),
+                  
 
                 ],
               ),
+
               Container(
                 child: _isEmailLogin
                     ? loginWithEmailPassword(context, textSize, buttonHeight)
@@ -252,51 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
 
               // Footer
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(100)),
-                    child: IconButton(
-                          onPressed: () => loginWithGoogle(context),
-                          icon: const Image(
-                            width: TSizes.iconMd,
-                            height: TSizes.iconMd,
-                            image: AssetImage(TImages.google),
-                          ),
-                        ),
-                  ),
-                  const SizedBox(width: TSizes.spaceBtwItems,),
-                  Container(
-                    decoration: BoxDecoration(border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(100)),
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: const Image(
-                        width: TSizes.iconMd,
-                        height: TSizes.iconMd,
-                        image: AssetImage(TImages.facebook),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: TSizes.spaceBtwItems,),
-                  Platform.isIOS ?
-                  Container(
-                    decoration: BoxDecoration(border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(100)),
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: const Image(
-                        width: TSizes.iconMd,
-                        height: TSizes.iconMd,
-                        image: AssetImage(TImages.apple),
-                      ),
-                    ),
-                  ) : const SizedBox(height: 0.0),
-                  
-                ],
-              ),
+              const SocialAuthWidget()
             ],
           ),
 
@@ -308,16 +133,16 @@ class _LoginScreenState extends State<LoginScreen> {
   loginWithEmailPassword(
       BuildContext context, double textSize, double buttonHeight) {
     var textScaleFactor = MediaQuery.of(context).textScaleFactor;
-
+    final controller = Get.put(LoginController());
     return Form(
-      key: _emailFormKey,
+      key: controller.emailLoginFormKey,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: TSizes.spaceBtwSections),
         child: Column(
           // mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextFormField(
-              controller: emailController,
+              controller: controller.emailController,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.mail_outlined),
                   labelText: 'Email'
@@ -334,13 +159,15 @@ class _LoginScreenState extends State<LoginScreen> {
               },
             ),
             const SizedBox(height: TSizes.spaceBtwInputFields,),
-            TextFormField(
-              controller: passwordFormEmailController,
-              decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.lock_outline),
-                  suffixIcon: Icon(Icons.remove_red_eye_outlined),
+            Obx(() => TextFormField(
+              controller: controller.emailPasswordController,
+              decoration:  InputDecoration(
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                      onPressed: () => controller.hideEmailPassword.value = !controller.hideEmailPassword.value,
+                      icon:  Icon(controller.hideEmailPassword.value ? Icons.remove_red_eye_outlined : Icons.remove_red_eye)),
                   labelText: 'Password'),
-              obscureText: true,
+              obscureText: controller.hideEmailPassword.value,
               style: TextStyle(fontSize: textSize),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -348,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 }
                 return null;
               },
-            ),
+            )),
             const SizedBox(height: TSizes.spaceBtwInputFields / 2.0),
             // Remember Me & Forget Password
             Row(
@@ -356,41 +183,20 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Row(
                   children: [
-                    Checkbox(value: true, onChanged: (value){}),
+                    Obx(() => Checkbox(value: controller.emailRememberMe.value, onChanged: (value) => controller.emailRememberMe.value  = !controller.emailRememberMe.value)),
                     const Text(Config.loginRememberMe),
                   ],
                 ),
 
                 // Forget password
-                TextButton(onPressed: (){}, child: const Text("Forget Password ?")),
+                TextButton(onPressed: () => Navigator.of(context).pushReplacementNamed(forgotPasswordRoute), child: const Text("Forgot Password ?")),
               ],
             ),
             const SizedBox(height: TSizes.spaceBtwSections,),
-            BlocListener<ProfileBloc, ProfileState>(
-              listener: (context, state){
-                if(state is AuthLoanding){
-                  const Center(child: CircularProgressIndicator(color: Colors.blue,),);
-                }else if(state is AuthSuccessFull){
-                  Navigator.of(context).pushReplacementNamed(accountRoute);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Welcome', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 30),)));
-                }else if(state is AuthError){
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 30),)));
-                }
-              },
-              child: SizedBox(
+            SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                  if (_emailFormKey.currentState!.validate()) {
-                      final email = emailController.text;
-                      final password = passwordFormEmailController.text;
-                      print('Email: $email');
-                      print('Password: $password');
-
-                      _authBlocEmail!.add(LoginEvent(email: emailController.text, phone: '', password: passwordFormEmailController.text));
-                  }
-
-                  },
+                  onPressed: () => controller.loginWithEmailPassword(),
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(
                         vertical: buttonHeight * 0.2,
@@ -404,12 +210,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
-            ),
             const SizedBox(height: TSizes.spaceBtwItems,),
 
             // Create account button
-            SizedBox(width: double.infinity, child: OutlinedButton(onPressed: (){}, child: const Text("Create Account")),),
+            SizedBox(width: double.infinity, child: OutlinedButton(onPressed: () => Get.to(() => const RegisterScreen())
+                , child: const Text("Create Account")),),
             // const SizedBox(height: TSizes.spaceBtwSections,)
           ],
         ),
@@ -423,8 +228,10 @@ class _LoginScreenState extends State<LoginScreen> {
     // Initializing PhoneNumber with Mauritania's country code
     final PhoneNumber initialPhoneNumber = PhoneNumber(isoCode: 'MR');
 
+    final controller = Get.put(LoginController());
+
     return Form(
-      key: _phoneFormKey,
+      key: controller.phoneLoginFormKey,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: TSizes.spaceBtwSections),
         child: Column(
@@ -432,7 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             InternationalPhoneNumberInput(
               autoFocus: true,
-              // initialValue: initialPhoneNumber,
+              initialValue: initialPhoneNumber,
               onInputChanged: (PhoneNumber number) {
                 print('Phone Number: ${number.phoneNumber}');
                 setState(() {
@@ -449,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ignoreBlank: false,
               autoValidateMode: AutovalidateMode.disabled,
               selectorTextStyle: const TextStyle(color: Colors.black),
-              textFieldController: phoneNumberController,
+              textFieldController: controller.phoneController,
               formatInput: false,
               keyboardType: const TextInputType.numberWithOptions(
                   signed: true, decimal: true),
@@ -463,13 +270,15 @@ class _LoginScreenState extends State<LoginScreen> {
               },
             ),
             const SizedBox(height: TSizes.spaceBtwInputFields,),
-            TextFormField(
-              controller: passwordController,
-              decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.lock_outline),
-                  suffixIcon: Icon(Icons.remove_red_eye_outlined),
+            Obx(() => TextFormField(
+              controller: controller.phonePasswordController,
+              decoration:  InputDecoration(
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    onPressed: () => controller.hidePhonePassword.value = !controller.hidePhonePassword.value,
+                      icon: Icon(controller.hidePhonePassword.value ? Icons.remove_red_eye_outlined : Icons.remove_red_eye)),
                   labelText: 'Password'),
-              obscureText: true,
+              obscureText: controller.hidePhonePassword.value,
               style: TextStyle(fontSize: textScaleFactor * 14),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -477,7 +286,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 }
                 return null;
               },
-            ),
+            )),
             const SizedBox(height: TSizes.spaceBtwInputFields / 2.0),
             // Remember Me & Forget Password
             Row(
@@ -485,43 +294,24 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Row(
                   children: [
-                    Checkbox(value: true, onChanged: (value){}),
+                    Obx(() => Checkbox(value: controller.phoneRememberMe.value, onChanged: (value) => controller.phoneRememberMe.value  = !controller.phoneRememberMe.value)),
                     const Text(Config.loginRememberMe),
                   ],
                 ),
 
                 // Forget password
-                TextButton(onPressed: (){}, child: const Text("Forget Password ?")),
+                TextButton(onPressed: () => Navigator.of(context).pushReplacementNamed(forgotPasswordRoute), child: const Text("Forgot Password ?")),
               ],
             ),
             const SizedBox(height: TSizes.spaceBtwSections,),
             // Remember Me & Forget Password
-            BlocListener<ProfileBlocPhone, ProfileState>(
-              listener: (context, state){
-                if(state is AuthLoanding){
-                  const Center(child: CircularProgressIndicator(color: Colors.blue,),);
-                }else if(state is AuthSuccessFull){
-                  Navigator.of(context).pushReplacementNamed(accountRoute);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Welcome', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 30),)));
-                }else if(state is AuthError){
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 30),)));
-                }
-              },
-              child: SizedBox(
+             SizedBox(
                 width: double.infinity,
                 height: buttonHeight,
                 child: ElevatedButton(
                   onPressed: () {
-                  if (_phoneFormKey.currentState!.validate()) {
-
-                    final phoneNumber = _phoneNumber?.phoneNumber!.replaceAll('+', '');
-                    final password = passwordController.text;
-                    print('Phone: ${_phoneNumber?.phoneNumber}');
-                    print('Password: $password');
-                    print('Phone Final: $phoneNumber');
-
-                    _authBloc!.add(LoginEvent(email: '', phone: phoneNumber, password: password));
-                  }
+                    controller.phoneController.text = _phoneNumber!.phoneNumber!.replaceAll('+', '');
+                    controller.loginWithPhonePassword();
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(
@@ -536,12 +326,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
-            ),
             const SizedBox(height: TSizes.spaceBtwItems,),
 
             // Create account button
-            SizedBox(width: double.infinity, child: OutlinedButton(onPressed: (){}, child: const Text("Create Account")),),
+            SizedBox(width: double.infinity, child: OutlinedButton(onPressed: (){
+              Navigator.of(context).pushReplacementNamed(registerRoute);
+            }, child: const Text("Create Account")),),
             // const SizedBox(height: TSizes.spaceBtwSections,)
           ],
         ),

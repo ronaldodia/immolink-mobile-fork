@@ -12,7 +12,12 @@
           "package_name": "com.example.immolink_mobile"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "487656917571-jtq8eqjatagcstrlh59f67j5mpr6qn2k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDs_Mi4SKQel06xGscvRMPi1EyFpdsH3IE"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "487656917571-jtq8eqjatagcstrlh59f67j5mpr6qn2k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "487656917571-i1i355qmcc6afikoshlj8uigh7rb5hf2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.immolinkMobile"
+              }
+            }
+          ]
         }
       }
     }

@@ -63,9 +63,9 @@ android {
 
     signingConfigs {
             debug {
-                keyAlias 'key'
+                keyAlias 'immoplace-key-two'
                 keyPassword 'immoPlace2024'
-                storeFile file('key.jks')
+                storeFile file('implace.keystore')
                 storePassword 'immoPlace2024'
             }
     }
@@ -85,5 +85,7 @@ flutter {
 
 dependencies {
     implementation platform('com.google.firebase:firebase-bom:33.1.1')
+    implementation("com.google.firebase:firebase-auth")
+    implementation "androidx.browser:browser:1.8.0"
     implementation 'com.google.firebase:firebase-analytics'
 }

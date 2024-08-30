@@ -29,7 +29,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     }
   }
 
-  Future<User?> _fetchUser(String token) async {
+  Future<UserModel?> _fetchUser(String token) async {
     final response = await http.get(
       Uri.parse('${Config.baseUrlApp}/me'),
       headers: {
@@ -39,7 +39,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return User.fromJson(data['user']);
+      return UserModel.fromJson(data['user']);
     }
 
     return null;

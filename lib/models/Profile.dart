@@ -1,13 +1,13 @@
 import 'package:immolink_mobile/models/User.dart';
 
 class Profile {
-  User? user;
+  UserModel? user;
   List<String>? permissions;
 
   Profile({this.user, this.permissions});
 
   Profile.fromJson(Map<String, dynamic> json) {
-    user = json['user'] != null ? User.fromJson(json['user']) : null;
+    user = json['user'] != null ? UserModel.fromJson(json['user']) : null;
     permissions = json['permissions'].cast<String>();
   }
 

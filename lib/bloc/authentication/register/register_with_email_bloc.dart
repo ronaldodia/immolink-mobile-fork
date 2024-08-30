@@ -12,6 +12,7 @@ class RegisterWithEmailBloc extends Bloc<RegisterEvent, RegisterState> {
   RegisterWithEmailBloc(this._authRepository) : super(RegisterAuthLoanding()) {
     on<RegisterAuthEvent>((event, emit) async {
       emit(RegisterAuthLoanding());
+
       final resultByEmail = await _authRepository.registerWithEmail(event.full_name, event.email, event.password, event.confirm_password, event.permission);
       print('inside bloc: $resultByEmail');
       if( resultByEmail == "error credentials"){
