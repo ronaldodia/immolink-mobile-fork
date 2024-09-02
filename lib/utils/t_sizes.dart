@@ -17,6 +17,22 @@ class TSizes {
   static  const double lg = 24.0;
   static  const double xl = 32.0;
 
+
+
+  static BoxDecoration boxDecorationBorder(
+      {required Color color,
+        required double radius,
+        Color? borderColor,
+        double? borderWidth}) {
+    return BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(radius),
+      border: borderColor == null
+          ? null
+          : Border.all(color: borderColor, width: borderWidth ?? 1),
+    );
+  }
+
   // Icon sizes
   static const double iconXs = 12.0;
   static const double iconSm = 16.0;

@@ -15,7 +15,7 @@ class FullscreenLoader {
           height: double.infinity,
           child: Column(
             children: [
-              const SizedBox(height: 250,),
+              const SizedBox(height: 200,),
               AnimationLoader(text: text, animation: animation, )
             ],
           ),

@@ -14,9 +14,10 @@ class DSectionHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: Theme.of(context).textTheme.headlineSmall!.apply(color: textColor), maxLines: 1, overflow: TextOverflow.ellipsis,),
-        const SizedBox(width: TSizes.customSpaceBtwSections,),
+        // const SizedBox(width: TSizes.customSpaceBtwSections,),
         if(showActionButton) TextButton(onPressed: onPressed, child:  Text(buttonTitle))
 
       ],

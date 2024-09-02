@@ -4,11 +4,11 @@ import 'package:immolink_mobile/utils/t_sizes.dart';
 
 class SearchBarWidget extends StatelessWidget {
   const SearchBarWidget({
-    super.key, required this.text, this.icon = Icons.search,  this.showBackground = true,  this.showBorder = true,
+    super.key, required this.text, this.icon = Icons.search,  this.showBackground = true,  this.showBorder = true, this.secondIcon = Icons.tune,
   });
 
   final String text;
-  final IconData? icon;
+  final IconData? icon, secondIcon;
   final bool showBackground, showBorder;
 
   @override
@@ -24,10 +24,18 @@ class SearchBarWidget extends StatelessWidget {
             border: showBorder ? Border.all(color: Colors.grey) : null
         ),
         child:  Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, color: Colors.grey,),
+            Row(
+
+              children: [
+                Icon(icon, color: Colors.grey,),
+                const SizedBox(height: TSizes.spaceBtwSections,),
+                Text(text, style: Theme.of(context).textTheme.bodySmall,),
+              ],
+            ),
             const SizedBox(height: TSizes.spaceBtwSections,),
-            Text(text, style: Theme.of(context).textTheme.bodySmall,)
+            Icon(secondIcon, color: Colors.grey,),
           ],
         ),
       ),

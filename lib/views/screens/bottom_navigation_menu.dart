@@ -12,6 +12,7 @@ class BottomNavigationMenu extends StatelessWidget {
     final controller = Get.put(NavigationController());
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar:  const DefaultAppBar(),
       bottomNavigationBar: Obx(
         () =>  NavigationBar(

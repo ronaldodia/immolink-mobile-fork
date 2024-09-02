@@ -17,6 +17,7 @@ class DefaultAppBar extends StatelessWidget implements PreferredSizeWidget {
     final LanguageController languageController = Get.find();
 
     return AppBar(
+      backgroundColor: Colors.white,
       title: const Icon(Icons.person, size: 40,),
       actions: [
         Obx(() {

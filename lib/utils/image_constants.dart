@@ -34,4 +34,6 @@ class TImages {
   static const String penthouse = "assets/icons/categories/penthouse.png";
 
   static const String store = "assets/icons/categories/store.png";
+
+  static const String featured1 = 'assets/images/featured/featured-image-1.jpg';
 }

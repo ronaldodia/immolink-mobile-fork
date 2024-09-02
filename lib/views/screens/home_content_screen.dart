@@ -7,9 +7,11 @@ import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/utils/helpers.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/utils/t_sizes.dart';
+import 'package:immolink_mobile/views/common/d_horizontal_image_text.dart';
 import 'package:immolink_mobile/views/common/d_search_bar_widget.dart';
 import 'package:immolink_mobile/views/common/d_section_heading.dart';
 import 'package:immolink_mobile/views/common/d_vertical_image_text.dart';
+import 'package:immolink_mobile/views/common/featured_property_card.dart';
 
 class HomeContentScreen extends StatefulWidget {
   const HomeContentScreen({super.key});
@@ -46,6 +48,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -53,7 +56,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
           children: [
             const SizedBox(height: TSizes.spaceBtwSections,),
             // Searchbar -- tutorial [Section # 3]
-             const SearchBarWidget(text: 'Search (Apartments, Home, Penthouse, Store)'),
+             const SearchBarWidget(text: 'Search (Apartments, Home, Penthouse)'),
             const SizedBox(height: TSizes.spaceBtwItems,),
             ///  Categories Header
              const Padding(
@@ -66,13 +69,32 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
             ),
             /// Categories
             SizedBox(
-              height: 80,
+              height: 50,
               child: ListView.builder(
                   itemCount: 6,
                   scrollDirection: Axis.horizontal,
                   shrinkWrap: true,
                   itemBuilder: (_, index) {
-                  return const DVerticalImageText(title: 'House',image: TImages.house, textColor: Colors.blueGrey, backgroundColor: Colors.white,);
+                  return const DHorizontalImageText(title: 'Apartment',image: TImages.house, textColor: Colors.blueGrey, backgroundColor: Colors.white,);
+                  }),
+            ),
+            //Featured property
+            SizedBox(
+              height: 200,
+              child: ListView.builder(
+                  itemCount: 6,
+                  scrollDirection: Axis.horizontal,
+                  shrinkWrap: true,
+                  itemBuilder: (_, index) {
+                    return const FeaturedPropertyCard(image: TImages.featured1,
+                        status: 'sell',
+                        isFeatured: true,
+                        categoryIcon: Icons.category,
+                        categoryName: 'Apartment',
+                        name: 'Appartement Cite Plage',
+                        location: 'Nouakchott, Cite Plage',
+                        price: '100 000 MRU',
+                        amenities: [Icons.add, Icons.school]);
                   }),
             ),
 
