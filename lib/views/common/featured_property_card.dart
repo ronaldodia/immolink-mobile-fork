@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:immolink_mobile/utils/t_sizes.dart';
+import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 
 class FeaturedPropertyCard extends StatelessWidget {
   final String image;
@@ -9,7 +11,7 @@ class FeaturedPropertyCard extends StatelessWidget {
   final String categoryName;
   final String name;
   final String location;  // Emplacement
-  final String price;
+  final double price;  // Le prix est maintenant un double pour les calculs
   final List<IconData> amenities; // List of icons representing amenities
   final void Function()? onTap;
 
@@ -23,11 +25,14 @@ class FeaturedPropertyCard extends StatelessWidget {
     required this.name,
     required this.location,  // Emplacement
     required this.price,
-    required this.amenities, this.onTap,
+    required this.amenities,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final CurrencyController currencyController = Get.find();
+
     return GestureDetector(
       onTap: onTap,
       child: Directionality(
@@ -96,14 +101,26 @@ class FeaturedPropertyCard extends StatelessWidget {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: Colors.blue.withOpacity(0.8),
+                                          color: Colors.orangeAccent.withOpacity(0.9),
                                           borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: const Text(
-                                          'FEATURED',
+                                          'Premium',
                                           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                         ),
                                       ),
+                                    const SizedBox(width: TSizes.spaceBtwItems),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.teal.withOpacity(0.9),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: const Text(
+                                        'Featured',
+                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ],
@@ -129,10 +146,13 @@ class FeaturedPropertyCard extends StatelessWidget {
                                   ],
                                 ),
                                 // Price
-                                Text(
-                                  price,
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                                ),
+                                Obx(() {
+                                  double convertedPrice = price * currencyController.selectedCurrency.value.exchangeRate;
+                                  return Text(
+                                    "${convertedPrice.toStringAsFixed(2)} ${currencyController.selectedCurrency.value.symbol}",
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                  );
+                                }),
                               ],
                             ),
                           ),

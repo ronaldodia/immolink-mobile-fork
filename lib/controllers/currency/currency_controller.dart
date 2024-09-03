@@ -22,23 +22,23 @@ class CurrencyController extends GetxController {
         code: 'MRU',
         name: 'Mauritania Ouguiya',
         imageUrl: 'assets/flags/mauritania.png',
-        exchangeRate: 1.0,
+        exchangeRate: 1.0, // MRU est la monnaie de base
         symbol: 'UM',
       ),
       Currency(
         code: 'EUR',
         name: 'Euro',
         imageUrl: 'assets/flags/europe.png',
-        exchangeRate: 0.82,
+        exchangeRate: 0.024, // 1 MRU ≈ 0.024 EUR (approximation)
         symbol: '€',
       ),
       Currency(
         code: 'USD',
         name: 'US Dollar',
         imageUrl: 'assets/flags/usd.png',
-        exchangeRate: 1.0,
+        exchangeRate: 0.027, // 1 MRU ≈ 0.027 USD (approximation)
         symbol: '\$',
-      ),
+      )
       // Ajoutez d'autres devises ici...
     ]);
 

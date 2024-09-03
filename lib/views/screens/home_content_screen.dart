@@ -12,6 +12,8 @@ import 'package:immolink_mobile/views/common/d_search_bar_widget.dart';
 import 'package:immolink_mobile/views/common/d_section_heading.dart';
 import 'package:immolink_mobile/views/common/d_vertical_image_text.dart';
 import 'package:immolink_mobile/views/common/featured_property_card.dart';
+import 'package:immolink_mobile/views/common/property_card_widget.dart';
+import 'package:immolink_mobile/views/widgets/default_appbar.dart';
 
 class HomeContentScreen extends StatefulWidget {
   const HomeContentScreen({super.key});
@@ -48,13 +50,14 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar:  const DefaultAppBar(),
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: TSizes.spaceBtwSections,),
+            const SizedBox(height: TSizes.spaceBtwItems,),
             // Searchbar -- tutorial [Section # 3]
              const SearchBarWidget(text: 'Search (Apartments, Home, Penthouse)'),
             const SizedBox(height: TSizes.spaceBtwItems,),
@@ -78,6 +81,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                   return const DHorizontalImageText(title: 'Apartment',image: TImages.house, textColor: Colors.blueGrey, backgroundColor: Colors.white,);
                   }),
             ),
+            const SizedBox(height: TSizes.spaceBtwItems,),
             //Featured property
             SizedBox(
               height: 200,
@@ -93,9 +97,67 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                         categoryName: 'Apartment',
                         name: 'Appartement Cite Plage',
                         location: 'Nouakchott, Cite Plage',
-                        price: '100 000 MRU',
+                        price: 100000,
                         amenities: [Icons.add, Icons.school]);
                   }),
+            ),
+
+            ///  Categories Header
+            const Padding(
+              padding: EdgeInsets.only(left: TSizes.defaultSpace),
+              child: Column(
+                children: [
+                  DSectionHeading(title: 'Featured', showActionButton: true,),
+                ],
+              ),
+            ),
+            PropertyCardWidget(
+              image: TImages.featured1,
+              isFeatured: true,
+              favoriteIcon: Icons.favorite_border,
+              status: 'sell',
+              category: 'House',
+              price: 120000,
+              name: 'Modern Villa',
+              location: 'Nouadhibou, Mauritania',
+              onTap: (){
+                print('CARD');
+              },
+              onFavoriteTap: () {
+                print('FAVORITE BUTTON');
+              },
+            ),
+            PropertyCardWidget(
+              image: TImages.featured1,
+              isFeatured: true,
+              favoriteIcon: Icons.favorite_border,
+              status: 'sell',
+              category: 'House',
+              price: 120000,
+              name: 'Modern Villa',
+              location: 'Nouadhibou, Mauritania',
+              onTap: (){
+                print('CARD');
+              },
+              onFavoriteTap: () {
+                print('FAVORITE BUTTON');
+              },
+            ),
+            PropertyCardWidget(
+              image: TImages.featured1,
+              isFeatured: true,
+              favoriteIcon: Icons.favorite_border,
+              status: 'sell',
+              category: 'House',
+              price: 120000,
+              name: 'Modern Villa',
+              location: 'Nouadhibou, Mauritania',
+              onTap: (){
+                print('CARD');
+              },
+              onFavoriteTap: () {
+                print('FAVORITE BUTTON');
+              },
             ),
 
             const SizedBox(height: TSizes.spaceBtwSections,),

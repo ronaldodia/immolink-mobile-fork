@@ -27,6 +27,16 @@ class TImages {
 
   static const String house = "assets/icons/categories/house.png";
 
+  static const String home = "assets/icons/home.svg";
+
+  static const String officeSvg = "assets/icons/office.svg";
+
+  static const String like = "assets/icons/like.svg";
+
+  static const String likeFill = "assets/icons/like_fill.svg";
+
+  static const String inactiveChat = "assets/icons/inactive_chat.svg";
+
   static const String land = "assets/icons/categories/land.png";
 
   static const String office = "assets/icons/categories/office.png";

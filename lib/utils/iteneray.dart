@@ -33,7 +33,7 @@ class CustomeRoute {
       case verifyEmail:
         return MaterialPageRoute(builder: (_) =>  const VerifyEmailScreen());
       case mapRoute:
-        return MaterialPageRoute(builder: (_) => const MapScreen());
+        return MaterialPageRoute(builder: (_) =>  MapScreen());
       case onBoardingRoute:
         return MaterialPageRoute(builder: (_) => const OnBoardingScreen());
       case forgotPasswordRoute:

@@ -40,33 +40,7 @@ void main() async {
   // print('get auth_token ${prefs.getString('auth_token')}');
   runApp(
 
-    MultiBlocProvider(
-      providers: [
-        BlocProvider<LocalizationBloc>(
-          create: (context) => LocalizationBloc(),
-        ),
-        BlocProvider<CurrencyBloc>(
-          create: (context) => CurrencyBloc(),
-        ),
-        BlocProvider<AuthBloc>(
-          create: (context) => AuthBloc()..add(AppStarted()),
-        ),
-        BlocProvider(
-          create: (context) => ProfileBloc(AuthRepository()),
-        ),
-        BlocProvider(
-          create: (context) => ProfileBlocPhone(AuthRepository()),
-        ),
-        BlocProvider(
-          create: (context) => RegisterWithEmailBloc(AuthRepository()),
-        ),
-        BlocProvider(
-          create: (context) => RegisterWithPhoneBloc(AuthRepository()),
-        ),
-
-      ],
-      child: const MyApp(),
-    ),
+    const MyApp(),
   );
 
   // AuthRepository authRepository = AuthRepository();

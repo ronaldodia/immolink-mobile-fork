@@ -62,6 +62,7 @@ dependencies:
   get: ^4.6.6
   url_launcher: ^6.3.0
   flutter_facebook_auth: ^7.1.0
+  flutter_svg: ^2.0.10+1
   
 
 dev_dependencies:
@@ -109,6 +110,11 @@ flutter:
     - assets/icons/categories/land.png
     - assets/icons/categories/office.png
     - assets/icons/categories/penthouse.png
+    - assets/icons/home.svg
+    - assets/icons/office.svg
+    - assets/icons/inactive_chat.svg
+    - assets/icons/like.svg
+    - assets/icons/like_fill.svg
     - assets/icons/categories/store.png
     - assets/images/featured/featured-image-1.jpg
 
