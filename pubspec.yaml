@@ -45,9 +45,6 @@ dependencies:
   google_maps_flutter: ^2.7.0
   location: ^6.0.2
   flutter_polyline_points: ^2.0.0
-  geocoding: ^3.0.0
-  geolocator: ^12.0.0
-  geojson_vi: ^2.2.4
   google_sign_in: ^6.2.1
   smooth_page_indicator: ^1.2.0+3
   connectivity: ^3.0.6
@@ -63,6 +60,7 @@ dependencies:
   url_launcher: ^6.3.0
   flutter_facebook_auth: ^7.1.0
   flutter_svg: ^2.0.10+1
+  shimmer: ^3.0.0
   
 
 dev_dependencies:
@@ -91,6 +89,7 @@ flutter:
   assets:
     - assets/images/
     - assets/docerAnimationOne.json
+    - assets/lottie/loading.json
     - assets/flags/mauritania.png
     - assets/flags/europe.png
     - assets/flags/usd.png
@@ -111,6 +110,11 @@ flutter:
     - assets/icons/categories/office.png
     - assets/icons/categories/penthouse.png
     - assets/icons/home.svg
+    - assets/icons/balcony.svg
+    - assets/icons/bedroom.svg
+    - assets/icons/bathroom.svg
+    - assets/images/loading_placeholder.png
+    - assets/icons/area.svg
     - assets/icons/office.svg
     - assets/icons/inactive_chat.svg
     - assets/icons/like.svg

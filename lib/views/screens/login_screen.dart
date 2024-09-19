@@ -34,8 +34,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _isEmailLogin = true;
-   late ProfileBlocPhone _authBloc;
-  late ProfileBloc _authBlocEmail;
+
 
   // Controllers should be initialized here
   final emailController = TextEditingController();
@@ -47,13 +46,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailFormKey = GlobalKey<FormState>();
   final _phoneFormKey = GlobalKey<FormState>();
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _authBlocEmail = BlocProvider.of<ProfileBloc>(context);
-    _authBloc = BlocProvider.of<ProfileBlocPhone>(context);
-  }
 
   @override
   void dispose() {

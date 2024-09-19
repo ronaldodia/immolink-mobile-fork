@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:get/get_rx/get_rx.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
 import 'package:immolink_mobile/views/screens/login_screen.dart';
 
 class OnBoardingController extends GetxController {
@@ -34,7 +35,8 @@ class OnBoardingController extends GetxController {
       }
 
       storage.write('isFirstTime', false);
-      Get.to(const LoginScreen());
+      // Get.to(const LoginScreen());
+      Get.to(const BottomNavigationMenu());
     } else {
       int page = currentPageIndex.value + 1;
       pageController.jumpToPage(page);

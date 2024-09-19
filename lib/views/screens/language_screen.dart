@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:immolink_mobile/controllers/language/language_controller.dart';
 import 'package:immolink_mobile/models/LanguageModel.dart';
+import 'package:immolink_mobile/utils/image_constants.dart';
+import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
+import 'package:immolink_mobile/views/widgets/loaders/animation_loader.dart';
 
 class LanguageScreen extends StatelessWidget {
   const LanguageScreen({super.key});
@@ -29,6 +32,8 @@ class LanguageScreen extends StatelessWidget {
               groupValue: groupValue,
               onChanged: (value) {
                 languageController.changeLanguage(item.languageCode);
+                const AnimationLoader(text: 'Changement de langue en cours', animation: TImages.loading, );
+                Get.offAll(const BottomNavigationMenu());
               },
             );
           },

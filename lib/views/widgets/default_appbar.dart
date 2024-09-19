@@ -18,7 +18,13 @@ class DefaultAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
       backgroundColor: Colors.white,
-      title: const Icon(Icons.person, size: 40,),
+      // title: const Icon(Icons.person, size: 40,),
+      leading: IconButton(
+        icon: const Icon(Icons.person, size: 40),
+        onPressed: () {
+          Scaffold.of(context).openDrawer(); // Ouvre le Drawer
+        },
+      ),
       actions: [
         Obx(() {
           // Vérifier si la monnaie sélectionnée est dans la liste
@@ -68,4 +74,7 @@ class DefaultAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+
+
 }

@@ -45,15 +45,15 @@ class AuthRepository extends GetxController{
     // var userCredential = await _auth.signInWithCredential(credential);
     Get.offAll(() => const BottomNavigationMenu());
     print('================= user: $user ===================');
-    if (authToken != null && authToken.isNotEmpty) {
-      // L'utilisateur possède un jeton API valide, considéré comme connecté
-      print('Utilisateur connecté avec un jeton API: $authToken');
-
-      // Redirection vers l'écran principal
-      Future.delayed(const Duration(milliseconds: 100), () {
-        Get.offAll(() =>  const BottomNavigationMenu());
-      });
-    }
+    // if (authToken != null && authToken.isNotEmpty) {
+    //   // L'utilisateur possède un jeton API valide, considéré comme connecté
+    //   print('Utilisateur connecté avec un jeton API: $authToken');
+    //
+    //   // Redirection vers l'écran principal
+    //   Future.delayed(const Duration(milliseconds: 100), () {
+    //     Get.offAll(() =>  const BottomNavigationMenu());
+    //   });
+    // }
     if(user != null) {
       // if(user.emailVerified){
       //   Get.offAll(() => const HomeScreen());

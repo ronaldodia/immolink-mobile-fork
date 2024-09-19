@@ -19,6 +19,16 @@ class TImages {
 
   static const String docerAnimationOne = "assets/docerAnimationOne.json";
 
+  static const String loading = "assets/data/address.json";
+
+  static const String balcony = "assets/icons/balcony.svg";
+
+  static const String bedroom = "assets/icons/bedroom.svg";
+
+  static const String bathroom = "assets/icons/bathroom.svg";
+
+  static const String area = "assets/icons/area.svg";
+
   static const String mapAnimation = "assets/images/mapAnimation.gif";
 
   static const String checkHome = "assets/images/checkHome.gif";

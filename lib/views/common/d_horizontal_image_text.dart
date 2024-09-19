@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:immolink_mobile/utils/t_sizes.dart';
 
 class DHorizontalImageText extends StatelessWidget {
@@ -23,7 +24,7 @@ class DHorizontalImageText extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.only(right: TSizes.spaceBtwItems),
+        padding: const EdgeInsets.only(right: 10, left: TSizes.spaceBtwItems),
         child: Container(
           width: 110,  // Largeur réduite
           height: 0,
@@ -45,12 +46,14 @@ class DHorizontalImageText extends StatelessWidget {
                   borderRadius: BorderRadius.circular(100),
                 ),
                 child: Center(
-                  child: Image(
-                    image: AssetImage(image),
-                    fit: BoxFit.cover,
+                  child: SvgPicture.network(
+                    image,
+                    height: 40,
+                    width: 40,
+                    colorFilter: const ColorFilter.mode(Colors.green, BlendMode.srcIn),)
+                    // colorFilter: const ColorFilter.mode(Colors.green, BlendMode.srcIn)
                   ),
                 ),
-              ),
               /// Texte
               const SizedBox(width: 4),  // Espacement réduit
               Expanded(  // Ajoute la flexibilité au texte pour éviter les débordements

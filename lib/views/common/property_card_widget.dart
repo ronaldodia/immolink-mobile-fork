@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 import 'package:immolink_mobile/utils/t_sizes.dart';
@@ -8,6 +9,7 @@ class PropertyCardWidget extends StatelessWidget {
   final bool isFeatured;
   final String status; // "rent", "sell", etc.
   final String category;
+  final String? categoryIcon;
   final double price;
   final String name;
   final String location;
@@ -24,7 +26,7 @@ class PropertyCardWidget extends StatelessWidget {
     required this.price,
     required this.name,
     required this.location,
-    this.onFavoriteTap, this.onTap, this.favoriteIcon = Icons.favorite_border,
+    this.onFavoriteTap, this.onTap, this.favoriteIcon = Icons.favorite_border,  this.categoryIcon,
   });
 
   @override
@@ -52,7 +54,7 @@ class PropertyCardWidget extends StatelessWidget {
                         ClipRRect(
                           borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
-                          child: Image.asset(
+                          child: Image.network(
                             image,
                             width: double.infinity,
                             height: double.infinity,
@@ -112,7 +114,19 @@ class PropertyCardWidget extends StatelessWidget {
                           // Category
                           Row(
                             children: [
-                              const Icon(Icons.house_outlined, color: Colors.blueGrey,),
+                              categoryIcon != null
+                                  ? SvgPicture.network(
+                                categoryIcon!,
+                                height: 20,
+                                width: 20,
+                                colorFilter: const ColorFilter.mode(Colors.green, BlendMode.srcIn)
+                              )
+                                  : Image.asset(
+                                'assets/images/default_icon.png', // Image par défaut
+                                height: 20,
+                                width: 20,
+                                fit: BoxFit.cover,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 category,
