@@ -21,7 +21,7 @@ class Article {
   final Category? category;
   final List<GalleryImage> gallery;
 
-  Article( {
+  Article({
     required this.id,
     required this.image,
     required this.name,
@@ -36,29 +36,35 @@ class Article {
     required this.area,
     required this.price,
     required this.category,
-    required this.gallery
+    required this.gallery,
   });
 
   factory Article.fromJson(Map<String, dynamic> json) {
     final LanguageController language = Get.find();
+
+    String? latitude = json['location_latitude'];
+    String? longitude = json['location_longitude'];
+
     return Article(
       id: json['id'],
-      name: json['name_${language.locale.languageCode}'], // Vous pouvez changer en fonction de la langue
-      description: json['description_${language.locale.languageCode}'] ?? '', // Vous pouvez changer en fonction de la langue
-      location_latitude: json['location_latitude'] ?? '', // Vous pouvez changer en fonction de la langue
-      location_longitude: json['location_longitude'] ?? '', // Vous pouvez changer en fonction de la langue
-      image: json['image'] ?? '', // Vous pouvez changer en fonction de la langue
-      purpose: json['purpose'] ?? '', // Vous pouvez changer en fonction de la langue
-      location: json['location_latitude'] + ', ' + json['location_longitude'],
-      price: json['price'].toDouble() ?? 0,
+      name: json['name_${language.locale.languageCode}'] ?? '', // Gestion de la langue
+      description: json['description_${language.locale.languageCode}'] ?? '', // Gestion de la langue
+      location_latitude: latitude,
+      location_longitude: longitude,
+      image: json['image'] ?? '',
+      purpose: json['purpose'] ?? '',
+      location: (latitude != null && longitude != null)
+          ? '$latitude, $longitude'
+          : 'Non spécifié', // Construction de location en gérant le cas de valeurs nulles
+      price: (json['price'] != null) ? (json['price'] as num).toDouble() : 0.0, // Gestion sécurisée du prix
       bedroom: json['bedroom'] ?? 0,
       bathroom: json['bathroom'] ?? 0,
       balcony: json['balcony'] ?? 0,
       area: json['area'] ?? 0,
       category: json['categories'] != null ? Category.fromJson(json['categories']) : null,
-        gallery: (json['gallery'] as List)
-            .map((item) => GalleryImage.fromJson(item))
-            .toList()
+      gallery: (json['gallery'] as List)
+          .map((item) => GalleryImage.fromJson(item))
+          .toList(),
     );
   }
 }

@@ -61,6 +61,7 @@ dependencies:
   flutter_facebook_auth: ^7.1.0
   flutter_svg: ^2.0.10+1
   shimmer: ^3.0.0
+  table_calendar: ^3.1.2
   
 
 dev_dependencies:

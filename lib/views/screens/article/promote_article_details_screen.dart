@@ -7,6 +7,7 @@ import 'package:immolink_mobile/models/Article.dart';
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/views/screens/article/common/gallery_panel.dart';
+import 'package:immolink_mobile/views/screens/booking_screen.dart';
 
 class PromoteArticleDetailsScreen extends StatefulWidget {
   const PromoteArticleDetailsScreen({super.key, required this.property});
@@ -327,8 +328,33 @@ class _PromoteArticleDetailsScreenState
                   const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
               color: Colors.white,
               child: ElevatedButton(
-                onPressed: () {
-                  // Logique pour la réservation
+                onPressed: () async {
+                  final List<DateTime> reservedDates = [
+                    DateTime(2024, 10, 15),  // Réservée pour une fête
+                    DateTime(2024, 10, 16),  // Réservée pour une autre fête
+                    DateTime(2024, 10, 20),  // Réservée pour un mariage
+                    DateTime(2024, 10, 30),  // Réservée pour un événement corporate
+                  ];
+
+                  final List<DateTime> availableDates = [
+                    DateTime(2024, 9, 17),
+                    DateTime(2024, 9, 18),
+                    DateTime(2024, 9, 19),
+                    DateTime(2024, 9, 21),
+                    DateTime(2024, 9, 22),
+                  ];
+
+                  final String eventType = 'Mariage';
+
+                  // Attendre quelques secondes pour simuler un chargement
+                  await Future.delayed(const Duration(seconds: 2));
+                  // Fermer le dialogue de chargement
+                  Navigator.pop(context);
+                  // Naviguer vers la page des détails
+                  Get.to(() => BookingScreen(
+                    reservedDates: reservedDates,
+                    eventType: eventType,
+                  ));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,

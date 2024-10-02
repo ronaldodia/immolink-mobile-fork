@@ -18,7 +18,6 @@ import 'package:immolink_mobile/views/common/property_card_widget.dart';
 import 'package:immolink_mobile/views/screens/article/futuread_article_details_screen.dart';
 import 'package:immolink_mobile/views/screens/article/promote_article_details_screen.dart';
 import 'package:immolink_mobile/views/widgets/default_appbar.dart';
-import 'package:immolink_mobile/views/widgets/loaders/animation_loader.dart';
 import 'package:shimmer/shimmer.dart';
 
 class HomeContentScreen extends StatefulWidget {
@@ -105,8 +104,9 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                     ),
                   );
                 } else {
-                  return const SearchBarWidget(
-                      text: 'Search (Apartments, Home, Penthouse)');
+                  return  const SearchBarWidget(
+                    text: 'Rechercher...',
+                    );
                 }
               }),
               const SizedBox(
@@ -282,7 +282,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                         itemBuilder: (_, index) {
                           var property = articlePromotionController.promotionProperties[index].article;
                           return FeaturedPropertyCard(
-                            image: property!.image!,
+                            image: property!.image,
                             status: property.purpose, // Vous pouvez récupérer à partir des données
                             isFeatured: true,
                             onTap: () async {

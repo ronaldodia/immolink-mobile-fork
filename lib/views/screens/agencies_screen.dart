@@ -25,8 +25,8 @@ class AgenciesScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SearchBarWidget(
-                text: 'Search Agency',
+               const SearchBarWidget(
+                text: 'Rechercher...',
                 secondIcon: Icons.location_on_rounded,
               ),
               const SizedBox(
