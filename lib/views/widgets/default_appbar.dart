@@ -14,7 +14,6 @@ class DefaultAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final CurrencyController currencyController = Get.find();
-    final LanguageController languageController = Get.find();
 
     return AppBar(
       backgroundColor: Colors.white,

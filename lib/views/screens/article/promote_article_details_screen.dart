@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -8,6 +9,7 @@ import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/views/screens/article/common/gallery_panel.dart';
 import 'package:immolink_mobile/views/screens/booking_screen.dart';
+import 'package:immolink_mobile/views/screens/login_screen.dart';
 
 class PromoteArticleDetailsScreen extends StatefulWidget {
   const PromoteArticleDetailsScreen({super.key, required this.property});
@@ -324,50 +326,42 @@ class _PromoteArticleDetailsScreenState
       ),
       bottomNavigationBar: widget.property.purpose == "Rent"
           ? Container(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-              color: Colors.white,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final List<DateTime> reservedDates = [
-                    DateTime(2024, 10, 15),  // Réservée pour une fête
-                    DateTime(2024, 10, 16),  // Réservée pour une autre fête
-                    DateTime(2024, 10, 20),  // Réservée pour un mariage
-                    DateTime(2024, 10, 30),  // Réservée pour un événement corporate
-                  ];
+        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+        color: Colors.white,
+        child: ElevatedButton(
+          onPressed: () async {
+            // Vérifier si l'utilisateur est connecté via Firebase
+            User? user = FirebaseAuth.instance.currentUser;
 
-                  final List<DateTime> availableDates = [
-                    DateTime(2024, 9, 17),
-                    DateTime(2024, 9, 18),
-                    DateTime(2024, 9, 19),
-                    DateTime(2024, 9, 21),
-                    DateTime(2024, 9, 22),
-                  ];
-
-                  final String eventType = 'Mariage';
-
-                  // Attendre quelques secondes pour simuler un chargement
-                  await Future.delayed(const Duration(seconds: 2));
-                  // Fermer le dialogue de chargement
-                  Navigator.pop(context);
-                  // Naviguer vers la page des détails
-                  Get.to(() => BookingScreen(
-                    reservedDates: reservedDates,
-                    eventType: eventType,
-                  ));
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: const Text('Reservez Maintenant',
-                    style: TextStyle(fontSize: 20, color: Colors.white)),
-              ),
-            )
+            if (user != null) {
+              // Si l'utilisateur est connecté, naviguer vers la page de réservation
+              Get.to(() => BookingScreen(
+                articleId: widget.property.id,
+                eventType: 'Mariage', // Par exemple, pour Mariage
+              ));
+            } else {
+              // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
+              Get.to(() => const LoginScreen(), arguments: {
+                'nextPage': BookingScreen(
+                  articleId: widget.property.id,
+                  eventType: 'Mariage',
+                )
+              });
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: const Text('Réservez Maintenant',
+              style: TextStyle(fontSize: 20, color: Colors.white)),
+        ),
+      )
           : null,
+
     );
   }
 

@@ -1,25 +1,15 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:ui';
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'package:immolink_mobile/bloc/authentication/auth_bloc.dart';
-import 'package:immolink_mobile/bloc/authentication/auth_event.dart';
-import 'package:immolink_mobile/bloc/authentication/login_bloc/profile_bloc.dart';
-import 'package:immolink_mobile/bloc/authentication/login_bloc/profile_bloc_phone.dart';
 import 'package:immolink_mobile/controllers/login/login_controller.dart';
-import 'package:immolink_mobile/services/google_login_api.dart';
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/utils/route_name.dart';
 import 'package:immolink_mobile/utils/spacing_styles.dart';
 import 'package:immolink_mobile/utils/t_sizes.dart';
+import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
 import 'package:immolink_mobile/views/screens/register_screen.dart';
 import 'package:immolink_mobile/views/widgets/form_divider_widget.dart';
 import 'package:immolink_mobile/views/widgets/social_auth_widget.dart';
@@ -43,8 +33,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final phoneNumberController = TextEditingController();
 
   PhoneNumber? _phoneNumber;
-  final _emailFormKey = GlobalKey<FormState>();
-  final _phoneFormKey = GlobalKey<FormState>();
 
 
   @override
@@ -81,6 +69,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   /// logo, Title & Sub-Tile
                   const Image(image: AssetImage(TImages.darkAppLogo), height: 150,),
+                  TextButton(
+                    onPressed: () {
+                      Get.to(() => const BottomNavigationMenu()); // Navigue vers la page d'accueil
+                    },
+                    child: const Text("Accueil", style: TextStyle(fontSize: 16)),
+                  ),
                   Text(Config.appLoginTitle, style: Theme.of(context).textTheme.headlineMedium,),
                   const SizedBox(height: TSizes.sm,),
                   Text(Config.appLoginSubTitle, style: Theme.of(context).textTheme.bodyMedium,),

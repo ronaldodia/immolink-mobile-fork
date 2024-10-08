@@ -73,7 +73,6 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
   Widget build(BuildContext context) {
 
     return Scaffold(
-      appBar: const DefaultAppBar(),
       drawer: _buildDrawer(context),
       backgroundColor: Colors.white,
       body: RefreshIndicator(

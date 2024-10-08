@@ -43,7 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
     const HomeContentScreen(),
     const AccountScreen(),
      MapScreen(),
-    const ChatScreen(),
   ];
 
   void _onTap(int index) {

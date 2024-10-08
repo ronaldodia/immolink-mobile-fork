@@ -62,6 +62,12 @@ dependencies:
   flutter_svg: ^2.0.10+1
   shimmer: ^3.0.0
   table_calendar: ^3.1.2
+  audioplayers: ^6.1.0
+  permission_handler: ^11.3.1
+  path_provider: ^2.1.4
+  record: ^5.1.2
+  voice_message_package: ^2.2.1
+  chat_bubbles: ^1.6.0
   
 
 dev_dependencies:
@@ -102,6 +108,7 @@ flutter:
     - assets/icons/social/apple.png
     - assets/icons/social/google.png
     - assets/data/address.json
+    - assets/images/avatar.jpg
     - assets/images/docerAnimation.gif
     - assets/images/mapAnimation.gif
     - assets/images/checkHome.gif

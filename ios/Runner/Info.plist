@@ -35,6 +35,11 @@
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>UISupportedInterfaceOrientations~ipad</key>
+		<key>NSMicrophoneUsageDescription</key>
+        <string>Nous avons besoin du micro pour l'enregistrement vocal.</string>
+        <key>NSPhotoLibraryUsageDescription</key>
+        <string>Nous avons besoin d'accéder à la bibliothèque pour joindre des fichiers multimédia.</string>
+
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
 			<string>UIInterfaceOrientationPortraitUpsideDown</string>
