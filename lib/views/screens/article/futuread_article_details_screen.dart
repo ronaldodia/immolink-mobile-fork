@@ -1,21 +1,38 @@
 
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:immolink_mobile/controllers/chat/chat_controller.dart';
 import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 import 'package:immolink_mobile/models/Article.dart';
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/views/screens/article/common/gallery_panel.dart';
+import 'package:immolink_mobile/views/screens/article/promote_article_details_screen.dart';
+import 'package:immolink_mobile/views/screens/booking_screen.dart';
+import 'package:immolink_mobile/views/screens/chat_screen.dart';
+import 'package:immolink_mobile/views/screens/login_screen.dart';
 
-class FutureadArticleDetailsScreen extends StatelessWidget {
+class FutureadArticleDetailsScreen extends StatefulWidget {
   const FutureadArticleDetailsScreen({super.key, required this.property});
   final Article property;
 
   @override
+  State<FutureadArticleDetailsScreen> createState() => _FutureadArticleDetailsScreenState();
+}
+
+class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScreen> {
+
+  bool _isExpanded = false;
+  @override
   Widget build(BuildContext context) {
+    final ChatController chatController = Get.put(ChatController());
     final CurrencyController currencyController = Get.find();
+    bool isLocationAvailable = widget.property.location_latitude! != null && widget.property.location_latitude!.isNotEmpty &&
+        widget.property.location_longitude != null && widget.property.location_longitude!.isNotEmpty;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -24,7 +41,7 @@ class FutureadArticleDetailsScreen extends StatelessWidget {
             Navigator.pop(context);
           },
         ),
-        title: Text(property.name ?? 'Property Details'),
+        title: Text(widget.property.name ?? 'Property Details'),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
@@ -47,7 +64,7 @@ class FutureadArticleDetailsScreen extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: Image.network(
-                      property.image ?? 'default_image.png',
+                      widget.property.image ?? 'default_image.png',
                       width: double.infinity,
                       height: 250,
                       fit: BoxFit.cover,
@@ -88,26 +105,26 @@ class FutureadArticleDetailsScreen extends StatelessWidget {
               height: 100,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: property.gallery.length,
+                itemCount: widget.property.gallery.length,
                 itemBuilder: (context, index) {
-                  final image = property.gallery[index];
+                  final image = widget.property.gallery[index];
                   return GestureDetector(
                     onTap: () {
                       // Ouvrir panel de visualisation de la galerie
-                      _showGalleryPanel(context, property.gallery, index);
+                      _showGalleryPanel(context, widget.property.gallery, index);
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16.0),
                         child: FadeInImage(
-                          placeholder: AssetImage('assets/images/loading_placeholder.png'), // Image de chargement local
+                          placeholder: const AssetImage('assets/images/loading_placeholder.png'), // Image de chargement local
                           image: NetworkImage('${Config.initUrl}${image.original}'),
                           fit: BoxFit.cover,
                           imageErrorBuilder: (context, error, stackTrace) {
-                            return Icon(Icons.broken_image, size: 50, color: Colors.red);
+                            return const Icon(Icons.broken_image, size: 50, color: Colors.red);
                           },
-                          fadeInDuration: Duration(milliseconds: 300), // Animation de fade-in
+                          fadeInDuration: const Duration(milliseconds: 300), // Animation de fade-in
                         ),
                       ),
                     ),
@@ -127,13 +144,13 @@ class FutureadArticleDetailsScreen extends StatelessWidget {
                   Row(
                     children: [
                       SvgPicture.network(
-                          property.category!.image! ?? '',
+                          widget.property.category!.image! ?? '',
                           height: 40,
                           width: 40,
                           colorFilter: const ColorFilter.mode(Colors.green, BlendMode.srcIn)
                       ),
                       const SizedBox(width: 8),
-                      Text(property.category!.name ?? 'Category'),
+                      Text(widget.property.category!.name ?? 'Category'),
                     ],
                   ),
                   const Spacer(),
@@ -142,7 +159,7 @@ class FutureadArticleDetailsScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     color: Colors.blue,
                     child: Text(
-                      property.purpose,
+                      widget.property.purpose,
                       style: const TextStyle(color: Colors.white),
                     ),
                   ),
@@ -158,7 +175,7 @@ class FutureadArticleDetailsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    property.name ?? 'Unknown Property',
+                    widget.property.name ?? 'Unknown Property',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -167,7 +184,7 @@ class FutureadArticleDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   // Price
                   Obx(() {
-                    double convertedPrice = property.price *
+                    double convertedPrice = widget.property.price *
                         currencyController.selectedCurrency.value.exchangeRate;
                     return Text(
                       "${convertedPrice.toStringAsFixed(2)} ${currencyController.selectedCurrency.value.symbol}",
@@ -194,12 +211,12 @@ class FutureadArticleDetailsScreen extends StatelessWidget {
                       _buildAmenity(
                         icon: TImages.bedroom,
                         label: 'Bedroom',
-                        value: property.bedroom ?? 0,
+                        value: widget.property.bedroom ?? 0,
                       ),
                       _buildAmenity(
                         icon: TImages.bathroom,
                         label: 'Bathroom',
-                        value: property.bathroom,
+                        value: widget.property.bathroom,
                       ),
                     ],
                   ),
@@ -209,19 +226,182 @@ class FutureadArticleDetailsScreen extends StatelessWidget {
                         _buildAmenity(
                           icon: TImages.area,
                           label: 'Area',
-                          value: '${property.area} m²',
+                          value: '${widget.property.area} m²',
                         ),
                         _buildAmenity(
                           icon: TImages.balcony,
                           label: 'Balcony',
-                          value: property.balcony,
+                          value: widget.property.balcony,
                         ),
                       ]),
 
                 ],
               ),
+            ),
+
+            // Property Description Section
+            Padding(
+              padding:
+              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Affiche le texte avec une limite de lignes si non expansé
+                  Text(
+                    widget.property.description ?? 'No description available.',
+                    maxLines: _isExpanded
+                        ? null
+                        : 5, // Limite à 5 lignes si non expansé
+                    overflow: _isExpanded
+                        ? TextOverflow.visible
+                        : TextOverflow.ellipsis,
+                  ),
+
+                  // Bouton "Voir plus" ou "Voir moins"
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isExpanded =
+                        !_isExpanded; // Alterne entre expansion et rétrécissement
+                      });
+                    },
+                    child: Text(
+                      _isExpanded ? "Voir moins" : "Voir plus",
+                      style: const TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Section de la petite carte
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: isLocationAvailable
+                  ?  GestureDetector(
+                onTap: () {
+                  // Lorsque l'utilisateur tape sur la carte, il est redirigé vers la carte en plein écran
+                  Get.to( FullMapScreen(latitude: double.parse(widget.property.location_latitude!), longitude: double.parse(widget.property.location_longitude!)));
+                },
+                child: Container(
+                  height: 150, // Petite section pour la carte
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8.0),
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: GoogleMap(
+
+                    initialCameraPosition: const CameraPosition(
+                      target: LatLng(18.110686245353225, -15.998744332959172),
+                      zoom: 14.0,
+                    ),
+                    markers: {
+                      Marker(
+                        markerId: const MarkerId('propertyLocation'),
+                        position: LatLng(double.parse(widget.property.location_latitude ?? ''), double.parse(widget.property.location_longitude ?? '')),
+                      ),
+                    },
+                    zoomControlsEnabled: false,
+                    // mapType: MapType.satellite,
+                    scrollGesturesEnabled: false,
+                    tiltGesturesEnabled: false,
+                    rotateGesturesEnabled: false,
+                    onTap: (LatLng position) {
+                      Get.to( FullMapScreen(latitude: double.parse(widget.property.location_latitude!), longitude: double.parse(widget.property.location_longitude!)));
+                    },
+                  ),
+                ),
+              ) : const Center(
+                child: Text(
+                  'Position non disponible',
+                ),
+              ),
             )
           ],
+        ),
+      ),
+      bottomNavigationBar: widget.property.purpose == "Rent"
+          ? Container(
+        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+        color: Colors.white,
+        child: ElevatedButton(
+          onPressed: () async {
+            // Vérifier si l'utilisateur est connecté via Firebase
+            User? user = FirebaseAuth.instance.currentUser;
+
+            if (user != null) {
+              // Si l'utilisateur est connecté, naviguer vers la page de réservation
+              Get.to(() => BookingScreen(
+                articleId: widget.property.id,
+                eventType: 'Mariage', // Par exemple, pour Mariage
+              ));
+            } else {
+              // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
+              Get.to(() => const LoginScreen(), arguments: {
+                'nextPage': BookingScreen(
+                  articleId: widget.property.id,
+                  eventType: 'Mariage',
+                )
+              });
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: const Text('Réservez Maintenant',
+              style: TextStyle(fontSize: 20, color: Colors.white)),
+        ),
+      )
+          : Container(
+        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+        color: Colors.white,
+        child: ElevatedButton(
+          onPressed: () async {
+            // Vérifier si l'utilisateur est connecté via Firebase
+            User? user = FirebaseAuth.instance.currentUser;
+            var conversation = chatController.filteredConversations[0];
+            if (user != null) {
+              // Si l'utilisateur est connecté, naviguer vers la page de réservation
+              // Naviguer vers l'écran de détails de la conversation
+              Get.to(ChatScreen(conversationId: conversation.id));
+            } else {
+              // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
+              Get.to(() => const LoginScreen(), arguments: {
+                'nextPage': BookingScreen(
+                  articleId: widget.property.id,
+                  eventType: 'Mariage',
+                )
+              });
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child:  Row(
+            mainAxisSize: MainAxisSize.min, // Adapter la taille du bouton à son contenu
+            children: [
+              const Text('Discutez', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
+              // Icône de discussion
+              const SizedBox(width: 8),
+              SvgPicture.asset(
+                TImages.inactiveChat,
+                colorFilter: const ColorFilter.mode(
+                    Colors.white, BlendMode.srcIn),
+              ) ,
+
+            ],
+          ),
         ),
       ),
     );
@@ -254,7 +434,6 @@ class FutureadArticleDetailsScreen extends StatelessWidget {
       ],
     );
   }
-
 
   void _showGalleryPanel(BuildContext context, List gallery, int initialIndex) {
     showModalBottomSheet(
