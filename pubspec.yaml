@@ -125,10 +125,12 @@ flutter:
     - assets/icons/bathroom.svg
     - assets/images/loading_placeholder.png
     - assets/icons/area.svg
+    - assets/icons/add.svg
     - assets/icons/office.svg
     - assets/icons/inactive_chat.svg
     - assets/icons/like.svg
     - assets/icons/like_fill.svg
+    - assets/icons/properties.svg
     - assets/icons/categories/store.png
     - assets/images/featured/featured-image-1.jpg
 

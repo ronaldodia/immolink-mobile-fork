@@ -67,8 +67,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.initState();
     _userRepository = UserRepository();
     _authRepository = AuthRepository();
-    _registerWithEmailBloc = BlocProvider.of<RegisterWithEmailBloc>(context);
-    _registerWithPhoneBloc = BlocProvider.of<RegisterWithPhoneBloc>(context);
   }
 
   sendEmailVerification() async {
@@ -374,21 +372,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
           ),
           const SizedBox(height: TSizes.spaceBtwSections),
-          BlocListener<RegisterWithEmailBloc, RegisterState>(
-            listener: (context, state) {
-              if(state is RegisterAuthLoanding){
-                const Center(child: CircularProgressIndicator(color: Colors.blue,),);
-              }else if(state is RegisterAuthSuccessFull){
-
-                // print(controller.emailController.text);
-                // Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => EmailConfirmationScreen(email: controller.emailController.text)));
-                // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Welcome', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 30),)));
-              }else if(state is RegisterAuthError){
-                DLoader.errorSnackBar(title: 'Error', message: 'jbjabj');
-                // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 30),)));
-              }
-            },
-            child:    SizedBox(
+          SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () async {
@@ -407,17 +391,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if(controller.privacyPolicy.value == false) {
                     DLoader.warningSnackBar(title: 'Accept Privacy Policy', message: 'In order to create account, you must have to read and accept the Privacy policy & Terms of Use.');
 
-                  } else {
-                    _registerWithEmailBloc.add(RegisterAuthEvent(
-                        full_name: displayName,
-                        email: email,
-                        phone: '',
-                        password: password,
-                        confirm_password: confirmPassword,
-                        permission: 'customer'
-                    ));
                   }
-
 
                 }
               },
@@ -430,7 +404,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     color: Colors.white, fontSize: textScaleFactor * 14),
               ),
             ),
-          ),
           ),
           const SizedBox(height: TSizes.spaceBtwSections),
           SizedBox(width: double.infinity, child: OutlinedButton(onPressed: (){
@@ -595,19 +568,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
           ),
           const SizedBox(height: TSizes.spaceBtwSections),
-          BlocListener<RegisterWithPhoneBloc, RegisterState>(
-            listener: (context, state) {if(state is RegisterAuthLoanding){
-              const Center(child: CircularProgressIndicator(color: Colors.blue,),);
-            }else if(state is RegisterAuthSuccessFull){
-              // final phoneNumber = _phoneNumber?.phoneNumber!.replaceAll('+', '');
-              // print(phoneNumber);
-              // Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => PhoneNumberConfirmationScreen(phoneNumber: phoneNumber!)));
-            }else if(state is RegisterAuthError){
-              DLoader.errorSnackBar(title: 'Error', message: 'jbjabj');
-             }
-
-              },
-            child:  SizedBox(
+          SizedBox(
               width: double.infinity,
               height: buttonHeight,
               child: ElevatedButton(
@@ -628,15 +589,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if(controller.phoneprivacyPolicy.value == false) {
                   DLoader.warningSnackBar(title: 'Accept Privacy Policy', message: 'In order to create account, you must have to read and accept the Privacy policy & Terms of Use.');
 
-                  } else {
-                    _registerWithPhoneBloc.add(RegisterAuthEvent(
-                        full_name: displayName,
-                        email: '',
-                        phone: phoneNumber,
-                        password: password,
-                        confirm_password: confirmPassword,
-                        permission: 'customer'
-                    ));
                   }
                   }
                 },
@@ -654,7 +606,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             )
             ,
-          ),
           const SizedBox(height: TSizes.spaceBtwSections),
           SizedBox(width: double.infinity, child: OutlinedButton(onPressed: (){
             Navigator.of(context).pushReplacementNamed(loginRoute);

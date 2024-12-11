@@ -1,13 +1,16 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:immolink_mobile/controllers/user/user_controller.dart';
 import 'package:immolink_mobile/repository/auth_repository.dart';
-import 'package:immolink_mobile/repository/user_repository.dart';
+import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/utils/network_manager.dart';
-import 'package:immolink_mobile/views/screens/home_screen.dart';
+import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
+import 'package:immolink_mobile/views/screens/login_screen.dart';
 import 'package:immolink_mobile/views/screens/phone_login_confirmation_screen.dart';
-import 'package:immolink_mobile/views/screens/phone_register_confirmation_screen.dart';
 import 'package:immolink_mobile/views/widgets/loaders/fullscreen_loader.dart';
 import 'package:immolink_mobile/views/widgets/loaders/loader.dart';
 
@@ -70,9 +73,7 @@ class LoginController extends GetxController{
       }
 
       // Register user in the Firebase Auth
-      final userCredential = await AuthRepository.instance.loginWithEmailFirebase(emailController.text.trim(), emailPasswordController.text.trim());
-
-
+      // final userCredential = await AuthRepository.instance.loginWithEmailFirebase(emailController.text.trim(), emailPasswordController.text.trim());
 
 
       //Remove Loader
@@ -80,14 +81,14 @@ class LoginController extends GetxController{
 
       /// Show Success Message
       DLoader.successSnackBar(title: 'Congratulation', message: 'Your successfuly loggin in.');
-
+      localStorage.write('AUTH_TOKEN', resultByEmail);
       AuthRepository.instance.screenRedirect();
 
       // Future.delayed(const Duration(milliseconds: 100), () {
       //   Get.to(() =>  VerifyEmailScreen(email: emailController.text.trim(),));
       // });
     } catch (e) {
-      DLoader.errorSnackBar(title: 'OH Snap!', message: e.toString());
+      DLoader.errorSnackBar(title: 'OH Snap!', message: 'Erreur de saisie');
     }
     finally {
       FullscreenLoader.stopLoading();
@@ -152,6 +153,9 @@ class LoginController extends GetxController{
     }
   }
 
+
+
+
   // -- Google SignIn Authentication
   Future<void> googleSign() async {
     try{
@@ -181,7 +185,7 @@ class LoginController extends GetxController{
     }
   }
 
-  // -- Google SignIn Authentication
+  // -- Facebbok SignIn Authentication
   Future<void> facebookSign() async {
     try{
       // Start Loading...
@@ -203,7 +207,7 @@ class LoginController extends GetxController{
       FullscreenLoader.stopLoading();
 
       // AuthRepository.instance.screenRedirect();
-        Get.to(() =>  HomeScreen());
+        Get.to(() =>  const BottomNavigationMenu());
 
       DLoader.successSnackBar(title: 'Congratulation', message: 'Your are login in');
     }catch(e) {
@@ -231,7 +235,7 @@ class LoginController extends GetxController{
       // AuthRepository.instance.screenRedirect();
 
       Future.delayed(const Duration(milliseconds: 100), () {
-        Get.offAll(() => const HomeScreen());
+        Get.offAll(() => const BottomNavigationMenu());
       });
 
       // Navigate to the home screen or wherever you want

@@ -43,6 +43,10 @@ class TImages {
 
   static const String like = "assets/icons/like.svg";
 
+  static const String ads = "assets/icons/properties.svg";
+
+  static const String add = "assets/icons/add.svg";
+
   static const String likeFill = "assets/icons/like_fill.svg";
 
   static const String inactiveChat = "assets/icons/inactive_chat.svg";

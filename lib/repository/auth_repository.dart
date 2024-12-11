@@ -11,6 +11,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:immolink_mobile/api/api_base.dart';
+import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
 import 'package:immolink_mobile/views/screens/home_screen.dart';
 import 'package:immolink_mobile/views/screens/login_screen.dart';
@@ -37,6 +38,9 @@ class AuthRepository extends GetxController{
   }
 
 
+
+
+
   /// Function to show Relevant Screen
   screenRedirect() async {
     final user = _auth.currentUser;
@@ -45,15 +49,15 @@ class AuthRepository extends GetxController{
     // var userCredential = await _auth.signInWithCredential(credential);
     Get.offAll(() => const BottomNavigationMenu());
     print('================= user: $user ===================');
-    // if (authToken != null && authToken.isNotEmpty) {
-    //   // L'utilisateur possède un jeton API valide, considéré comme connecté
-    //   print('Utilisateur connecté avec un jeton API: $authToken');
-    //
-    //   // Redirection vers l'écran principal
-    //   Future.delayed(const Duration(milliseconds: 100), () {
-    //     Get.offAll(() =>  const BottomNavigationMenu());
-    //   });
-    // }
+    if (authToken != null && authToken.isNotEmpty) {
+      // L'utilisateur possède un jeton API valide, considéré comme connecté
+      print('Utilisateur connecté avec un jeton API: $authToken');
+
+      // Redirection vers l'écran principal
+      Future.delayed(const Duration(milliseconds: 100), () {
+        Get.offAll(() =>  const BottomNavigationMenu());
+      });
+    }
     if(user != null) {
       // if(user.emailVerified){
       //   Get.offAll(() => const HomeScreen());
@@ -311,6 +315,19 @@ class AuthRepository extends GetxController{
       'password': password,
       'confirm_password': confirm_password,
       'permission': permission
+    });
+
+    return response;
+  }
+
+
+
+  Future<dynamic> saveRegisterWithEmailFirebase(String? full_name, String? email, String? password, String? confirm_password, String? permission) async {
+
+    final response = await _apibase.emailRegister({
+      'full_name': full_name,
+      'email': email,
+      'permission': 'customer'
     });
 
     return response;

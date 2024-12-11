@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 import 'package:immolink_mobile/models/Article.dart';
@@ -26,6 +27,7 @@ class _PromoteArticleDetailsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final localStorage = GetStorage();
     bool isLocationAvailable = widget.property.location_latitude! != null && widget.property.location_latitude!.isNotEmpty &&
         widget.property.location_longitude != null && widget.property.location_longitude!.isNotEmpty;
     final CurrencyController currencyController = Get.find();
@@ -41,7 +43,9 @@ class _PromoteArticleDetailsScreenState
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
-            onPressed: () {
+            onPressed: () async {
+              String? token = await localStorage.read('AUTH_TOKEN');
+              print(token);
               // Fonctionnalité de partage
               print("Share button tapped");
             },

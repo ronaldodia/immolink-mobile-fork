@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';  // Import Firebase Authentication
+import 'package:get_storage/get_storage.dart';
+import 'package:immolink_mobile/controllers/login/check_auth_controller.dart';
+import 'package:immolink_mobile/controllers/login/login_controller.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/views/screens/agencies_screen.dart';
+import 'package:immolink_mobile/views/screens/article/articles_screen.dart';
 import 'package:immolink_mobile/views/screens/chat_list_screen.dart';
 import 'package:immolink_mobile/views/screens/home_content_screen.dart';
 import 'package:immolink_mobile/views/screens/map_screen.dart';
@@ -17,6 +21,7 @@ class BottomNavigationMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(NavigationController());
+
 
     return Scaffold(
       appBar: const DefaultAppBar(),
@@ -54,11 +59,11 @@ class BottomNavigationMenu extends StatelessWidget {
             ),
             NavigationDestination(
               icon: SvgPicture.asset(
-                TImages.like,
+                TImages.ads,
                 colorFilter: const ColorFilter.mode(
                     Colors.blueGrey, BlendMode.srcIn),
               ),
-              label: 'Wishlist',
+              label: 'Annonces',
             ),
             NavigationDestination(
               icon: SvgPicture.asset(
@@ -84,28 +89,51 @@ class NavigationController extends GetxController {
     const HomeContentScreen(),
     const AgenciesScreen(),
     const MapScreen(),
-    const WishlistScreen(),
+    const ArticlesScreen(),
      ChatListScreen(),
   ];
 
   // Méthode pour vérifier l'état de connexion
-  Future<void> checkLoginStatus() async {
-    final user = FirebaseAuth.instance.currentUser;  // Vérifie si l'utilisateur est connecté
-    if (user == null) {
-      // Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
+  Future<bool> checkLoginStatus(int index) async {
+    final localStorage = GetStorage();
+    final CheckAuthController authController = Get.put(CheckAuthController());
+
+    final String? token = await localStorage.read('AUTH_TOKEN');
+
+    // Vérifiez si le token est nul avant de continuer
+    if (token == null) {
+      // Redirigez vers la page de connexion
       Get.to(() => const LoginScreen());
+      return false;
+    }
+
+    // Le token n'est pas nul, continuez à vérifier sa validité
+    final response = await authController.checkToken(token);
+    print('Reponse $response');
+
+    if (response) {
+      selectIndex.value = index;
+      return true;
     } else {
-      // Si l'utilisateur est connecté, rediriger vers la page de chat
-      selectIndex.value = 4;  // Met à jour l'index pour afficher la page Chat
+      // Token invalide, supprimez le token et redirigez
+      localStorage.remove('AUTH_TOKEN');
+      Get.to(() => const LoginScreen());
+      return false;
     }
   }
 
+
   // Gérer la sélection des onglets
-  void onDestinationSelected(int index) {
-    if (index == 4) {
+  void onDestinationSelected(int index) async {
+
+    if (index == 3) {
       // Si l'onglet 'Chat' est sélectionné, vérifie l'état de connexion
-      checkLoginStatus();
-    } else {
+      checkLoginStatus(3);
+    } else   if (index == 4) {
+      // Si l'onglet 'Chat' est sélectionné, vérifie l'état de connexion
+      checkLoginStatus(4);
+    }
+    else {
       // Pour les autres onglets, mettre à jour l'index normalement
       selectIndex.value = index;
     }
