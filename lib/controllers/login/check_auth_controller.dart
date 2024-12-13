@@ -7,7 +7,7 @@ import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/views/screens/login_screen.dart';
 
 class CheckAuthController extends GetxController {
-
+  static CheckAuthController get instance => Get.find();
   final localStorage = GetStorage();
 
   // Méthode pour vérifier le token

@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:immolink_mobile/controllers/chat/chat_controller.dart';
 import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
+import 'package:immolink_mobile/controllers/login/check_auth_controller.dart';
 import 'package:immolink_mobile/models/Article.dart';
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
@@ -30,6 +31,7 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
   @override
   Widget build(BuildContext context) {
     final ChatController chatController = Get.put(ChatController());
+    final CheckAuthController authController = Get.put(CheckAuthController());
     final CurrencyController currencyController = Get.find();
     bool isLocationAvailable = widget.property.location_latitude! != null && widget.property.location_latitude!.isNotEmpty &&
         widget.property.location_longitude != null && widget.property.location_longitude!.isNotEmpty;
@@ -364,10 +366,17 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
         color: Colors.white,
         child: ElevatedButton(
           onPressed: () async {
-            // Vérifier si l'utilisateur est connecté via Firebase
+            bool isAuthenticated = await authController.checkUserToken();
+            // Vérifier si l'utilisateur est connecté via Firebase ou backend
             User? user = FirebaseAuth.instance.currentUser;
             var conversation = chatController.filteredConversations[0];
-            if (user != null) {
+            print(isAuthenticated);
+
+            print(isAuthenticated);
+            if (isAuthenticated) {
+              // L'utilisateur est authentifié, continuer l'action
+              Get.to(ChatScreen(conversationId: conversation.id));
+            }else if (user != null) {
               // Si l'utilisateur est connecté, naviguer vers la page de réservation
               // Naviguer vers l'écran de détails de la conversation
               Get.to(ChatScreen(conversationId: conversation.id));
