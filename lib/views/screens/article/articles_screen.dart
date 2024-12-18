@@ -2,19 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:immolink_mobile/controllers/articles/article_controller.dart';
+import 'package:immolink_mobile/controllers/language/language_controller.dart';
 import 'package:immolink_mobile/controllers/login/check_auth_controller.dart';
 import 'package:immolink_mobile/models/Article.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
+import 'package:immolink_mobile/views/common/d_search_bar_widget.dart';
 import 'package:immolink_mobile/views/screens/article/create_article_screen.dart';
 import 'package:immolink_mobile/views/screens/login_email_screen.dart';
 
-import '../../common/d_search_bar_widget.dart';
+
 
 class ArticlesScreen extends StatelessWidget {
   ArticlesScreen({super.key});
 
   final ArticlesController controller = Get.put(ArticlesController());
-
+  final LanguageController languageController = Get.find();
   @override
   Widget build(BuildContext context) {
     final CheckAuthController authController = Get.find();
@@ -45,7 +47,7 @@ class ArticlesScreen extends StatelessWidget {
                         errorBuilder: (context, error, stackTrace) =>
                         const Icon(Icons.broken_image),
                       ),
-                      title: Text(article.name ?? "Nom non spécifié"),
+                      title: Text(article.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? "Nom non spécifié"),
                       subtitle: Text("Prix : ${article.price}"),
                       onTap: () {
                         // Logique pour ouvrir les détails de l'article

@@ -57,8 +57,7 @@ class APIBASE {
     final response = await http.get(Uri.parse('${Config.baseUrlApp}/me'), headers: {
         HttpHeaders.authorizationHeader: 'Bearer $token',
       }, );
-    var responseJson = _returnResponse(response);
-    return responseJson;
+    return jsonDecode(response.body.toString());
   }
   
 }

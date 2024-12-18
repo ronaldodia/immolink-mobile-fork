@@ -15,6 +15,8 @@ import 'package:immolink_mobile/views/widgets/loaders/fullscreen_loader.dart';
 import 'package:immolink_mobile/views/widgets/loaders/loader.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
+import 'package:immolink_mobile/models/Profile.dart';
+
 class LoginController extends GetxController{
   //variables
   final emailRememberMe = false.obs;
@@ -82,9 +84,15 @@ class LoginController extends GetxController{
 
       // login with backend
       final resultByEmail = await AuthRepository.instance.loginWithEmail(emailController.text.trim(), emailPasswordController.text.trim());
+
       if (resultByEmail != null && resultByEmail != "error credentials" && resultByEmail != "Unauthenticated") {
         // Résultat valide : On écrit dans le localStorage
-        localStorage.write('AUTH_TOKEN', resultByEmail);
+         localStorage.write('AUTH_TOKEN', resultByEmail);
+         final json = await AuthRepository.instance.getProfileByToken(resultByEmail);
+         Profile profile  = Profile.fromJson(json);
+         localStorage.write('FULL_NAME', profile.user?.fullName);
+         localStorage.write('AVATAR', profile.user?.avatar);
+
       } else {
         // Résultat invalide ou erreur : Afficher un message d'erreur approprié
         DLoader.errorSnackBar(title: 'OH Snap!', message: resultByEmail);

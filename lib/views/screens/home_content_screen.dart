@@ -304,7 +304,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                             },
                             categoryIcon: property.category!.image ?? '', // Assurez-vous que l'icône est correcte
                             categoryName: property.category!.name ?? 'Nom indisponible', // Vous pouvez récupérer à partir des données
-                            name: property.name ?? 'Nom indisponible',
+                            name: property.getPropertyByLanguage(language.locale.languageCode, propertyType: "name") ?? 'Nom indisponible',
                             location: 'Cite Plage',
                             price: property.price,
                             amenities: const [Icons.add, Icons.school],
@@ -407,7 +407,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                         status: property.purpose,
                         category: property.category!.name,
                         price: property.price,
-                        name: property.name ?? 'Test',
+                        name: property.getPropertyByLanguage(language.locale.languageCode, propertyType: "name") ?? 'Test',
                         location: 'Cite Plage',
                         onTap: () async {
                           // Affiche un dialogue de chargement
@@ -428,7 +428,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                           Get.to(() => FutureadArticleDetailsScreen(property: property));
                         },
                         onFavoriteTap: () {
-                          print('FAVORITE BUTTON: ${property.name}');
+                          print('FAVORITE BUTTON: ${property.getPropertyByLanguage(language.locale.languageCode, propertyType: "name")}');
                         },
                       );
                     },

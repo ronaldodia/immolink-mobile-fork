@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../repository/auth_repository.dart';
+import 'package:immolink_mobile/repository/auth_repository.dart';
 
 part 'profile_event.dart';
 part 'profile_state.dart';
