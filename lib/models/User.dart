@@ -4,7 +4,7 @@ class UserModel {
   String? fullName;
   String? email;
   String? phone;
-  // String? avatar;
+  String? avatar;
   // String? address;
   // String? twoFactorSecret;
   // String? twoFactorRecoveryCodes;
@@ -22,7 +22,7 @@ class UserModel {
     this.fullName,
     this.email,
     this.phone,
-    // this.avatar,
+    this.avatar,
     // this.address,
     // this.twoFactorSecret,
     // this.twoFactorRecoveryCodes,
@@ -44,7 +44,7 @@ class UserModel {
     fullName = json['full_name'];
     email = json['email'];
     phone = json['phone'];
-    // avatar = json['avatar'];
+    avatar = json['avatar'];
     // address = json['address'];
     // twoFactorSecret = json['two_factor_secret'];
     // twoFactorRecoveryCodes = json['two_factor_recovery_codes'];
@@ -64,7 +64,7 @@ class UserModel {
     data['full_name'] = fullName;
     data['email'] = email;
     data['phone'] = phone;
-    // data['avatar'] = avatar;
+    data['avatar'] = avatar;
     // data['address'] = address;
     // data['two_factor_secret'] = twoFactorSecret;
     // data['two_factor_recovery_codes'] = twoFactorRecoveryCodes;

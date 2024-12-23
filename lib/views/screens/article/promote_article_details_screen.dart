@@ -5,12 +5,13 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
+import 'package:immolink_mobile/controllers/login/check_auth_controller.dart';
 import 'package:immolink_mobile/models/Article.dart';
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/views/screens/article/common/gallery_panel.dart';
 import 'package:immolink_mobile/views/screens/booking_screen.dart';
-import 'package:immolink_mobile/views/screens/login_screen.dart';
+import 'package:immolink_mobile/views/screens/login_email_screen.dart';
 
 class PromoteArticleDetailsScreen extends StatefulWidget {
   const PromoteArticleDetailsScreen({super.key, required this.property});
@@ -27,6 +28,7 @@ class _PromoteArticleDetailsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final CheckAuthController authController = Get.put(CheckAuthController());
     final localStorage = GetStorage();
     bool isLocationAvailable = widget.property.location_latitude! != null && widget.property.location_latitude!.isNotEmpty &&
         widget.property.location_longitude != null && widget.property.location_longitude!.isNotEmpty;
@@ -335,17 +337,21 @@ class _PromoteArticleDetailsScreenState
         child: ElevatedButton(
           onPressed: () async {
             // Vérifier si l'utilisateur est connecté via Firebase
+            bool isAuthenticated = await authController.checkUserToken();
+            // Vérifier si l'utilisateur est connecté via Firebase ou backend
             User? user = FirebaseAuth.instance.currentUser;
+            print(isAuthenticated);
 
-            if (user != null) {
+            if (isAuthenticated) {
               // Si l'utilisateur est connecté, naviguer vers la page de réservation
               Get.to(() => BookingScreen(
                 articleId: widget.property.id,
                 eventType: 'Mariage', // Par exemple, pour Mariage
               ));
-            } else {
+            }
+            else {
               // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
-              Get.to(() => const LoginScreen(), arguments: {
+              Get.to(() => const LoginEmailScreen(), arguments: {
                 'nextPage': BookingScreen(
                   articleId: widget.property.id,
                   eventType: 'Mariage',

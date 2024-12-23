@@ -12,6 +12,7 @@ class UserRepository extends GetxController {
 
     try{
        await _db.collection("Users").doc(user.id).set(user.toJson());
+
     } on FirebaseAuthException catch(e) {
       throw FirebaseAuthException(code: e.code);
     } on FirebaseException catch(e) {

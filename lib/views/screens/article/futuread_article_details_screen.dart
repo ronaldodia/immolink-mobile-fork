@@ -15,7 +15,7 @@ import 'package:immolink_mobile/views/screens/article/common/gallery_panel.dart'
 import 'package:immolink_mobile/views/screens/article/promote_article_details_screen.dart';
 import 'package:immolink_mobile/views/screens/booking_screen.dart';
 import 'package:immolink_mobile/views/screens/chat_screen.dart';
-import 'package:immolink_mobile/views/screens/login_screen.dart';
+import 'package:immolink_mobile/views/screens/login_email_screen.dart';
 
 class FutureadArticleDetailsScreen extends StatefulWidget {
   const FutureadArticleDetailsScreen({super.key, required this.property});
@@ -342,7 +342,7 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
               ));
             } else {
               // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
-              Get.to(() => const LoginScreen(), arguments: {
+              Get.to(() => const LoginEmailScreen(), arguments: {
                 'nextPage': BookingScreen(
                   articleId: widget.property.id,
                   eventType: 'Mariage',
@@ -372,7 +372,6 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
             var conversation = chatController.filteredConversations[0];
             print(isAuthenticated);
 
-            print(isAuthenticated);
             if (isAuthenticated) {
               // L'utilisateur est authentifié, continuer l'action
               Get.to(ChatScreen(conversationId: conversation.id));
@@ -382,10 +381,9 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
               Get.to(ChatScreen(conversationId: conversation.id));
             } else {
               // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
-              Get.to(() => const LoginScreen(), arguments: {
-                'nextPage': BookingScreen(
-                  articleId: widget.property.id,
-                  eventType: 'Mariage',
+              Get.to(() => const LoginEmailScreen(), arguments: {
+                'nextPage': ChatScreen(
+                  conversationId: conversation.id,
                 )
               });
             }

@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:immolink_mobile/utils/config.dart';
-import 'package:immolink_mobile/views/screens/login_screen.dart';
 
 class CheckAuthController extends GetxController {
   static CheckAuthController get instance => Get.find();

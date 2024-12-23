@@ -9,7 +9,7 @@ import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/utils/network_manager.dart';
 import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
-import 'package:immolink_mobile/views/screens/login_screen.dart';
+import 'package:immolink_mobile/views/screens/login_email_screen.dart';
 import 'package:immolink_mobile/views/screens/phone_login_confirmation_screen.dart';
 import 'package:immolink_mobile/views/widgets/loaders/fullscreen_loader.dart';
 import 'package:immolink_mobile/views/widgets/loaders/loader.dart';

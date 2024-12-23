@@ -5,10 +5,10 @@ import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
 import 'package:immolink_mobile/views/screens/forgot_password_screen.dart';
 import 'package:immolink_mobile/views/screens/home_screen.dart';
 import 'package:immolink_mobile/views/screens/language_screen.dart';
-import 'package:immolink_mobile/views/screens/login_screen.dart';
+import 'package:immolink_mobile/views/screens/login_email_screen.dart';
 import 'package:immolink_mobile/views/screens/map_screen.dart';
 import 'package:immolink_mobile/views/screens/onboarding/onboarding_screen.dart';
-import 'package:immolink_mobile/views/screens/register_screen.dart';
+import 'package:immolink_mobile/views/screens/register_email_screen.dart';
 import 'package:immolink_mobile/views/screens/verify_email_screen.dart';
 
 class CustomeRoute {
@@ -23,17 +23,17 @@ class CustomeRoute {
       case accountRoute:
         return MaterialPageRoute(builder: (_) => const AccountScreen());
       case loginRoute:
-        return MaterialPageRoute(builder: (_) =>  const LoginScreen());
+        return MaterialPageRoute(builder: (_) =>  const LoginEmailScreen());
       // case loginRoute:
       //   return MaterialPageRoute(builder: (_) =>  const LoginScreen());
       // case loginRoute:
       //   return MaterialPageRoute(builder: (_) =>  const LoginScreen());
       case registerRoute:
-        return MaterialPageRoute(builder: (_) =>  const RegisterScreen());
+        return MaterialPageRoute(builder: (_) =>  const RegisterEmailScreen());
       case verifyEmail:
         return MaterialPageRoute(builder: (_) =>  const VerifyEmailScreen());
       case mapRoute:
-        return MaterialPageRoute(builder: (_) =>  MapScreen());
+        return MaterialPageRoute(builder: (_) =>  const MapScreen());
       case onBoardingRoute:
         return MaterialPageRoute(builder: (_) => const OnBoardingScreen());
       case forgotPasswordRoute:

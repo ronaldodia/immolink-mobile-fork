@@ -14,6 +14,14 @@ class APIBASE {
   }
 
 
+  Future <dynamic> socialRegisterRecord(dynamic body) async {
+    final response = await http.post(Uri.parse('${Config.baseUrlApp}/social/register'), body: body);
+    print(body);
+    var responseJson = _returnResponse(response);
+    return responseJson;
+  }
+
+
   Future<http.Response> logout(String? token) async {
     final response = await http.post(Uri.parse('${Config.baseUrlApp}/logout'), headers: {
       HttpHeaders.authorizationHeader: 'Bearer $token',

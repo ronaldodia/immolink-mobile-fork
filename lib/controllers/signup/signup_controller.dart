@@ -4,6 +4,7 @@ import 'package:immolink_mobile/models/User.dart';
 import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/repository/user_repository.dart';
 import 'package:immolink_mobile/utils/network_manager.dart';
+import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
 import 'package:immolink_mobile/views/screens/home_screen.dart';
 import 'package:immolink_mobile/views/screens/phone_register_confirmation_screen.dart';
 import 'package:immolink_mobile/views/screens/verify_email_screen.dart';
@@ -69,6 +70,19 @@ Future<void> signupWithEmailFirebase() async {
     final userRepository = Get.put(UserRepository());
     await  userRepository.saveUserRecord(newUser);
 
+    // save to backend
+    final authRepository = Get.put(AuthRepository());
+    final backToken = await authRepository.registerWithEmail(
+      '${firstNameEmailController.text.trim()} ${lastNameEmailController.text.trim()}',
+      emailController.text.trim() ?? '',
+      passwordEmailController.text.trim(),
+      passwordEmailConfirmController.text.trim(),
+      'customer'
+    );
+
+    print('======= token created ===========');
+    print(backToken);
+
     //Remove Loader
     FullscreenLoader.stopLoading();
 
@@ -127,6 +141,8 @@ Future<void> signupWithEmailFirebase() async {
       /// Show Success Message
       DLoader.successSnackBar(title: 'Congratulation', message: 'Your account has been create! verify email to continue.');
 
+
+
       // Get.to(() => const VerifyEmailScreen());
 
       Future.delayed(const Duration(milliseconds: 100), () {
@@ -166,8 +182,21 @@ Future<void> signupWithEmailFirebase() async {
       final userRepository = Get.put(UserRepository());
       await  userRepository.saveUserRecord(newUser);
 
+      // save to backend
+      final authRepository = Get.put(AuthRepository());
+      final backToken = await authRepository.registerWithPhone(
+          '${firstNamePhoneController.text.trim()} ${lastNamePhoneController.text.trim()}',
+          phoneNumberController.text.trim().replaceAll('+', '') ?? '',
+          passwordPhoneController.text.trim(),
+          passwordPhoneConfirmController.text.trim(),
+          'customer'
+      );
+
+      print('======= token created ===========');
+      print(backToken);
+
       Future.delayed(const Duration(milliseconds: 100), () {
-        Get.offAll(() => const HomeScreen());
+        Get.offAll(() => const BottomNavigationMenu());
       });
 
       // AuthRepository.instance.screenRedirect();
@@ -199,7 +228,7 @@ Future<void> signupWithEmailFirebase() async {
 
 
       Future.delayed(const Duration(milliseconds: 100), () {
-        Get.offAll(() => const HomeScreen());
+        Get.offAll(() => const BottomNavigationMenu());
       });
 
       // Navigate to the home screen or wherever you want

@@ -6,7 +6,7 @@ import 'package:immolink_mobile/controllers/login/login_controller.dart';
 import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/views/screens/article/create_article_screen.dart';
-import 'package:immolink_mobile/views/screens/login_screen.dart';
+import 'package:immolink_mobile/views/screens/login_email_screen.dart';
 
 import '../../common/d_search_bar_widget.dart';
 
@@ -39,7 +39,7 @@ class ArticlesScreen extends StatelessWidget {
               Get.to(() => const CreateArticleScreen());
             }else {
 
-              Get.to(() => const LoginScreen());
+              Get.to(() => const LoginEmailScreen());
             }
 
           },
