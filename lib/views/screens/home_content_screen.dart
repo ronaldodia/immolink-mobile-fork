@@ -453,6 +453,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                     final localStorage = GetStorage();
                     AuthRepository.instance
                         .logOutBackend(localStorage.read('AUTH_TOKEN'));
+                    localStorage.remove('AUTH_TOKEN');
                   },
                   icon: const Text('Logout'))
             ],

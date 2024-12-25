@@ -33,7 +33,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
     // Initializing PhoneNumber with Mauritania's country code
     final PhoneNumber initialPhoneNumber = PhoneNumber(isoCode: 'MR');
 
-    final controller = Get.put(LoginController());
+    final LoginController controller = Get.put(LoginController());
     return Scaffold(
       body: SingleChildScrollView(
         // Use SingleChildScrollView to avoid RenderFlex errors when keyboard appears
@@ -71,10 +71,11 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                         autoFocus: true,
                         initialValue: initialPhoneNumber,
                         onInputChanged: (PhoneNumber number) {
-                          print('Phone Number: ${number.phoneNumber}');
-                          setState(() {
-                            _phoneNumber = number;
-                          });
+                          controller.onPhoneNumberChanged(number);
+                          // print('Phone Number: ${number.phoneNumber}');
+                          // setState(() {
+                          //   _phoneNumber = number;
+                          // });
                         },
                         onInputValidated: (bool value) {
                           print(value);
@@ -140,7 +141,8 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                         height: buttonHeight,
                         child: ElevatedButton(
                           onPressed: () {
-                            controller.phoneController.text = _phoneNumber!.phoneNumber!.replaceAll('+', '');
+                            final phoneNumber = controller.phoneNumberInput.value!.phoneNumber!.replaceAll('+', '');
+                            print("Final phone Number = $phoneNumber");
                             controller.loginWithPhonePassword();
                           },
                           style: ElevatedButton.styleFrom(
@@ -154,7 +156,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                             style: TextStyle(
                                 color: Colors.white, fontSize: textScaleFactor * 14),
                           ),
-                        ),
+                        )
                       ),
                       const SizedBox(height: TSizes.spaceBtwItems,),
 

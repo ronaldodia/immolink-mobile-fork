@@ -13,6 +13,7 @@ import 'package:immolink_mobile/views/screens/login_email_screen.dart';
 import 'package:immolink_mobile/views/screens/phone_login_confirmation_screen.dart';
 import 'package:immolink_mobile/views/widgets/loaders/fullscreen_loader.dart';
 import 'package:immolink_mobile/views/widgets/loaders/loader.dart';
+import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
 class LoginController extends GetxController{
   //variables
@@ -24,6 +25,7 @@ class LoginController extends GetxController{
   final phoneController = TextEditingController();
   final emailPasswordController = TextEditingController();
   final phonePasswordController = TextEditingController();
+  final phoneNumberInput = Rx<PhoneNumber?>(null);
   final localStorage = GetStorage();
   GlobalKey<FormState> emailLoginFormKey = GlobalKey<FormState>();
   GlobalKey<FormState> phoneLoginFormKey = GlobalKey<FormState>();
@@ -38,6 +40,22 @@ class LoginController extends GetxController{
     // phonePasswordController.text = localStorage.read('REMEMBER_ME_PHONE_PASSWORD');
     super.onInit();
   }
+
+  // Fonction pour gérer les changements dans le champ de numéro de téléphone
+  void onPhoneNumberChanged(PhoneNumber number) {
+    phoneNumberInput.value = number;
+  }
+
+  @override
+  void dispose() {
+      phoneController.dispose();
+  } // // Nettoyage des ressources
+  // @override
+  // void onClose() {
+
+  //   super.onClose();
+  // }
+
 
   Future<void> loginWithEmailPassword() async {
     try {
@@ -112,15 +130,15 @@ class LoginController extends GetxController{
       }
 
 
-      if(emailRememberMe.value){
-        localStorage.write('REMEMBER_ME_PHONE', phoneController.text.trim());
+      if(phoneRememberMe.value){
+        localStorage.write('REMEMBER_ME_PHONE', phoneNumberInput.value!.phoneNumber!.replaceAll(phoneNumberInput.value!.isoCode.toString(), ''));
         localStorage.write('REMEMBER_ME_PHONE_PASSWORD', phonePasswordController.text.trim());
       }
 
-
-
+      final phoneNumber = phoneNumberInput.value!.phoneNumber!.replaceAll('+', '');
+      print("final phone number = $phoneNumber");
       // login with backend
-      final resultByPhone = await AuthRepository.instance.loginWithPhone(phoneController.text.trim(), phonePasswordController.text.trim());
+      final resultByPhone = await AuthRepository.instance.loginWithPhone(phoneNumber, phonePasswordController.text.trim());
       if (resultByPhone != null && resultByPhone != "error credentials" && resultByPhone != "Unauthenticated") {
         // Résultat valide : On écrit dans le localStorage
         localStorage.write('AUTH_TOKEN', resultByPhone);
@@ -131,7 +149,7 @@ class LoginController extends GetxController{
 
 
     // Login user in the Firebase Auth
-    await AuthRepository.instance.loginWithPhoneNumber('+${phoneController.text.trim()}');
+    await AuthRepository.instance.loginWithPhoneNumber('+$phoneNumber');
 
       //Remove Loader
       FullscreenLoader.stopLoading();
@@ -139,12 +157,10 @@ class LoginController extends GetxController{
       /// Show Success Message
       DLoader.successSnackBar(title: 'Congratulation', message: 'Your successfuly loggin in.');
       Future.delayed(const Duration(milliseconds: 100), () {
-        Get.to(() =>  PhoneLoginConfirmationScreen(phoneNumber: '+${phoneController.text.trim()}',));
+        Get.to(() =>  PhoneLoginConfirmationScreen(phoneNumber: '+$phoneNumber',));
       });
 
-      // Future.delayed(const Duration(milliseconds: 100), () {
-      //   Get.to(() =>  VerifyEmailScreen(email: emailController.text.trim(),));
-      // });
+
     } catch (e) {
       DLoader.errorSnackBar(title: 'OH Snap!', message: e.toString());
     }

@@ -185,11 +185,11 @@ class _MapScreenState extends State<MapScreen>
               String areaText = area.toStringAsFixed(2); // Format area
 
               panelInfo =
-                  'Lot: ${properties['l']}\nSuperficie: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
+                  'Lot: ${properties['l']}\nSuperficie: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}${properties['lts']} \nAltitude: ${properties['el'] }m';
               panelInfoAr =
-                  'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']}';
+                  'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']} \nارتفاع: ${properties['el']} m';
               panelInfoEn =
-                  'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
+                  'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}${properties['lts']} \nAltitude: ${properties['el'] }m';
 
               isPanelVisible = true; // Show the panel with lot info
             });
@@ -306,11 +306,11 @@ class _MapScreenState extends State<MapScreen>
               polygons = newPolygons;
               selectedPolygon = polygon;
               panelInfo =
-                  'Lot: ${properties['l']}\nSuperficie: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
+                  'Lot: ${properties['l']}\nSuperficie: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts'] }\nAltitude: ${properties['el']} m';
               panelInfoAr =
-                  'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']}';
+                  'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']} \nارتفاع: ${properties['el']} m';
               panelInfoEn =
-                  'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}';
+                  'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']} \nAltitude: ${properties['el'] }m';
 
               isPanelVisible = true;
             });

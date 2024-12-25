@@ -10,6 +10,7 @@ import 'package:immolink_mobile/views/screens/phone_register_confirmation_screen
 import 'package:immolink_mobile/views/screens/verify_email_screen.dart';
 import 'package:immolink_mobile/views/widgets/loaders/fullscreen_loader.dart';
 import 'package:immolink_mobile/views/widgets/loaders/loader.dart';
+import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
 class SignupController extends GetxController {
   static SignupController get instance => Get.find();
@@ -26,6 +27,7 @@ class SignupController extends GetxController {
   final passwordPhoneController = TextEditingController();
   final passwordPhoneConfirmController = TextEditingController();
   final phoneNumberController = TextEditingController();
+  final phoneNumberInput = Rx<PhoneNumber?>(null);
 
   final  privacyPolicy = true.obs;
   final  phoneprivacyPolicy = true.obs;
@@ -35,6 +37,10 @@ class SignupController extends GetxController {
   final GlobalKey<FormState> emailFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> phoneFormKey = GlobalKey<FormState>();
 
+  @override
+  void dispose() {
+    phoneNumberController.dispose();
+  }
 
 /// --- SIGNUP Email Firebase
 Future<void> signupWithEmailFirebase() async {
@@ -102,6 +108,10 @@ Future<void> signupWithEmailFirebase() async {
   }
 }
 
+// Fonction pour gérer les changements dans le champ de numéro de téléphone
+  void onPhoneNumberChanged(PhoneNumber number) {
+    phoneNumberInput.value = number;
+  }
 
   /// --- SIGNUP Phone Firebase
 
@@ -109,8 +119,8 @@ Future<void> signupWithEmailFirebase() async {
 
     try {
       // Start Loading
-      print(' ================== ${phoneNumberController.text.trim()}==============');
-      // FullscreenLoader.openDialog('We are processing your information..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
+      print(' ================== ${phoneNumberInput.value!.phoneNumber!.replaceAll('+', '')}==============');
+      FullscreenLoader.openDialog('We are processing your information..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Check Internet Connectivity
       final isConnected = await NetworkManager.instance.isConnected();
@@ -130,13 +140,12 @@ Future<void> signupWithEmailFirebase() async {
       }
 
 
-
       // Register user in the Firebase Auth
-      await AuthRepository.instance.registerWithPhoneNumber(phoneNumberController.text.trim());
+      await AuthRepository.instance.registerWithPhoneNumber(phoneNumberInput.value!.phoneNumber!);
 
 
       //Remove Loader
-      // FullscreenLoader.stopLoading();
+      FullscreenLoader.stopLoading();
 
       /// Show Success Message
       DLoader.successSnackBar(title: 'Congratulation', message: 'Your account has been create! verify email to continue.');
@@ -146,7 +155,7 @@ Future<void> signupWithEmailFirebase() async {
       // Get.to(() => const VerifyEmailScreen());
 
       Future.delayed(const Duration(milliseconds: 100), () {
-        Get.to(() =>  PhoneRegisterConfirmationScreen(phoneNumber: phoneNumberController.text.trim(),));
+        Get.to(() =>  PhoneRegisterConfirmationScreen(phoneNumber: phoneNumberInput.value!.phoneNumber!,));
       });
     } catch (e) {
       DLoader.errorSnackBar(title: 'OH Snap!', message: e.toString());
@@ -173,7 +182,7 @@ Future<void> signupWithEmailFirebase() async {
       DLoader.successSnackBar(title: 'Congratulation', message: 'Your account has been verified!');
 
       final newUser = UserModel(
-          id: phoneNumberController.text.trim(),
+          id: phoneNumberInput.value!.phoneNumber!,
           fullName: '${firstNamePhoneController.text.trim()} ${lastNamePhoneController.text.trim()}',
           email: '${phoneNumberController.text.trim()}@gmail.com',
           phone: phoneNumberController.text.trim()
@@ -186,7 +195,7 @@ Future<void> signupWithEmailFirebase() async {
       final authRepository = Get.put(AuthRepository());
       final backToken = await authRepository.registerWithPhone(
           '${firstNamePhoneController.text.trim()} ${lastNamePhoneController.text.trim()}',
-          phoneNumberController.text.trim().replaceAll('+', '') ?? '',
+          phoneNumberInput.value!.phoneNumber!.replaceAll('+', '') ?? '',
           passwordPhoneController.text.trim(),
           passwordPhoneConfirmController.text.trim(),
           'customer'

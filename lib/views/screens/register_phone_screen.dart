@@ -117,7 +117,8 @@ class _RegisterPhoneScreenState extends State<RegisterPhoneScreen> {
           InternationalPhoneNumberInput(
 
             onInputChanged: (PhoneNumber number) {
-              _phoneNumber = number;
+              controller.onPhoneNumberChanged(number);
+              // _phoneNumber = number;
             },
             selectorConfig: const SelectorConfig(
               selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
@@ -202,13 +203,13 @@ class _RegisterPhoneScreenState extends State<RegisterPhoneScreen> {
               Text.rich(TextSpan(
                   children: [
                     TextSpan(text: '${Config.isAgreeTo} & ', style: Theme.of(context).textTheme.bodySmall),
-                    TextSpan(text: '${Config.privacyPolicy}', style: Theme.of(context).textTheme.bodyMedium?.apply(
+                    TextSpan(text: Config.privacyPolicy, style: Theme.of(context).textTheme.bodyMedium?.apply(
                         color: Colors.black,
                         decoration: TextDecoration.underline,
                         decorationColor: Colors.black
                     )),
-                    TextSpan(text: '${Config.textAnd}', style: Theme.of(context).textTheme.bodySmall),
-                    TextSpan(text: '${Config.termsOfUse}', style: Theme.of(context).textTheme.bodyMedium?.apply(
+                    TextSpan(text: Config.textAnd, style: Theme.of(context).textTheme.bodySmall),
+                    TextSpan(text: Config.termsOfUse, style: Theme.of(context).textTheme.bodyMedium?.apply(
                         color: Colors.black,
                         decoration: TextDecoration.underline,
                         decorationColor: Colors.black
@@ -226,13 +227,8 @@ class _RegisterPhoneScreenState extends State<RegisterPhoneScreen> {
                 print(controller.phoneNumberController.text.trim());
                 if (controller.phoneFormKey.currentState!.validate()) {
 
-                  final displayName = '${controller.firstNamePhoneController.text} ${controller.lastNamePhoneController.text}';
-                  final phoneNumber = _phoneNumber?.phoneNumber!.replaceAll('+', '');
-                  final password = controller.passwordPhoneController.text;
-                  final confirmPassword = controller.passwordPhoneConfirmController.text;
-
-                  controller.phoneNumberController.text = _phoneNumber!.phoneNumber.toString();
-
+                  final phoneNumber = controller.phoneNumberInput.value!.phoneNumber!.replaceAll('+', '');
+                  print("Final phone Number = $phoneNumber");
                   controller.signupWithPhoneFirebase();
 
 
