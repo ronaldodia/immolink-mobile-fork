@@ -89,7 +89,7 @@ class NavigationController extends GetxController {
     const HomeContentScreen(),
     const AgenciesScreen(),
     const MapScreen(),
-    const ArticlesScreen(),
+     ArticlesScreen(),
      ChatListScreen(),
   ];
 

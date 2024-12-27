@@ -83,21 +83,7 @@ class MyApp extends StatelessWidget {
                   ),
                 ),
               ),
-              // initialRoute: onBoardingRoute,
-              // home: BlocBuilder<AuthBloc, AuthState>(
-              //   builder: (context, authState) {
-              //     if (authState is AuthInitial) {
-              //       return const Center(child: CircularProgressIndicator());
-              //     }
-              //     if (authState is Authenticated) {
-              //       return const AccountScreen();
-              //     }
-              //     if (authState is Unauthenticated) {
-              //       return const LoginScreen();
-              //     }
-              //     return const Center(child: CircularProgressIndicator());
-              //   },
-              // ),
+
             )
         );
   }

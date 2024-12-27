@@ -8,11 +8,15 @@ import 'package:immolink_mobile/utils/config.dart';
 class CategoryController extends GetxController {
   var categories = [].obs;
   var isLoading = true.obs;
+  var selectedCategory = ''.obs;
+  var purpose = ''.obs;
+  var bookableType = ''.obs;
 
   // Fonction pour récupérer les catégories
   Future<void> fetchCategories(String language) async {
     try {
       isLoading(true);
+      print('${Config.baseUrlApp}/home/categories?language=$language');
       final response = await http.get(Uri.parse('${Config.baseUrlApp}/home/categories?language=$language'));
       // print(response.body);
       if (response.statusCode == 200) {
@@ -27,6 +31,32 @@ class CategoryController extends GetxController {
       Get.snackbar("Error", "Failed to fetch categories: $e");
     } finally {
       isLoading(false);
+    }
+  }
+
+  void selectCategory(String categoryName) {
+    selectedCategory.value = categoryName;
+    updateBookableType(); // Met à jour le bookableType en fonction de la catégorie sélectionnée
+  }
+
+  void setPurpose(String purposeValue) {
+    purpose.value = purposeValue;
+    updateBookableType(); // Met à jour le bookableType en fonction de la catégorie et du purpose
+  }
+
+  void updateBookableType() {
+    if (purpose.value == 'Rent') {
+      if (selectedCategory.value == 'Apartment' || selectedCategory.value == 'شقة' || selectedCategory.value == 'Appartement') {
+        bookableType.value = 'Daily, Monthly';
+      } else if (selectedCategory.value == 'House' || selectedCategory.value == 'بيت' || selectedCategory.value == 'Maison') {
+        bookableType.value = 'Daily, Monthly';
+      } else if (selectedCategory.value == 'Store' || selectedCategory.value == 'محل' || selectedCategory.value == 'Boutique') {
+        bookableType.value = 'Monthly';
+      } else if (selectedCategory.value == 'Office' || selectedCategory.value == 'مكتب' || selectedCategory.value == 'Bureau') {
+        bookableType.value = 'Monthly';
+      }
+    } else {
+      bookableType.value = ''; // Pas de bookableType pour Sell
     }
   }
 

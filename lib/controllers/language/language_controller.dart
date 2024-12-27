@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:immolink_mobile/controllers/home/categories_controller.dart';
 
 class LanguageController extends GetxController {
   final GetStorage _box = GetStorage();
@@ -22,5 +23,14 @@ class LanguageController extends GetxController {
     _locale.value = newLocale;
     Get.updateLocale(newLocale);
     _box.write('language', languageCode);
+
+    // 3. Mettez à jour les données après le changement de langue
+    updateUI();
+  }
+
+  void updateUI() {
+    // Mettez à jour les données (par exemple, actualisez les API ou le stockage local)
+    // Exemple : Appeler un contrôleur pour recharger les données en fonction de la nouvelle langue
+    Get.find<CategoryController>().fetchCategories(Get.locale?.languageCode ?? 'fr');
   }
 }
