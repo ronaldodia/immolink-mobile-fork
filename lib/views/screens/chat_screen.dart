@@ -120,10 +120,12 @@ class _ChatScreenState extends State<ChatScreen> {
         // Check if the conversationId matches
         print("Got new message: ${parsedMessage} and currentConverstion is $currentConversationId");
         if (parsedMessage['message']['conversation'] == currentConversationId) {
-          if (!messages.any((msg) => msg.id == parsedMessage['message']['id'])) {
-            setState(() {
-              messages.insert(0, ChatModel.fromJson(parsedMessage['message']));
-            });
+          if(parsedMessage['message']['sender_name']!= myName){
+            if (!messages.any((msg) => msg.id == parsedMessage['message']['id'])) {
+              setState(() {
+                messages.insert(0, ChatModel.fromJson(parsedMessage['message']));
+              });
+            }
           }
         }
       } else if (parsedMessage['type'] == 'connection_established') {
