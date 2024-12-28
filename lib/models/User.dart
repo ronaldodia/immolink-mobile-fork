@@ -39,7 +39,7 @@ class UserModel {
   static List<String> nameParts(fullName) => fullName.split(" ");
 
   UserModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    id = json['id'].toString();
     // structureId = json['structure_id'];
     fullName = json['full_name'];
     email = json['email'];

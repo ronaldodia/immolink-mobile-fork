@@ -1,5 +1,6 @@
 class Config {
   static const String baseUrlApp = 'https://daar.server1.digissimmo.org/mobile';
+  static const String chatHostApi='chat.digissimmo.org';
   static const String initUrl = 'https://daar.server1.digissimmo.org';
   static const String baseUrlAppLocalhost = 'http://192.168.100.6:8000/mobile';
   static const String baseUrlSIG = 'https://gis.digissimmo.org/api';

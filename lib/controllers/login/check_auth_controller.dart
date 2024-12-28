@@ -26,11 +26,11 @@ class CheckAuthController extends GetxController {
         return jsonResponse['status'] == 'valid';
       }
       else {
-        return true;
+        return false;
       }
     } catch (e) {
       print('Erreur lors de la vérification du token : $e');
-      return true;
+      return false;
     }
   }
 

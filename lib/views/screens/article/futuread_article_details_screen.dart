@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:immolink_mobile/controllers/chat/chat_controller.dart';
 import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
+import 'package:immolink_mobile/controllers/language/language_controller.dart';
 import 'package:immolink_mobile/controllers/login/check_auth_controller.dart';
 import 'package:immolink_mobile/models/Article.dart';
 import 'package:immolink_mobile/utils/config.dart';
@@ -28,13 +29,17 @@ class FutureadArticleDetailsScreen extends StatefulWidget {
 class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScreen> {
 
   bool _isExpanded = false;
+
   @override
   Widget build(BuildContext context) {
     final ChatController chatController = Get.put(ChatController());
     final CheckAuthController authController = Get.put(CheckAuthController());
     final CurrencyController currencyController = Get.find();
+    final LanguageController languageController = Get.find();
     bool isLocationAvailable = widget.property.location_latitude! != null && widget.property.location_latitude!.isNotEmpty &&
         widget.property.location_longitude != null && widget.property.location_longitude!.isNotEmpty;
+    final agentId = widget.property.structure!=null?widget.property.structure!.owner_id: widget.property.author_id;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -43,7 +48,7 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
             Navigator.pop(context);
           },
         ),
-        title: Text(widget.property.name ?? 'Property Details'),
+        title: Text(widget.property.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? 'Property Details'),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
@@ -177,7 +182,7 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.property.name ?? 'Unknown Property',
+                    widget.property.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? 'Unknown Property',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -250,7 +255,7 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
                 children: [
                   // Affiche le texte avec une limite de lignes si non expansé
                   Text(
-                    widget.property.description ?? 'No description available.',
+                    widget.property.getPropertyByLanguage(languageController.locale.languageCode , propertyType: "description") ?? 'No description available.',
                     maxLines: _isExpanded
                         ? null
                         : 5, // Limite à 5 lignes si non expansé
@@ -369,16 +374,20 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
             bool isAuthenticated = await authController.checkUserToken();
             // Vérifier si l'utilisateur est connecté via Firebase ou backend
             User? user = FirebaseAuth.instance.currentUser;
-            var conversation = chatController.filteredConversations[0];
+            //var conversation = chatController.filteredConversations[0];
             print(isAuthenticated);
-
+            final conversation = await chatController.getOrCreateConversation(
+              propertyId: widget.property.id,
+              propertyTitle: widget.property.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? 'Property Chat',
+              agentId: agentId,
+            );
             if (isAuthenticated) {
-              // L'utilisateur est authentifié, continuer l'action
-              Get.to(ChatScreen(conversationId: conversation.id));
+
+              Get.to(ChatScreen(conversationId: conversation.id, agentId: agentId));
             }else if (user != null) {
               // Si l'utilisateur est connecté, naviguer vers la page de réservation
               // Naviguer vers l'écran de détails de la conversation
-              Get.to(ChatScreen(conversationId: conversation.id));
+              Get.to(ChatScreen(conversationId: conversation.id, agentId: agentId));
             } else {
               // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
               Get.to(() => const LoginEmailScreen(), arguments: {

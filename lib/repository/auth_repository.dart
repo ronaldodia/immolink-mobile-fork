@@ -11,6 +11,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:immolink_mobile/api/api_base.dart';
+import 'package:immolink_mobile/models/Profile.dart';
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
 import 'package:immolink_mobile/views/screens/home_screen.dart';
@@ -419,7 +420,11 @@ class AuthRepository extends GetxController{
     }
   }
 
-
-
-
+  Future<dynamic> getProfileByToken(token) async {
+    try {
+      return await _apibase.getMyProfile(token);
+    } catch (e) {
+      throw 'enable to get the profile';
+    }
+  }
 }

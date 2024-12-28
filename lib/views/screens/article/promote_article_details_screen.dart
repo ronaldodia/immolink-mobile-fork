@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
+import 'package:immolink_mobile/controllers/language/language_controller.dart';
 import 'package:immolink_mobile/controllers/login/check_auth_controller.dart';
 import 'package:immolink_mobile/models/Article.dart';
 import 'package:immolink_mobile/utils/config.dart';
@@ -33,6 +34,7 @@ class _PromoteArticleDetailsScreenState
     bool isLocationAvailable = widget.property.location_latitude! != null && widget.property.location_latitude!.isNotEmpty &&
         widget.property.location_longitude != null && widget.property.location_longitude!.isNotEmpty;
     final CurrencyController currencyController = Get.find();
+    final LanguageController languageController = Get.find();
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -41,7 +43,7 @@ class _PromoteArticleDetailsScreenState
             Navigator.pop(context);
           },
         ),
-        title: Text(widget.property.name ?? 'Property Details'),
+        title: Text(widget.property.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? 'Property Details'),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
@@ -181,7 +183,7 @@ class _PromoteArticleDetailsScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.property.name ?? 'Unknown Property',
+                    widget.property.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? 'Unknown Property',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -255,7 +257,7 @@ class _PromoteArticleDetailsScreenState
                 children: [
                   // Affiche le texte avec une limite de lignes si non expansé
                   Text(
-                    widget.property.description ?? 'No description available.',
+                    widget.property.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "description")?? 'No description available.',
                     maxLines: _isExpanded
                         ? null
                         : 5, // Limite à 5 lignes si non expansé

@@ -5,6 +5,8 @@ import 'package:immolink_mobile/models/Article.dart';
 import 'package:immolink_mobile/views/screens/article/futuread_article_details_screen.dart';
 import 'package:immolink_mobile/views/screens/article/promote_article_details_screen.dart';
 
+import 'package:immolink_mobile/controllers/language/language_controller.dart';
+
 class SearchBarWidget extends StatelessWidget {
   const SearchBarWidget({
     super.key,
@@ -22,7 +24,7 @@ class SearchBarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final SearchAppController searchController = Get.put(SearchAppController());
-
+    final LanguageController languageController = Get.find();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -71,7 +73,7 @@ class SearchBarWidget extends StatelessWidget {
 
                   return ListTile(
                     leading: Image.network(article.image, width: 50, height: 50, fit: BoxFit.cover),
-                    title: Text(article.name ?? 'Sans titre'),  // Protection contre les valeurs nulles
+                    title: Text( article.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? 'Sans titre'),  // Protection contre les valeurs nulles
                     subtitle: Text(article.purpose),
                     onTap: () async {
                       if (article.id != null) {
