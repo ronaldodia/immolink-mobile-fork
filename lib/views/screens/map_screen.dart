@@ -410,8 +410,7 @@ class _MapScreenState extends State<MapScreen>
                                 final arabicName =
                                     lotissements[name]['arabicName'];
                                 final saxonName = lotissements[name]['name'];
-                                print(
-                                    'langue: ${Localizations.localeOf(context).languageCode}');
+
                                 return DropdownMenuItem<String>(
                                   value: name,
                                   child:

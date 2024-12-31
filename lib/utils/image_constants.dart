@@ -29,6 +29,8 @@ class TImages {
 
   static const String area = "assets/icons/area.svg";
 
+  static const String total_area = "assets/icons/total_area.svg";
+
   static const String mapAnimation = "assets/images/mapAnimation.gif";
 
   static const String checkHome = "assets/images/checkHome.gif";

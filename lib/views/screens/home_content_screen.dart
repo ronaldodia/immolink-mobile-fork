@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:immolink_mobile/controllers/communes/commune_controller.dart';
+import 'package:immolink_mobile/controllers/communes/district_controller.dart';
 import 'package:immolink_mobile/controllers/home/article_promotion_controller.dart';
 import 'package:immolink_mobile/controllers/home/categories_controller.dart';
 import 'package:immolink_mobile/controllers/language/language_controller.dart';
@@ -30,6 +32,8 @@ class HomeContentScreen extends StatefulWidget {
 class _HomeContentScreenState extends State<HomeContentScreen> {
 
   final CategoryController categoryController = Get.put(CategoryController());
+  final DistrictController districtController = Get.put(DistrictController());
+  final CommuneController communeController = Get.put(CommuneController());
   final ArticlePromotionController articlePromotionController =
   Get.put(ArticlePromotionController());
 

@@ -41,7 +41,6 @@ class UserController extends GetxController {
         );
         // Résultat valide : On écrit dans le localStorage
         localStorage.write('AUTH_TOKEN', backToken);
-        print('======= user created ===========');
         print('======= token created ===========');
         print(backToken);
       }

@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';  // Import Firebase Authentication
 import 'package:get_storage/get_storage.dart';
+import 'package:immolink_mobile/controllers/communes/commune_controller.dart';
+import 'package:immolink_mobile/controllers/communes/district_controller.dart';
 import 'package:immolink_mobile/controllers/login/check_auth_controller.dart';
 import 'package:immolink_mobile/controllers/login/login_controller.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
@@ -21,6 +23,8 @@ class BottomNavigationMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(NavigationController());
+    final DistrictController districtController = Get.put(DistrictController());
+    final CommuneController communeController = Get.put(CommuneController());
 
 
     return Scaffold(

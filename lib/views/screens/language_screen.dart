@@ -34,8 +34,8 @@ class LanguageScreen extends StatelessWidget {
                 languageController.changeLanguage(item.languageCode);
                 const AnimationLoader(text: 'Changement de langue en cours', animation: TImages.loading, );
                 // Get.offAll(const BottomNavigationMenu());
-                // Get.back();
-                Navigator.pop(context);
+
+                // Navigator.pop(context)
               },
             );
           },
