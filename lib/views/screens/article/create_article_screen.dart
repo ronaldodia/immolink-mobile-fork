@@ -536,35 +536,50 @@ class CreateArticleScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: controller.fetchFeatures,
+                        onPressed: () async {
+                          await controller.fetchFeatures();
+
+                        },
                         child: const Text('Rechercher'),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Expanded(
-                    child: Obx(() => GoogleMap(
-                      mapType: MapType.satellite,
-                      initialCameraPosition: CameraPosition(
-                        target: controller.currentLocation.value,
-                        zoom: 18,
-                      ),
-                      onTap: (LatLng location) {
-                        controller.setCurrentLocation(location);
-                      },
-                      markers: {
-                        Marker(
-                          markerId: const MarkerId('currentLocation'),
-                          position: controller.currentLocation.value,
+                    child: Obx(() {
+                      if (controller.isLoading.value) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      return GoogleMap(
+                        mapType: MapType.satellite,
+                        myLocationEnabled: true,
+                        myLocationButtonEnabled: true,
+                        mapToolbarEnabled: false,
+                        initialCameraPosition: CameraPosition(
+                          target: controller.currentLocation.value,
+                          zoom: 18,
                         ),
-                      },
-                      myLocationButtonEnabled: true,
-                      myLocationEnabled: true,
-                    )),
+                        polygons: Set<Polygon>.of(controller.polygons),
+                        onMapCreated: (GoogleMapController mapController) {
+                          controller.currentLocation.listen((location) {
+                            mapController.animateCamera(
+                              CameraUpdate.newLatLng(location),
+                            );
+
+                          });
+
+                        },
+                          onTap: (LatLng location) {
+                            controller.setCurrentLocation(location);
+                          }
+                      );
+                    }),
                   ),
+
+
                   Obx(() {
                     if (controller.locationData.isEmpty) {
-                      return const Text('Aune donnée de localisation disponible.');
+                      return const Text('Aucune donnée de localisation disponible.');
                     }
                     return ListView.builder(
                       shrinkWrap: true,

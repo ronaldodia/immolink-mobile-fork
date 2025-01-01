@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:get/get.dart';
 import 'package:immolink_mobile/services/address_service.dart';
 import 'package:immolink_mobile/utils/config.dart';
+import 'package:immolink_mobile/views/widgets/loaders/loader.dart';
 
 class ArticleFormController extends GetxController {
   // Champs du formulaire
@@ -28,6 +30,7 @@ class ArticleFormController extends GetxController {
   var gallery = <Map<String, String>>[].obs;
   var image = "".obs;
 
+
   // addressage
   RxList<String> moughataas = <String>[].obs;
   RxList<String> lotissements = <String>[].obs;
@@ -35,16 +38,16 @@ class ArticleFormController extends GetxController {
   RxString selectedLotissement = ''.obs;
   RxString selectedLot = ''.obs;
   RxList<dynamic> locationData = <dynamic>[].obs;
-  Rx<LatLng> currentLocation = LatLng(0.0, 0.0).obs;
+  Rx<LatLng> currentLocation = const LatLng(18.0601376, -15.9600027).obs; // Exemple pour Nouakchott
+
+  RxList<Polygon> polygons = <Polygon>[].obs;
+  RxBool isLoading = false.obs;
 
   // Champs observables pour l'image en avant et la galerie d'images
   RxString uploadImage = ''.obs;
   RxList<Map<String, String>> uploadGallery = <Map<String, String>>[].obs;
 
   RxBool isPanelOpen = false.obs;
-  // Rx<LatLng> currentLocation =
-  //     const LatLng(18.060137615952126, -15.96000274888616).obs;
-  // RxList locationData = [].obs;
   var addressData = {}.obs;
 
   var isLoadingImage = false.obs;
@@ -53,12 +56,12 @@ class ArticleFormController extends GetxController {
   // Étape actuelle
   var currentStep = 0.obs;
 
-
   @override
   void onInit() {
     super.onInit();
     loadData();
   } // Méthode pour aller à une étape spécifique
+
   void goToStep(int step) {
     currentStep.value = step;
   }
@@ -158,39 +161,70 @@ class ArticleFormController extends GetxController {
         }
       } else {
         print(
-            'Erreur lors du téléchargement des images : ${response.statusCode}');
+            'Erreur lors du téléchargement des images : ${response
+                .statusCode}');
       }
     } catch (e) {
       print('Exception lors du téléchargement des images : $e');
     } finally {
       isLoadingGallery.value = false; // Cache le chargement
     }
+  }
 
-    Future<void> fetchLocationData(double latitude, double longitude) async {
-      try {
-        final url =
-            'https://gis.digissimmo.org/api/location?longitude=$longitude&latitude=$latitude';
-        final response = await http.get(Uri.parse(url));
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          locationData.assignAll(data);
-        } else {
-          print('Erreur API : ${response.statusCode}');
+  Future<void> fetchLocationData(double latitude, double longitude) async {
+    isLoading.value = true; // Active le chargement
+    try {
+      final url =
+          'https://gis.digissimmo.org/api/location?longitude=$longitude&latitude=$latitude';
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        // Effacer les polygones précédents
+        polygons.clear();
+
+        if (data.isNotEmpty) {
+          final geometry = data[0]['geometry'];
+
+          if (geometry != null) {
+            final coordinates = geometry['coordinates'];
+            if (coordinates != null && coordinates.isNotEmpty) {
+              List<LatLng> polygonCoords = [];
+              for (var point in coordinates[0][0]) {
+                polygonCoords.add(LatLng(point[1], point[0]));
+              }
+
+              // Ajouter le nouveau polygone
+              final polygon = Polygon(
+                polygonId: const PolygonId('selectedPolygon'),
+                points: polygonCoords,
+                fillColor: Colors.red.withOpacity(0.3),
+                strokeColor: Colors.red,
+                strokeWidth: 2,
+              );
+              polygons.add(polygon);
+            }
+          } else {
+            DLoader.warningSnackBar(
+              title: 'Localisation',
+              message: "Aucune donnée trouvée pour l'emplacement spécifié.",
+            );
+          }
         }
-      } catch (e) {
-        print('Exception lors de la récupération des données : $e');
+      } else {
+        print('Erreur API : ${response.statusCode}');
       }
-    }
-
-    void togglePanel() {
-      isPanelOpen.value = !isPanelOpen.value;
-    }
-
-    void setCurrentLocation(LatLng location) {
-      currentLocation.value = location;
-      fetchLocationData(location.latitude, location.longitude);
+    } catch (e) {
+      print('Exception lors de la récupération des données : $e');
+    } finally {
+      isLoading.value = false; // Désactive le chargement
     }
   }
+
+  void togglePanel() {
+    isPanelOpen.value = !isPanelOpen.value;
+  }
+
 
   // Méthode pour supprimer une image de la galerie
   void removeImageFromGallery(Map<String, String> image) {
@@ -202,31 +236,21 @@ class ArticleFormController extends GetxController {
     uploadImage.value = '';
   }
 
-  void togglePanel() {
-    isPanelOpen.value = !isPanelOpen.value;
-  }
 
   void setCurrentLocation(LatLng location) async {
     currentLocation.value = location;
+
+    // Efface les anciens polygones et supprime les marqueurs
+    polygons.clear();
+
+    // Rechercher les données pour la nouvelle localisation
     await fetchLocationData(location.latitude, location.longitude);
   }
 
-  Future<void> fetchLocationData(double latitude, double longitude) async {
-    final url =
-        'https://gis.digissimmo.org/api/location?longitude=$longitude&latitude=$latitude';
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      locationData.value = jsonDecode(response.body);
-    } else {
-      locationData.value = [];
-    }
-  }
 
   void searchLocation(String query) {
     // Implémentez une recherche personnalisée pour trouver des endroits.
   }
-
 
   Future<void> loadData() async {
     final data = await AddressService().loadAddressData();
@@ -240,12 +264,12 @@ class ArticleFormController extends GetxController {
     // Assurez-vous que 'lotissements' contient uniquement des Strings.
     var rawLotissements = addressData[moughataa]['lotissements'] ?? [];
     if (rawLotissements is List<dynamic>) {
-      lotissements.value = rawLotissements.map((item) => item.toString()).toList();
+      lotissements.value =
+          rawLotissements.map((item) => item.toString()).toList();
     } else {
       lotissements.value = [];
     }
   }
-
 
   void selectLotissement(String lotissement) {
     selectedLotissement.value = lotissement;
@@ -256,16 +280,72 @@ class ArticleFormController extends GetxController {
   }
 
   Future<void> fetchFeatures() async {
-    final response = await GetConnect().get(
-      'https://gis.digissimmo.org/api/features',
-      query: {
-        'lot': selectedLot.value,
-        'lotissement': selectedLotissement.value,
-        'moughataa': selectedMoughataa.value,
-      },
-    );
-    if (response.statusCode == 200) {
-      locationData.value = response.body;
+    isLoading.value = true;
+    try {
+      final response = await GetConnect().get(
+        'https://gis.digissimmo.org/api/features',
+        query: {
+          'lot': selectedLot.value,
+          'lotissement': selectedLotissement.value,
+          'moughataa': selectedMoughataa.value,
+        },
+      );
+
+      if (response.statusCode == 200 && response.body != null) {
+        final data = response.body;
+
+        if (data.isNotEmpty) {
+          locationData.value = data;
+
+          // Supposons que la première fonctionnalité est celle que vous voulez afficher
+          final feature = data[0];
+          final geometry = feature['geometry'];
+
+          if (geometry != null) {
+            final coordinates = geometry['coordinates'];
+
+            if (coordinates != null && coordinates.isNotEmpty) {
+              // Extraire les coordonnées pour dessiner le polygone
+              List<LatLng> polygonCoords = [];
+              for (var point in coordinates[0][0]) {
+                polygonCoords.add(LatLng(point[1], point[0]));
+              }
+
+              // Ajouter un nouveau polygone
+              polygons.clear();
+              final polygon = Polygon(
+                polygonId: const PolygonId('selectedPolygon'),
+                points: polygonCoords,
+                fillColor: Colors.green.withOpacity(0.3),
+                strokeColor: Colors.green,
+                strokeWidth: 2,
+              );
+              polygons.add(polygon);
+
+              // Centrer la carte sur la première coordonnée
+              if (polygonCoords.isNotEmpty) {
+                currentLocation.value = polygonCoords[0];
+              }
+            } else {
+              DLoader.warningSnackBar(
+                title: 'Recherche',
+                message: "Aucune donnee trouvé pour cet emplacement.",
+              );
+            }
+          }
+        } else {
+          DLoader.warningSnackBar(
+            title: 'Recherche',
+            message: "Aucune donnée trouvée pour les critères spécifiés.",
+          );
+        }
+      } else {
+        print('Erreur API : ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Exception lors de la récupération des fonctionnalités : $e');
+    } finally {
+      isLoading.value = false;
     }
   }
 
