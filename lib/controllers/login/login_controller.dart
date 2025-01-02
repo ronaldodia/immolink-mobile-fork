@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -147,7 +148,7 @@ class LoginController extends GetxController{
       print("final phone number = $phoneNumber");
       // login with backend
       final resultByPhone = await AuthRepository.instance.loginWithPhone(phoneNumber, phonePasswordController.text.trim());
-      if (resultByPhone != null && resultByPhone != "error credentials" && resultByPhone != "Unauthenticated") {
+      if (resultByPhone != null || resultByPhone != "error credentials" || resultByPhone != "Unauthenticated") {
         // Résultat valide : On écrit dans le localStorage
         localStorage.write('AUTH_TOKEN', resultByPhone);
       } else {
@@ -196,6 +197,11 @@ class LoginController extends GetxController{
       // google Authentication
       final userCredentials = await AuthRepository.instance.signInWithGoogle();
 
+      var token = FirebaseAuth.instance.currentUser;
+      final idToken = await token!.getIdToken();
+      print("FIREBASE_TOKEN = $idToken");
+      localStorage.write('FIREBASE_TOKEN', idToken);
+
       // Save User Record
       await userController.saveUserRecord(userCredentials);
 
@@ -224,6 +230,12 @@ class LoginController extends GetxController{
 
       // google Authentication
       final userCredentials = await AuthRepository.instance.signInWithFacebook();
+
+      var token = FirebaseAuth.instance.currentUser;
+      final idToken = await token!.getIdToken();
+      print("FIREBASE_TOKEN = $idToken");
+      localStorage.write('FIREBASE_TOKEN', idToken);
+      // Once signed in, return the UserCredential
 
       // Save User Record
       await userController.saveUserRecord(userCredentials);

@@ -125,6 +125,7 @@ class AuthRepository extends GetxController{
         idToken: googleAuth?.idToken
       );
 
+
       // Once signed in, return the UserCredential
       return await _auth.signInWithCredential(credential);
     } on FirebaseAuthException catch(e) {
@@ -171,8 +172,8 @@ class AuthRepository extends GetxController{
       throw FormatException(e.message);
     }on PlatformException catch(e) {
       throw PlatformException(code: e.code);
-    } catch(e) {
-      if(kDebugMode) print('Something went wrong. Please try again');
+    } catch(e,st) {
+      if(kDebugMode) print('Something went wrong. Please try again $st');
       print(e.toString());
       // return null;
       throw e.toString();
@@ -259,7 +260,12 @@ class AuthRepository extends GetxController{
     try {
       final credential = PhoneAuthProvider.credential(verificationId: verificationId, smsCode: smsCode);
       var userCredential = await _auth.signInWithCredential(credential);
+
       if(userCredential.user != null){
+        var auth = FirebaseAuth.instance.currentUser;
+        final idToken = await auth!.getIdToken();
+        print("FIREBASE_TOKEN = $idToken");
+        deviceStorage.write('FIREBASE_TOKEN', idToken);
         Get.to(const BottomNavigationMenu());
       }
     } on FirebaseAuthException catch (e) {
@@ -411,6 +417,8 @@ class AuthRepository extends GetxController{
           this.verificationId = verificationId;
         },
       );
+
+
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthException(code: e.code);
     } on PlatformException catch (e) {
