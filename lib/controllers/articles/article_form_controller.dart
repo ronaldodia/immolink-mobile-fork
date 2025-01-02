@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:immolink_mobile/services/address_service.dart';
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/views/widgets/loaders/loader.dart';
+import 'package:location/location.dart';
 
 class ArticleFormController extends GetxController {
   // Champs du formulaire
@@ -38,7 +39,9 @@ class ArticleFormController extends GetxController {
   RxString selectedLotissement = ''.obs;
   RxString selectedLot = ''.obs;
   RxList<dynamic> locationData = <dynamic>[].obs;
-  Rx<LatLng> currentLocation = const LatLng(18.0601376, -15.9600027).obs; // Exemple pour Nouakchott
+  Rx<LatLng> currentLocation = const LatLng(0.0, 0.0).obs; // Exemple pour Nouakchott
+  GoogleMapController? mapController;
+  final Location location = Location();
 
   RxList<Polygon> polygons = <Polygon>[].obs;
   RxBool isLoading = false.obs;
@@ -60,6 +63,7 @@ class ArticleFormController extends GetxController {
   void onInit() {
     super.onInit();
     loadData();
+    _initLocation();
   } // Méthode pour aller à une étape spécifique
 
   void goToStep(int step) {
@@ -184,6 +188,7 @@ class ArticleFormController extends GetxController {
         polygons.clear();
 
         if (data.isNotEmpty) {
+          locationData.value = data;
           final geometry = data[0]['geometry'];
 
           if (geometry != null) {
@@ -245,6 +250,29 @@ class ArticleFormController extends GetxController {
 
     // Rechercher les données pour la nouvelle localisation
     await fetchLocationData(location.latitude, location.longitude);
+    // Si des polygones sont présents, ajustez la caméra pour inclure tous leurs points
+    if (polygons.isNotEmpty) {
+      final polygonPoints = polygons.first.points;
+
+      if (polygonPoints.isNotEmpty) {
+        final bounds = LatLngBounds(
+          southwest: polygonPoints.reduce((a, b) =>
+              LatLng(a.latitude < b.latitude ? a.latitude : b.latitude,
+                  a.longitude < b.longitude ? a.longitude : b.longitude)),
+          northeast: polygonPoints.reduce((a, b) =>
+              LatLng(a.latitude > b.latitude ? a.latitude : b.latitude,
+                  a.longitude > b.longitude ? a.longitude : b.longitude)),
+        );
+
+        mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+        return;
+      }
+    }
+
+    // Mettre à jour la position de la caméra
+    mapController?.animateCamera(
+      CameraUpdate.newLatLng(location),
+    );
   }
 
 
@@ -260,16 +288,18 @@ class ArticleFormController extends GetxController {
 
   void selectMoughataa(String moughataa) {
     selectedMoughataa.value = moughataa;
-
-    // Assurez-vous que 'lotissements' contient uniquement des Strings.
+    lotissements.clear(); // Réinitialiser les lotissements
+    selectedLotissement.value = ''; // Réinitialiser la sélection
+    selectedLot.value = ''; // Réinitialiser les lots
+    // Charger les nouveaux lotissements
     var rawLotissements = addressData[moughataa]['lotissements'] ?? [];
     if (rawLotissements is List<dynamic>) {
-      lotissements.value =
-          rawLotissements.map((item) => item.toString()).toList();
+      lotissements.value = rawLotissements.map((item) => item.toString()).toList();
     } else {
       lotissements.value = [];
     }
   }
+
 
   void selectLotissement(String lotissement) {
     selectedLotissement.value = lotissement;
@@ -344,6 +374,31 @@ class ArticleFormController extends GetxController {
       }
     } catch (e) {
       print('Exception lors de la récupération des fonctionnalités : $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> _initLocation() async {
+    try {
+      // Vérifiez les permissions
+      bool _serviceEnabled = await location.serviceEnabled();
+      if (!_serviceEnabled) {
+        _serviceEnabled = await location.requestService();
+        if (!_serviceEnabled) return;
+      }
+
+      PermissionStatus _permissionGranted = await location.hasPermission();
+      if (_permissionGranted == PermissionStatus.denied) {
+        _permissionGranted = await location.requestPermission();
+        if (_permissionGranted != PermissionStatus.granted) return;
+      }
+
+      // Obtenez la localisation actuelle
+      final userLocation = await location.getLocation();
+      currentLocation.value = LatLng(userLocation.latitude!, userLocation.longitude!);
+    } catch (e) {
+      print("Erreur lors de la récupération de la localisation : $e");
     } finally {
       isLoading.value = false;
     }

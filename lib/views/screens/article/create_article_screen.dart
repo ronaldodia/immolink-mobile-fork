@@ -414,6 +414,26 @@ class CreateArticleScreen extends StatelessWidget {
               content: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Obx(() {
+                    if (articleController.locationData.isEmpty) {
+                      return const Text('Aucune donnée de localisation disponible.');
+                    }
+                    final location = articleController.locationData[0];
+                    final properties = location['properties'];
+                    final geometry = location['geometry']['coordinates'];
+                    final surface = _calculateSurface(geometry).toStringAsFixed(2);
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text('Moughataa: ${properties['moughataa'] ?? 'N/A'}'),
+                        Text('Lotissement: ${properties['lts'] ?? 'N/A'}'),
+                        Text('Surface: $surface m²'),
+                        Text('Numero de lot: ${properties['l'] ?? 'N/A'}'),
+                      ],
+                    );
+                  }),
+                  const SizedBox(height: TSizes.spaceBtwItems,),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white.withOpacity(1.0),
@@ -457,6 +477,7 @@ class CreateArticleScreen extends StatelessWidget {
 
     bool isArabic = Get.locale?.languageCode == 'ar';
     showModalBottomSheet(
+      backgroundColor: Colors.white,
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -557,7 +578,7 @@ class CreateArticleScreen extends StatelessWidget {
                         mapToolbarEnabled: false,
                         initialCameraPosition: CameraPosition(
                           target: controller.currentLocation.value,
-                          zoom: 18,
+                          zoom: 19,
                         ),
                         polygons: Set<Polygon>.of(controller.polygons),
                         onMapCreated: (GoogleMapController mapController) {
@@ -569,7 +590,8 @@ class CreateArticleScreen extends StatelessWidget {
                           });
 
                         },
-                          onTap: (LatLng location) {
+                          onTap: (LatLng location) async {
+                            await controller.fetchLocationData(location.latitude, location.longitude);
                             controller.setCurrentLocation(location);
                           }
                       );
@@ -581,14 +603,10 @@ class CreateArticleScreen extends StatelessWidget {
                     if (controller.locationData.isEmpty) {
                       return const Text('Aucune donnée de localisation disponible.');
                     }
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: controller.locationData.length,
-                      itemBuilder: (_, index) {
-                        final location = controller.locationData[index];
-                        final properties = location['properties'];
-                        final geometry = location['geometry']['coordinates'];
-                        final surface = _calculateSurface(geometry).toStringAsFixed(2);
+                    final location = controller.locationData[0];
+                    final properties = location['properties'];
+                    final geometry = location['geometry']['coordinates'];
+                    final surface = _calculateSurface(geometry).toStringAsFixed(2);
 
                         return Card(
                           margin: const EdgeInsets.symmetric(vertical: 8),
@@ -600,12 +618,11 @@ class CreateArticleScreen extends StatelessWidget {
                                 Text('Moughataa: ${properties['moughataa'] ?? 'N/A'}'),
                                 Text('Lotissement: ${properties['lts'] ?? 'N/A'}'),
                                 Text('Surface: $surface m²'),
+                                Text('Numero de lot: ${properties['l'] ?? 'N/A'}'),
                               ],
                             ),
                           ),
                         );
-                      },
-                    );
                   }),
                   ElevatedButton(
                     onPressed: () => Navigator.pop(context),
