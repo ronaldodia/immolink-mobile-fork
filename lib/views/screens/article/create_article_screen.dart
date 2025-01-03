@@ -78,13 +78,21 @@ class CreateArticleScreen extends StatelessWidget {
                   const Text('Choisissez une catégorie :'),
                   const SizedBox(height: 10),
                   Obx(() {
-
                     if (categoryController.isLoading.value) {
                       return const CircularProgressIndicator();
                     }
+
+                    // Filtrage des catégories
+                    final filteredCategories = categoryController.categories.where((category) {
+                      final categoryName = category['name'].toLowerCase();
+                      return categoryName != 'hostel' &&
+                          categoryName != 'hôtel' &&
+                          categoryName != 'الفندق';
+                    }).toList();
+
                     return Wrap(
                       spacing: 10,
-                      children: categoryController.categories.map((category) {
+                      children: filteredCategories.map((category) {
                         return ElevatedButton(
                           onPressed: () {
                             categoryController.selectCategory(category['name']);
@@ -107,56 +115,119 @@ class CreateArticleScreen extends StatelessWidget {
                                     : const ColorFilter.mode(Colors.green, BlendMode.srcIn),
                               ),
                               const SizedBox(height: TSizes.spaceBtwItems),
-                              Text(category['name'], style: TextStyle(color: categoryController.selectedCategory.value == category['name'] ? Colors.white : Colors.green),),
+                              Text(
+                                category['name'],
+                                style: TextStyle(
+                                  color: categoryController.selectedCategory.value == category['name']
+                                      ? Colors.white
+                                      : Colors.green,
+                                ),
+                              ),
                             ],
                           ),
                         );
                       }).toList(),
                     );
                   }),
+
                   const SizedBox(height: 20),
                   const Text('Choisir une proposition :'),
                   Obx(() {
+                    // Vérifie les catégories spécifiques
                     final isBoutique =
                         categoryController.selectedCategory.value.toLowerCase() == 'boutique' ||
-                            categoryController.selectedCategory.value.toLowerCase() == 'store' ||  categoryController.selectedCategory.value.toLowerCase() == 'محل' ;
+                            categoryController.selectedCategory.value.toLowerCase() == 'store' ||
+                            categoryController.selectedCategory.value.toLowerCase() == 'محل';
+                    final isBureau =
+                        categoryController.selectedCategory.value.toLowerCase() == 'bureau' ||
+                            categoryController.selectedCategory.value.toLowerCase() == 'office' ||
+                            categoryController.selectedCategory.value.toLowerCase() == 'مكتب';
+                    final isAppartement =
+                        categoryController.selectedCategory.value.toLowerCase() == 'appartement' ||
+                            categoryController.selectedCategory.value.toLowerCase() == 'apartment' ||
+                            categoryController.selectedCategory.value.toLowerCase() == 'شقة';
+
+                    // Vérifie si la catégorie est Boutique, Appartement ou Bureau
+                    final isRentOnly = isBoutique || isBureau || isAppartement;
+
                     return Row(
                       children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            categoryController.setPurpose('Rent');
-                            articleController.purpose.value = 'Rent';
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: categoryController.purpose.value == 'Rent'
-                                ? Colors.green
-                                : Colors.white,
-                          ),
-                          child:  Text('Rent', style: TextStyle(color: categoryController.purpose.value == 'Rent' ? Colors.white : Colors.green)),
-                        ),
-                        const SizedBox(width: 10),
-                        if (!isBoutique)
+                        if (isRentOnly) // Affiche uniquement Rent pour les catégories spécifiques
                           ElevatedButton(
+                            onPressed: () {
+                              categoryController.setPurpose('Rent');
+                              articleController.purpose.value = 'Rent';
+                            },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: categoryController.purpose.value == 'Sell'
+                              backgroundColor: categoryController.purpose.value == 'Rent'
                                   ? Colors.green
                                   : Colors.white,
                             ),
-                            onPressed: () => categoryController.setPurpose('Sell'),
-                            child:  Text('Sell',  style: TextStyle(color: categoryController.purpose.value == 'Sell' ? Colors.white : Colors.green)),
+                            child: Text(
+                              'Rent',
+                              style: TextStyle(
+                                color: categoryController.purpose.value == 'Rent'
+                                    ? Colors.white
+                                    : Colors.green,
+                              ),
+                            ),
                           ),
+                        if (!isRentOnly) // Affiche Rent et Sell pour les autres catégories
+                          ...[
+                            ElevatedButton(
+                              onPressed: () {
+                                categoryController.setPurpose('Rent');
+                                articleController.purpose.value = 'Rent';
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: categoryController.purpose.value == 'Rent'
+                                    ? Colors.green
+                                    : Colors.white,
+                              ),
+                              child: Text(
+                                'Rent',
+                                style: TextStyle(
+                                  color: categoryController.purpose.value == 'Rent'
+                                      ? Colors.white
+                                      : Colors.green,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            ElevatedButton(
+                              onPressed: () {
+                                categoryController.setPurpose('Sell');
+                                articleController.purpose.value = 'Sell';
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: categoryController.purpose.value == 'Sell'
+                                    ? Colors.green
+                                    : Colors.white,
+                              ),
+                              child: Text(
+                                'Sell',
+                                style: TextStyle(
+                                  color: categoryController.purpose.value == 'Sell'
+                                      ? Colors.white
+                                      : Colors.green,
+                                ),
+                              ),
+                            ),
+                          ],
                       ],
                     );
                   }),
+
                   const SizedBox(height: TSizes.spaceBtwItems,),
-                  const Text(
-                    "Sélectionnez une zone",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  // const Text(
+                  //   "Sélectionnez une zone",
+                  //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  // ),
                   const SizedBox(height: 10),
 
                   Obx(
                         () => DropdownButton<Commune>(
+                          hint: const Text('Selectionnez une zone'),
                       isExpanded: true,
                       value: communeController.selectedCommune.value,
                       items: communeController.communes.map((commune) {
@@ -223,42 +294,75 @@ class CreateArticleScreen extends StatelessWidget {
                   width: 2,
                 ),
               ),
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Champs pour la latitude et la longitude
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: 'Titre', suffixStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    onChanged: (value) => articleController.nameAr.value = value,
-                  ),
-                  const SizedBox(height: TSizes.spaceBtwItems,),
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: 'Description'),
-                    onChanged: (value) => articleController.description.value = value,
-                  ),
-                  const SizedBox(height: TSizes.spaceBtwItems,),
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: 'Price'),
-                    onChanged: (value) => articleController.price.value = value,
-                  ),
-                  const SizedBox(height: TSizes.spaceBtwItems,),
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: 'Nombre de Chambre'),
-                    onChanged: (value) => articleController.bedroom.value = value,
-                  ),
-                  const SizedBox(height: TSizes.spaceBtwItems,),
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: 'Nombre de Toilette'),
-                    onChanged: (value) => articleController.bathroom.value = value,
-                  ),const SizedBox(height: TSizes.spaceBtwItems,),
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: 'Surface m²'),
-                    onChanged: (value) => articleController.area.value = value,
-                  ),
-                ],
-              ),
+              content: Obx(() {
+                // Vérifier la catégorie sélectionnée
+                final selectedCategory = categoryController.selectedCategory.value.toLowerCase();
+                final hideRoomsAndToilets = selectedCategory == 'terrain' ||
+                    selectedCategory == 'land' ||
+                    selectedCategory == 'أرض' ||
+                    selectedCategory == 'boutique' ||
+                    selectedCategory == 'store' ||
+                    selectedCategory == 'محل' ||
+                    selectedCategory == 'bureau' ||
+                    selectedCategory == 'office' ||
+                    selectedCategory == 'مكتب' ;
+                final hideSurface = selectedCategory == 'boutique' ||
+                    selectedCategory == 'store' ||
+                    selectedCategory == 'محل' ||
+                    selectedCategory == 'bureau' ||
+                    selectedCategory == 'office' ||
+                    selectedCategory == 'مكتب' ||
+                    selectedCategory == 'appartement' ||
+                    selectedCategory == 'apartment' ||
+                    selectedCategory == 'شقة';
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Champs pour la latitude et la longitude
+                    TextFormField(
+                      decoration: const InputDecoration(
+                          labelText: 'Titre',
+                          suffixStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      onChanged: (value) => articleController.nameAr.value = value,
+                    ),
+                    const SizedBox(height: TSizes.spaceBtwItems),
+                    TextFormField(
+                      decoration: const InputDecoration(labelText: 'Description'),
+                      onChanged: (value) => articleController.description.value = value,
+                    ),
+                    const SizedBox(height: TSizes.spaceBtwItems),
+                    TextFormField(
+                      decoration: const InputDecoration(labelText: 'Price'),
+                      onChanged: (value) => articleController.price.value = value,
+                    ),
+                    const SizedBox(height: TSizes.spaceBtwItems),
+                    // Champs Nombre de Chambre (affiché uniquement si non caché)
+                    if (!hideRoomsAndToilets)
+                      TextFormField(
+                        decoration: const InputDecoration(labelText: 'Nombre de Chambre'),
+                        onChanged: (value) => articleController.bedroom.value = value,
+                      ),
+                    if (!hideRoomsAndToilets) const SizedBox(height: TSizes.spaceBtwItems),
+                    // Champs Nombre de Toilette (affiché uniquement si non caché)
+                    if (!hideRoomsAndToilets)
+                      TextFormField(
+                        decoration: const InputDecoration(labelText: 'Nombre de Toilette'),
+                        onChanged: (value) => articleController.bathroom.value = value,
+                      ),
+                    if (!hideRoomsAndToilets) const SizedBox(height: TSizes.spaceBtwItems),
+                    // Champs Surface m² (affiché uniquement si non caché)
+                    if (!hideSurface)
+                      TextFormField(
+                        decoration: const InputDecoration(labelText: 'Surface m²'),
+                        onChanged: (value) => articleController.area.value = value,
+                      ),
+                  ],
+                );
+              }),
               isActive: articleController.currentStep.value >= 1,
             ),
+
             Step(
               title: const Text('Image & Gallerie'),
               stepStyle: _stepStyle.copyWith(
