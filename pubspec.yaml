@@ -51,6 +51,7 @@ dependencies:
   intl_phone_number_input: ^0.7.4
   firebase_core: ^3.1.1
   firebase_auth: ^5.1.1
+  firebase_messaging: ^15.2.0
   flutter_native_splash: ^2.4.0
   pin_code_fields: ^8.0.1
   lottie: ^3.1.2
@@ -59,6 +60,7 @@ dependencies:
   get: ^4.6.6
   url_launcher: ^6.3.0
   flutter_facebook_auth: ^7.1.0
+  flutter_local_notifications: ^18.0.1
   flutter_svg: ^2.0.10+1
   shimmer: ^3.0.0
   table_calendar: ^3.1.2

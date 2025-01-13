@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:immolink_mobile/utils/config.dart';
+import 'package:immolink_mobile/views/screens/article/create_article_by_map_screen.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'dart:math' as math;
@@ -24,6 +26,10 @@ class _MapScreenState extends State<MapScreen>
   StreamSubscription<LocationData>? locationSubscription;
   final TextEditingController lotController = TextEditingController();
   GoogleMapController? mapController;
+  double? screenArea;
+  String? screenLotNumber;
+  String? screenLotissement;
+  String? screenMoughataa;
 
   String? selectedMoughataa;
   String? selectedLotissement;
@@ -190,7 +196,10 @@ class _MapScreenState extends State<MapScreen>
                   'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']} \nارتفاع: ${properties['el']} m';
               panelInfoEn =
                   'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}${properties['lts']} \nAltitude: ${properties['el'] }m';
-
+              screenArea = area;
+              screenLotissement = properties['lts'];
+              screenLotNumber = properties['l'];
+              screenMoughataa = properties['moughataa'];
               isPanelVisible = true; // Show the panel with lot info
             });
 
@@ -311,7 +320,10 @@ class _MapScreenState extends State<MapScreen>
                   'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']} \nارتفاع: ${properties['el']} m';
               panelInfoEn =
                   'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']} \nAltitude: ${properties['el'] }m';
-
+              screenArea = area;
+              screenLotissement = properties['lts'];
+              screenLotNumber = properties['l'];
+              screenMoughataa = properties['moughataa'];
               isPanelVisible = true;
             });
           }
@@ -563,7 +575,7 @@ class _MapScreenState extends State<MapScreen>
                           ),
                           ElevatedButton(
                             onPressed: () {
-                              // Implement route functionality
+                              Get.to(CreateArticleByMapScreen(area: screenArea, lotNumber: screenLotNumber, lotissement: screenLotissement, moughataa: screenMoughataa,));
                             },
                             child: const Text('Ajouter'),
                           ),

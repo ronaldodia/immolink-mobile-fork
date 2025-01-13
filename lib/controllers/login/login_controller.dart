@@ -304,9 +304,7 @@ class LoginController extends GetxController{
       // login with backend
       await AuthRepository.instance.logOutBackend(localStorage.read('AUTH_TOKEN'));
       localStorage.remove('AUTH_TOKEN');
-
-
-
+      localStorage.remove('FCM_TOKEN');
 
 
       //Remove Loader

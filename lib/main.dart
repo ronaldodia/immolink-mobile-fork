@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -17,6 +18,7 @@ import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 import 'package:immolink_mobile/controllers/language/language_controller.dart';
 import 'package:immolink_mobile/firebase_options.dart';
 import 'package:immolink_mobile/repository/auth_repository.dart';
+import 'package:immolink_mobile/services/notification/notification_services.dart';
 import 'package:immolink_mobile/utils/iteneray.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -35,6 +37,8 @@ void main() async {
   await Firebase.initializeApp(
   options: DefaultFirebaseOptions.currentPlatform)
  .then((FirebaseApp value) => Get.put(AuthRepository()));
+
+ await NotificationServices.instance.initialize();
 
   // final prefs = await SharedPreferences.getInstance();
   // print('get auth_token ${prefs.getString('auth_token')}');

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -262,10 +263,9 @@ class AuthRepository extends GetxController{
       var userCredential = await _auth.signInWithCredential(credential);
 
       if(userCredential.user != null){
-        var auth = FirebaseAuth.instance.currentUser;
-        final idToken = await auth!.getIdToken();
-        print("FIREBASE_TOKEN = $idToken");
-        deviceStorage.write('FIREBASE_TOKEN', idToken);
+        // final fcmToken = await FirebaseMessaging.instance.getToken();
+        // print("FCM_TOKEN = $fcmToken");
+        // deviceStorage.write('FCM_TOKEN', fcmToken);
         Get.to(const BottomNavigationMenu());
       }
     } on FirebaseAuthException catch (e) {
@@ -368,7 +368,9 @@ class AuthRepository extends GetxController{
     final response = await _apibase.logout(token!);
     final localStorage = GetStorage();
     localStorage.remove('AUTH_TOKEN');
+    localStorage.remove('FCM_TOKEN');
     print('AUTH_TOKEN:  ${localStorage.read('AUTH_TOKEN')}');
+    print('FCM_TOKEN_REMOVE: ${localStorage.read('FCM_TOKEN')}');
 
     return response;
   }
