@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -30,6 +31,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final ChatService _chatService = ChatService();
   final TextEditingController textController = TextEditingController();
   String myName = "Demba";
@@ -63,7 +65,30 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     audioPlayer = AudioPlayer();
     _initializeChat();
-    //setupWebSocket();
+    _setupFirebaseMessaging();
+  }
+  void _setupFirebaseMessaging() {
+    // Request permission for iOS
+    _firebaseMessaging.requestPermission();
+
+    // Handle foreground messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      // Show a notification or update the UI
+      if (message.notification != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message.notification!.title ?? 'New message'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    });
+
+    // Handle background messages
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      // Navigate to the chat screen or update the UI
+      // You can also handle the message data here
+    });
   }
 
   Future<void> _initializeChat() async {
