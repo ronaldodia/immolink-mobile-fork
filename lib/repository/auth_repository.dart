@@ -263,6 +263,9 @@ class AuthRepository extends GetxController{
       var userCredential = await _auth.signInWithCredential(credential);
 
       if(userCredential.user != null){
+        final fcmToken = await FirebaseMessaging.instance.getToken();
+        print("FCM_TOKEN = $fcmToken");
+        deviceStorage.write('FCM_TOKEN', fcmToken);
 
         Get.to(const BottomNavigationMenu());
       }

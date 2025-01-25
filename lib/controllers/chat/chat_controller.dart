@@ -15,7 +15,7 @@ import 'package:immolink_mobile/models/Conversation.dart';class ChatController e
   Future<void> loadConversations() async {
     try {
       isLoading.value = true;
-      final data = await _chatService.getConversations();
+      final data = await   _chatService.getConversations();
       conversations.value = data.map((json) => Conversation.fromJson(json)).toList();
     } catch (e) {
       print('Error loading conversations: $e');

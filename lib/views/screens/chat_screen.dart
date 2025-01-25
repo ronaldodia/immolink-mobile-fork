@@ -87,7 +87,8 @@ class _ChatScreenState extends State<ChatScreen> {
     // Handle background messages
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       // Navigate to the chat screen or update the UI
-      // You can also handle the message data here
+      // Assuming you have a method to navigate to the chat screen
+      _navigateToChatScreen(message.data);
     });
   }
 
@@ -546,5 +547,17 @@ class _ChatScreenState extends State<ChatScreen> {
       await sendMessage('', 'image', filePath: image.path);
       Navigator.pop(context);
     }
+  }
+
+  void _navigateToChatScreen(Map<String, dynamic> data) {
+    // Extract necessary data from the notification payload
+    String conversationId = data['conversationId'] ?? '';
+    int? propertyId = data['propertyId'] != null ? int.tryParse(data['propertyId']) : null;
+
+    // Navigate to the ChatScreen with the conversationId and propertyId
+    Get.to(() => ChatScreen(
+      conversationId: conversationId,
+      propertyId: propertyId,
+    ));
   }
 }

@@ -18,7 +18,7 @@ class ChatService {
 
   Map<String, String> get _headers {
     final token = localStorage.read('AUTH_TOKEN');
-    String fcmToken = localStorage.read("FIREBASE_TOKEN");
+    String fcmToken = localStorage.read("FCM_TOKEN");
     return {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
@@ -31,7 +31,7 @@ class ChatService {
   // Connect to WebSocket
   void connectWebSocket() {
     final token = localStorage.read('AUTH_TOKEN');
-    final fcmToken = localStorage.read('FIREBASE_TOKEN');
+    final fcmToken = localStorage.read('FCM_TOKEN');
     if (token != null) {
       _channel = WebSocketChannel.connect(
         Uri.parse('$wsUrl?token=$token&fcmToken=$fcmToken'),
