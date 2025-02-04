@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:immolink_mobile/utils/route_name.dart';
 import 'package:immolink_mobile/views/screens/account_screen.dart';
 import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
+import 'package:immolink_mobile/views/screens/filters/filter_screen.dart';
 import 'package:immolink_mobile/views/screens/forgot_password_screen.dart';
 import 'package:immolink_mobile/views/screens/home_screen.dart';
 import 'package:immolink_mobile/views/screens/language_screen.dart';
@@ -22,6 +23,8 @@ class CustomeRoute {
         return MaterialPageRoute(builder: (_) => const LanguageScreen());
       case accountRoute:
         return MaterialPageRoute(builder: (_) => const AccountScreen());
+        case filterRoute:
+        return MaterialPageRoute(builder: (_) =>  FilterScreen());
       case loginRoute:
         return MaterialPageRoute(builder: (_) =>  const LoginEmailScreen());
       // case loginRoute:

@@ -59,7 +59,7 @@ class NotificationServices {
         ?.createNotificationChannel(channel);
 
     const initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('im_place_icon');
 
     //IOS setup
     const initializationSettingDarwin = DarwinInitializationSettings();
@@ -85,7 +85,7 @@ class NotificationServices {
               channelDescription: 'This channel is used for important notifications.',
               importance: Importance.high,
               priority: Priority.high,
-              icon: '@mipmap/ic_launcher',
+              icon: 'im_place_icon',
             ),
             iOS: DarwinNotificationDetails(
               presentAlert: true,

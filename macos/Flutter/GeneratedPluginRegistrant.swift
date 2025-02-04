@@ -8,7 +8,7 @@ import Foundation
 import audio_session
 import audioplayers_darwin
 import cloud_firestore
-import connectivity_macos
+import connectivity_plus
 import facebook_auth_desktop
 import file_selector_macos
 import firebase_auth
@@ -22,7 +22,7 @@ import location
 import path_provider_foundation
 import record_darwin
 import shared_preferences_foundation
-import sqflite
+import sqflite_darwin
 import url_launcher_macos
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {

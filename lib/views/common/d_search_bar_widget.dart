@@ -6,6 +6,7 @@ import 'package:immolink_mobile/views/screens/article/futuread_article_details_s
 import 'package:immolink_mobile/views/screens/article/promote_article_details_screen.dart';
 
 import 'package:immolink_mobile/controllers/language/language_controller.dart';
+import 'package:immolink_mobile/views/screens/filters/filter_screen.dart';
 
 class SearchBarWidget extends StatelessWidget {
   const SearchBarWidget({
@@ -51,7 +52,9 @@ class SearchBarWidget extends StatelessWidget {
                     },
                   ),
                 ),
-                Icon(secondIcon, color: Colors.grey),
+                IconButton(onPressed: (){
+                  Get.to( FilterScreen());
+                }, icon: Icon(secondIcon, color: Colors.grey)),
               ],
             ),
           ),

@@ -1,4 +1,5 @@
 const String homeRoute = '/';
+const String filterRoute = 'filter';
 const String aboutRoute = 'about';
 const String languageRoute = 'language';
 const String mapRoute = 'map';
