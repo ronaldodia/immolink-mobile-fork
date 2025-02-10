@@ -109,8 +109,7 @@ class LoginController extends GetxController{
 
       /// Show Success Message
       DLoader.successSnackBar(title: 'Congratulation', message: 'Your successfuly loggin in.');
-      localStorage.write('AUTH_TOKEN', resultByEmail['token']);
-      localStorage.write('USER_PROFILE', resultByEmail['user']);
+      localStorage.write('AUTH_TOKEN', resultByEmail);
       AuthRepository.instance.screenRedirect();
 
       // Future.delayed(const Duration(milliseconds: 100), () {
@@ -152,9 +151,7 @@ class LoginController extends GetxController{
       final resultByPhone = await AuthRepository.instance.loginWithPhone(phoneNumber, phonePasswordController.text.trim());
       if (resultByPhone != null || resultByPhone != "error credentials" || resultByPhone != "Unauthenticated") {
         // Résultat valide : On écrit dans le localStorage
-        print('GET_TOKEN: ${resultByPhone['token']}');
-        localStorage.write('AUTH_TOKEN', resultByPhone['token']);
-        localStorage.write('USER_PROFILE', resultByPhone['user']);
+        localStorage.write('AUTH_TOKEN', resultByPhone);
       } else {
         // Résultat invalide ou erreur : Afficher un message d'erreur approprié
         DLoader.errorSnackBar(title: 'OH Snap!', message: resultByPhone);
@@ -308,8 +305,7 @@ class LoginController extends GetxController{
       // login with backend
       await AuthRepository.instance.logOutBackend(localStorage.read('AUTH_TOKEN'));
       localStorage.remove('AUTH_TOKEN');
-      localStorage.remove('USER_PROFILE');
-      // localStorage.remove('FCM_TOKEN');
+      localStorage.remove('FCM_TOKEN');
 
 
       //Remove Loader

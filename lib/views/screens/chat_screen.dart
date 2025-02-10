@@ -94,6 +94,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _initializeChat() async {
     myName = await localStorage.read('FULL_NAME');
+
     if (widget.conversationId.isEmpty && widget.propertyId != null) {
       // Create new conversation if we have propertyId but no conversationId
       await _createNewConversation();
