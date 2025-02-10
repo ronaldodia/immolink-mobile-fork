@@ -152,6 +152,7 @@ class LoginController extends GetxController{
       if (resultByPhone != null || resultByPhone != "error credentials" || resultByPhone != "Unauthenticated") {
         // Résultat valide : On écrit dans le localStorage
         localStorage.write('AUTH_TOKEN', resultByPhone);
+        localStorage.write('FULL_NAME', resultByPhone);
       } else {
         // Résultat invalide ou erreur : Afficher un message d'erreur approprié
         DLoader.errorSnackBar(title: 'OH Snap!', message: resultByPhone);
