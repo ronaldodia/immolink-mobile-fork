@@ -30,11 +30,14 @@ class ArticlesScreen extends StatelessWidget {
           ),
           Expanded(
             child: Obx(() {
-              if (controller.isLoading.value && controller.articles.isEmpty) {
+              if (controller.isLoading.value) {
                 return const Center(child: CircularProgressIndicator());
+              } else if (controller.articles.isEmpty) {
+                return const Center(child: Text('Aucun article'));
               }
+
               return ListView.builder(
-                itemCount: controller.articles.length + 1, // +1 pour le loader de fin
+                itemCount: controller.articles.length + (controller.hasMore.value ? 1 : 0), // +1 pour le loader seulement si nécessaire
                 itemBuilder: (context, index) {
                   if (index < controller.articles.length) {
                     final Article article = controller.articles[index];
@@ -47,20 +50,25 @@ class ArticlesScreen extends StatelessWidget {
                         errorBuilder: (context, error, stackTrace) =>
                         const Icon(Icons.broken_image),
                       ),
-                      title: Text(article.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? "Nom non spécifié"),
+                      title: Text(article.getPropertyByLanguage(
+                          languageController.locale.languageCode,
+                          propertyType: "name") ??
+                          "Nom non spécifié"),
                       subtitle: Text("Prix : ${article.price}"),
                       onTap: () {
                         // Logique pour ouvrir les détails de l'article
                       },
                     );
-                  } else if (controller.hasMore.value) {
-                    controller.fetchArticles(); // Charger plus d'articles
-                    return const Center(child: CircularProgressIndicator());
                   } else {
-                    return const Center(child: Text("Aucun article supplémentaire"));
+                    // Charger plus d'articles seulement si on n'est pas déjà en train de charger
+                    if (!controller.isLoading.value) {
+                      controller.fetchArticles();
+                    }
+                    return const Center(child: CircularProgressIndicator());
                   }
                 },
               );
+
             }),
           ),
         ],

@@ -88,7 +88,8 @@ class LoginController extends GetxController{
 
       if (resultByEmail != null && resultByEmail != "error credentials" && resultByEmail != "Unauthenticated") {
         // Résultat valide : On écrit dans le localStorage
-         localStorage.write('AUTH_TOKEN', resultByEmail);
+        localStorage.write('AUTH_TOKEN', resultByEmail['token']);
+        localStorage.write('USER_PROFILE', resultByEmail['user']);
          final json = await AuthRepository.instance.getProfileByToken(resultByEmail);
          Profile profile  = Profile.fromJson(json);
          localStorage.write('FULL_NAME', profile.user?.fullName);
@@ -108,7 +109,8 @@ class LoginController extends GetxController{
 
       /// Show Success Message
       DLoader.successSnackBar(title: 'Congratulation', message: 'Your successfuly loggin in.');
-      localStorage.write('AUTH_TOKEN', resultByEmail);
+      localStorage.write('AUTH_TOKEN', resultByEmail['token']);
+      localStorage.write('USER_PROFILE', resultByEmail['user']);
       AuthRepository.instance.screenRedirect();
 
       // Future.delayed(const Duration(milliseconds: 100), () {
@@ -150,7 +152,9 @@ class LoginController extends GetxController{
       final resultByPhone = await AuthRepository.instance.loginWithPhone(phoneNumber, phonePasswordController.text.trim());
       if (resultByPhone != null || resultByPhone != "error credentials" || resultByPhone != "Unauthenticated") {
         // Résultat valide : On écrit dans le localStorage
-        localStorage.write('AUTH_TOKEN', resultByPhone);
+        print('GET_TOKEN: ${resultByPhone['token']}');
+        localStorage.write('AUTH_TOKEN', resultByPhone['token']);
+        localStorage.write('USER_PROFILE', resultByPhone['user']);
       } else {
         // Résultat invalide ou erreur : Afficher un message d'erreur approprié
         DLoader.errorSnackBar(title: 'OH Snap!', message: resultByPhone);
@@ -304,7 +308,8 @@ class LoginController extends GetxController{
       // login with backend
       await AuthRepository.instance.logOutBackend(localStorage.read('AUTH_TOKEN'));
       localStorage.remove('AUTH_TOKEN');
-      localStorage.remove('FCM_TOKEN');
+      localStorage.remove('USER_PROFILE');
+      // localStorage.remove('FCM_TOKEN');
 
 
       //Remove Loader

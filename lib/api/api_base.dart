@@ -66,7 +66,8 @@ _returnResponse(http.Response response) {
   switch (response.statusCode) {
     case 200:
        var responseJson = jsonDecode(response.body.toString());
-      return responseJson['token'];
+      // return responseJson['token'];
+      return responseJson;
     case 422:
        var responseJson = jsonDecode(response.body.toString());
       return responseJson['message'];

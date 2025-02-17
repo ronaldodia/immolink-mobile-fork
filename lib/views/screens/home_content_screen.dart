@@ -39,6 +39,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
 
   final ScrollController _scrollController = ScrollController();
   final LanguageController language = Get.find();
+  var userProfile = AuthRepository.instance.deviceStorage.read('USER_PROFILE');
 
   // Simulez la méthode d'actualisation des données
   Future<void> _refreshData() async {
@@ -459,7 +460,11 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                         .logOutBackend(localStorage.read('AUTH_TOKEN'));
                     localStorage.remove('AUTH_TOKEN');
                   },
-                  icon: const Text('Logout'))
+                  icon: const Text('Logout')),
+              const SizedBox(
+                width: TSizes.spaceBtwItems,
+              ),
+              Text(userProfile['full_name'] ?? 'Nom inconnu')
             ],
           ),
         ),
