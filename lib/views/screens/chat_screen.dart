@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:uuid/uuid.dart';
@@ -60,6 +61,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final Map<String, bool> isPauseMap = {};
   final Map<String, bool> isLoadingMap = {};
   final localStorage = GetStorage();
+  var userProfile = AuthRepository.instance.deviceStorage.read('USER_PROFILE');
   @override
   void initState() {
     super.initState();
@@ -93,7 +95,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _initializeChat() async {
-    myName = await localStorage.read('FULL_NAME');
+    myName = userProfile['full_name'];
 
     if (widget.conversationId.isEmpty && widget.propertyId != null) {
       // Create new conversation if we have propertyId but no conversationId
