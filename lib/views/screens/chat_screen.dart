@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:uuid/uuid.dart';
@@ -30,6 +32,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final ChatService _chatService = ChatService();
   final TextEditingController textController = TextEditingController();
   String myName = "Demba";
@@ -58,16 +61,42 @@ class _ChatScreenState extends State<ChatScreen> {
   final Map<String, bool> isPauseMap = {};
   final Map<String, bool> isLoadingMap = {};
   final localStorage = GetStorage();
+  var userProfile = AuthRepository.instance.deviceStorage.read('USER_PROFILE');
   @override
   void initState() {
     super.initState();
     audioPlayer = AudioPlayer();
     _initializeChat();
-    //setupWebSocket();
+    _setupFirebaseMessaging();
+  }
+  void _setupFirebaseMessaging() {
+    // Request permission for iOS
+    _firebaseMessaging.requestPermission();
+
+    // Handle foreground messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      // Show a notification or update the UI
+      if (message.notification != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message.notification!.title ?? 'New message'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    });
+
+    // Handle background messages
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      // Navigate to the chat screen or update the UI
+      // Assuming you have a method to navigate to the chat screen
+      _navigateToChatScreen(message.data);
+    });
   }
 
   Future<void> _initializeChat() async {
-    myName = await localStorage.read('FULL_NAME');
+    myName = userProfile['full_name'];
+
     if (widget.conversationId.isEmpty && widget.propertyId != null) {
       // Create new conversation if we have propertyId but no conversationId
       await _createNewConversation();
@@ -521,5 +550,17 @@ class _ChatScreenState extends State<ChatScreen> {
       await sendMessage('', 'image', filePath: image.path);
       Navigator.pop(context);
     }
+  }
+
+  void _navigateToChatScreen(Map<String, dynamic> data) {
+    // Extract necessary data from the notification payload
+    String conversationId = data['conversationId'] ?? '';
+    int? propertyId = data['propertyId'] != null ? int.tryParse(data['propertyId']) : null;
+
+    // Navigate to the ChatScreen with the conversationId and propertyId
+    Get.to(() => ChatScreen(
+      conversationId: conversationId,
+      propertyId: propertyId,
+    ));
   }
 }
