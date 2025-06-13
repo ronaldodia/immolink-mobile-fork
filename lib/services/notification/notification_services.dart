@@ -18,30 +18,26 @@ class NotificationServices {
   final deviceStorage = GetStorage();
 
   Future<void> initialize() async {
-
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-    await _requestPermission();
-
-    await _setupMessageHandlers();
-
-    final fcmToken = await _firebaseMessaging.getToken();
-    print('FCM_TOKEN: $fcmToken');
-  }
-
-  Future<void> _requestPermission() async {
-    final settings = await _firebaseMessaging.requestPermission(
+    try {
+      await FirebaseMessaging.instance.requestPermission(
         alert: true,
         badge: true,
         sound: true,
         provisional: false,
-        announcement: false,
-        carPlay: false,
-        criticalAlert: false);
+      );
 
-    print('Permission status: ${settings.authorizationStatus}');
+      final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+      print('APNS_TOKEN: $apnsToken');
+
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      print('FCM_TOKEN: $fcmToken');
+
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      await _setupMessageHandlers();
+    } catch (e) {
+      print('Erreur lors de l\'initialisation des notifications: $e');
+    }
   }
-
 
   Future<void> setupFlutterNotifications() async {
     if (_isFlutterNotificationsInitialized) {

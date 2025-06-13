@@ -9,11 +9,11 @@
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
-    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <string>com.immo.place.mr</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>immolink_mobile</string>
+    <string>immo_place</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -35,21 +35,72 @@
       <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
     <key>UISupportedInterfaceOrientations~ipad</key>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>Nous avons besoin du micro pour l'enregistrement vocal.</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>Nous avons besoin d'accéder à la bibliothèque pour joindre des fichiers multimédia.</string>
     <array>
       <string>UIInterfaceOrientationPortrait</string>
       <string>UIInterfaceOrientationPortraitUpsideDown</string>
       <string>UIInterfaceOrientationLandscapeLeft</string>
       <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Nous avons besoin du micro pour l'enregistrement vocal.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Nous avons besoin d'accéder à la bibliothèque pour joindre des fichiers multimédia.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Nous avons besoin d'accéder à la caméra pour prendre des photos.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Nous avons besoin de votre localisation pour vous aider à trouver des propriétés proches.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Nous avons besoin de votre localisation pour vous aider à trouver des propriétés proches.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Nous avons besoin de votre localisation pour vous aider à trouver des propriétés proches et pour la carte interactive.</string>
+    <key>NSLocationTemporaryUsageDescriptionDictionary</key>
+    <dict>
+        <key>com.google.maps</key>
+        <string>Nous avons besoin de votre localisation pour afficher votre position sur la carte.</string>
+    </dict>
+    <key>NSLocationUsageDescription</key>
+    <string>Nous avons besoin de votre localisation pour vous aider à trouver des propriétés proches et pour la carte interactive.</string>
+    <key>NSLocationBackgroundUsageDescription</key>
+    <string>Nous avons besoin de votre localisation en arrière-plan pour vous aider à trouver des propriétés proches et pour la carte interactive.</string>
+    <key>GMSServicesAPIKey</key>
+    <string>AIzaSyBUgmBZjTAuIbMzXNm3JDAT-nPZvUNnP1A</string>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>api.immo-place.net</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+                <key>NSExceptionRequiresForwardSecrecy</key>
+                <false/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
+    
+    <!-- Notifications -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>remote-notification</string>
+    </array>
+    <key>NSUserNotificationUsageDescription</key>
+    <string>Nous avons besoin de vos notifications pour vous informer des mises à jour importantes.</string>
     <key>UIStatusBarHidden</key>
     <false/>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>Cette application nécessite l'accès au réseau local pour le débogage</string>
+    <key>NSBonjourServices</key>
+    <array>
+        <string>_dartobservatory._tcp</string>
+    </array>
   </dict>
 </plist>

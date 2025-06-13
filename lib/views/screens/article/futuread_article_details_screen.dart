@@ -1,5 +1,3 @@
-
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -23,11 +21,12 @@ class FutureadArticleDetailsScreen extends StatefulWidget {
   final Article property;
 
   @override
-  State<FutureadArticleDetailsScreen> createState() => _FutureadArticleDetailsScreenState();
+  State<FutureadArticleDetailsScreen> createState() =>
+      _FutureadArticleDetailsScreenState();
 }
 
-class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScreen> {
-
+class _FutureadArticleDetailsScreenState
+    extends State<FutureadArticleDetailsScreen> {
   bool _isExpanded = false;
 
   @override
@@ -36,9 +35,13 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
     final CheckAuthController authController = Get.put(CheckAuthController());
     final CurrencyController currencyController = Get.find();
     final LanguageController languageController = Get.find();
-    bool isLocationAvailable = widget.property.location_latitude! != null && widget.property.location_latitude!.isNotEmpty &&
-        widget.property.location_longitude != null && widget.property.location_longitude!.isNotEmpty;
-    final agentId = widget.property.structure!=null?widget.property.structure!.owner_id: widget.property.author_id;
+    bool isLocationAvailable = widget.property.location_latitude! != null &&
+        widget.property.location_latitude!.isNotEmpty &&
+        widget.property.location_longitude != null &&
+        widget.property.location_longitude!.isNotEmpty;
+    final agentId = widget.property.structure != null
+        ? widget.property.structure!.owner_id
+        : widget.property.author_id;
 
     return Scaffold(
       appBar: AppBar(
@@ -48,7 +51,10 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
             Navigator.pop(context);
           },
         ),
-        title: Text(widget.property.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? 'Property Details'),
+        title: Text(widget.property.getPropertyByLanguage(
+                languageController.locale.languageCode,
+                propertyType: "name") ??
+            'Property Details'),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
@@ -118,20 +124,25 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
                   return GestureDetector(
                     onTap: () {
                       // Ouvrir panel de visualisation de la galerie
-                      _showGalleryPanel(context, widget.property.gallery, index);
+                      _showGalleryPanel(
+                          context, widget.property.gallery, index);
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16.0),
                         child: FadeInImage(
-                          placeholder: const AssetImage('assets/images/loading_placeholder.png'), // Image de chargement local
-                          image: NetworkImage('${Config.initUrl}${image.original}'),
+                          placeholder: const AssetImage(
+                              'assets/images/loading_placeholder.png'), // Image de chargement local
+                          image: NetworkImage(
+                              '${Config.initUrl}${image.original}'),
                           fit: BoxFit.cover,
                           imageErrorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.broken_image, size: 50, color: Colors.red);
+                            return const Icon(Icons.broken_image,
+                                size: 50, color: Colors.red);
                           },
-                          fadeInDuration: const Duration(milliseconds: 300), // Animation de fade-in
+                          fadeInDuration: const Duration(
+                              milliseconds: 300), // Animation de fade-in
                         ),
                       ),
                     ),
@@ -150,12 +161,11 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
                   // Icone et catégorie
                   Row(
                     children: [
-                      SvgPicture.network(
-                          widget.property.category!.image! ?? '',
+                      SvgPicture.network(widget.property.category!.image! ?? '',
                           height: 40,
                           width: 40,
-                          colorFilter: const ColorFilter.mode(Colors.green, BlendMode.srcIn)
-                      ),
+                          colorFilter: const ColorFilter.mode(
+                              Colors.green, BlendMode.srcIn)),
                       const SizedBox(width: 8),
                       Text(widget.property.category!.name ?? 'Category'),
                     ],
@@ -166,7 +176,7 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
                     padding: const EdgeInsets.all(8),
                     color: Colors.blue,
                     child: Text(
-                      widget.property.purpose,
+                      widget.property.purpose ?? '',
                       style: const TextStyle(color: Colors.white),
                     ),
                   ),
@@ -182,7 +192,10 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.property.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? 'Unknown Property',
+                    widget.property.getPropertyByLanguage(
+                            languageController.locale.languageCode,
+                            propertyType: "name") ??
+                        'Unknown Property',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -206,8 +219,8 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
             ),
 
             Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0, vertical: 8.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Wrap(
                 spacing: 16.0, // Espace horizontal entre les éléments
                 runSpacing: 16.0, // Espace vertical entre les lignes
@@ -241,7 +254,6 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
                           value: widget.property.balcony,
                         ),
                       ]),
-
                 ],
               ),
             ),
@@ -249,13 +261,16 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
             // Property Description Section
             Padding(
               padding:
-              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Affiche le texte avec une limite de lignes si non expansé
                   Text(
-                    widget.property.getPropertyByLanguage(languageController.locale.languageCode , propertyType: "description") ?? 'No description available.',
+                    widget.property.getPropertyByLanguage(
+                            languageController.locale.languageCode,
+                            propertyType: "description") ??
+                        'No description available.',
                     maxLines: _isExpanded
                         ? null
                         : 5, // Limite à 5 lignes si non expansé
@@ -269,7 +284,7 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
                     onTap: () {
                       setState(() {
                         _isExpanded =
-                        !_isExpanded; // Alterne entre expansion et rétrécissement
+                            !_isExpanded; // Alterne entre expansion et rétrécissement
                       });
                     },
                     child: Text(
@@ -288,144 +303,171 @@ class _FutureadArticleDetailsScreenState extends State<FutureadArticleDetailsScr
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: isLocationAvailable
-                  ?  GestureDetector(
-                onTap: () {
-                  // Lorsque l'utilisateur tape sur la carte, il est redirigé vers la carte en plein écran
-                  Get.to( FullMapScreen(latitude: double.parse(widget.property.location_latitude!), longitude: double.parse(widget.property.location_longitude!)));
-                },
-                child: Container(
-                  height: 150, // Petite section pour la carte
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8.0),
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: GoogleMap(
-
-                    initialCameraPosition: const CameraPosition(
-                      target: LatLng(18.110686245353225, -15.998744332959172),
-                      zoom: 14.0,
-                    ),
-                    markers: {
-                      Marker(
-                        markerId: const MarkerId('propertyLocation'),
-                        position: LatLng(double.parse(widget.property.location_latitude ?? ''), double.parse(widget.property.location_longitude ?? '')),
+                  ? GestureDetector(
+                      onTap: () {
+                        // Lorsque l'utilisateur tape sur la carte, il est redirigé vers la carte en plein écran
+                        Get.to(FullMapScreen(
+                            latitude: double.parse(
+                                widget.property.location_latitude!),
+                            longitude: double.parse(
+                                widget.property.location_longitude!)));
+                      },
+                      child: Container(
+                        height: 150, // Petite section pour la carte
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: GoogleMap(
+                          initialCameraPosition: const CameraPosition(
+                            target:
+                                LatLng(18.110686245353225, -15.998744332959172),
+                            zoom: 14.0,
+                          ),
+                          markers: {
+                            Marker(
+                              markerId: const MarkerId('propertyLocation'),
+                              position: LatLng(
+                                  double.parse(
+                                      widget.property.location_latitude ?? ''),
+                                  double.parse(
+                                      widget.property.location_longitude ??
+                                          '')),
+                            ),
+                          },
+                          zoomControlsEnabled: false,
+                          // mapType: MapType.satellite,
+                          scrollGesturesEnabled: false,
+                          tiltGesturesEnabled: false,
+                          rotateGesturesEnabled: false,
+                          onTap: (LatLng position) {
+                            Get.to(FullMapScreen(
+                                latitude: double.parse(
+                                    widget.property.location_latitude!),
+                                longitude: double.parse(
+                                    widget.property.location_longitude!)));
+                          },
+                        ),
                       ),
-                    },
-                    zoomControlsEnabled: false,
-                    // mapType: MapType.satellite,
-                    scrollGesturesEnabled: false,
-                    tiltGesturesEnabled: false,
-                    rotateGesturesEnabled: false,
-                    onTap: (LatLng position) {
-                      Get.to( FullMapScreen(latitude: double.parse(widget.property.location_latitude!), longitude: double.parse(widget.property.location_longitude!)));
-                    },
-                  ),
-                ),
-              ) : const Center(
-                child: Text(
-                  'Position non disponible',
-                ),
-              ),
+                    )
+                  : const Center(
+                      child: Text(
+                        'Position non disponible',
+                      ),
+                    ),
             )
           ],
         ),
       ),
       bottomNavigationBar: widget.property.purpose == "Rent"
           ? Container(
-        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-        color: Colors.white,
-        child: ElevatedButton(
-          onPressed: () async {
-            // Vérifier si l'utilisateur est connecté via Firebase
-            User? user = FirebaseAuth.instance.currentUser;
+              padding:
+                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+              color: Colors.white,
+              child: ElevatedButton(
+                onPressed: () async {
+                  // Vérifier si l'utilisateur est connecté via Firebase
+                  User? user = FirebaseAuth.instance.currentUser;
 
-            if (user != null) {
-              // Si l'utilisateur est connecté, naviguer vers la page de réservation
-              Get.to(() => BookingScreen(
-                articleId: widget.property.id,
-                eventType: 'Mariage', // Par exemple, pour Mariage
-              ));
-            } else {
-              // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
-              Get.to(() => const LoginEmailScreen(), arguments: {
-                'nextPage': BookingScreen(
-                  articleId: widget.property.id,
-                  eventType: 'Mariage',
-                )
-              });
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: const Text('Réservez Maintenant',
-              style: TextStyle(fontSize: 20, color: Colors.white)),
-        ),
-      )
+                  if (user != null) {
+                    // Si l'utilisateur est connecté, naviguer vers la page de réservation
+                    Get.to(() => BookingScreen(
+                          articleId: widget.property.id,
+                          eventType: 'Mariage', // Par exemple, pour Mariage
+                        ));
+                  } else {
+                    // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
+                    Get.to(() => const LoginEmailScreen(), arguments: {
+                      'nextPage': BookingScreen(
+                        articleId: widget.property.id,
+                        eventType: 'Mariage',
+                      )
+                    });
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text('Réservez Maintenant',
+                    style: TextStyle(fontSize: 20, color: Colors.white)),
+              ),
+            )
           : Container(
-        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-        color: Colors.white,
-        child: ElevatedButton(
-          onPressed: () async {
-            bool isAuthenticated = await authController.checkUserToken();
-            // Vérifier si l'utilisateur est connecté via Firebase ou backend
-            User? user = FirebaseAuth.instance.currentUser;
-            //var conversation = chatController.filteredConversations[0];
-            print(isAuthenticated);
-            final conversation = await chatController.getOrCreateConversation(
-              propertyId: widget.property.id,
-              propertyTitle: widget.property.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? 'Property Chat',
-              agentId: agentId,
-            );
-            if (isAuthenticated) {
-
-              Get.to(ChatScreen(conversationId: conversation.id, agentId: agentId));
-            }else if (user != null) {
-              // Si l'utilisateur est connecté, naviguer vers la page de réservation
-              // Naviguer vers l'écran de détails de la conversation
-              Get.to(ChatScreen(conversationId: conversation.id, agentId: agentId));
-            } else {
-              // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
-              Get.to(() => const LoginEmailScreen(), arguments: {
-                'nextPage': ChatScreen(
-                  conversationId: conversation.id,
-                )
-              });
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+              color: Colors.white,
+              child: ElevatedButton(
+                onPressed: () async {
+                  bool isAuthenticated = await authController.checkUserToken();
+                  // Vérifier si l'utilisateur est connecté via Firebase ou backend
+                  User? user = FirebaseAuth.instance.currentUser;
+                  //var conversation = chatController.filteredConversations[0];
+                  print(isAuthenticated);
+                  final conversation =
+                      await chatController.getOrCreateConversation(
+                    propertyId: widget.property.id,
+                    propertyTitle: widget.property.getPropertyByLanguage(
+                            languageController.locale.languageCode,
+                            propertyType: "name") ??
+                        'Property Chat',
+                    agentId: agentId,
+                  );
+                  if (isAuthenticated) {
+                    Get.to(ChatScreen(
+                        conversationId: conversation.id, agentId: agentId));
+                  } else if (user != null) {
+                    // Si l'utilisateur est connecté, naviguer vers la page de réservation
+                    // Naviguer vers l'écran de détails de la conversation
+                    Get.to(ChatScreen(
+                        conversationId: conversation.id, agentId: agentId));
+                  } else {
+                    // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
+                    Get.to(() => const LoginEmailScreen(), arguments: {
+                      'nextPage': ChatScreen(
+                        conversationId: conversation.id,
+                      )
+                    });
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize
+                      .min, // Adapter la taille du bouton à son contenu
+                  children: [
+                    const Text('Discutez',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20)),
+                    // Icône de discussion
+                    const SizedBox(width: 8),
+                    SvgPicture.asset(
+                      TImages.inactiveChat,
+                      colorFilter:
+                          const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          child:  Row(
-            mainAxisSize: MainAxisSize.min, // Adapter la taille du bouton à son contenu
-            children: [
-              const Text('Discutez', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
-              // Icône de discussion
-              const SizedBox(width: 8),
-              SvgPicture.asset(
-                TImages.inactiveChat,
-                colorFilter: const ColorFilter.mode(
-                    Colors.white, BlendMode.srcIn),
-              ) ,
-
-            ],
-          ),
-        ),
-      ),
     );
   }
 
-  Widget _buildAmenity({required String icon, required String label, required dynamic value}) {
+  Widget _buildAmenity(
+      {required String icon, required String label, required dynamic value}) {
     return Row(
-      children: [ // Si l'icône est un chemin de fichier SVG
+      children: [
+        // Si l'icône est un chemin de fichier SVG
         SvgPicture.asset(
           icon,
           height: 40,

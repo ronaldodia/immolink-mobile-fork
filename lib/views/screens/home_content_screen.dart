@@ -1,26 +1,38 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:immolink_mobile/controllers/communes/commune_controller.dart';
 import 'package:immolink_mobile/controllers/communes/district_controller.dart';
 import 'package:immolink_mobile/controllers/home/article_promotion_controller.dart';
 import 'package:immolink_mobile/controllers/home/categories_controller.dart';
 import 'package:immolink_mobile/controllers/language/language_controller.dart';
-import 'package:immolink_mobile/models/Currency.dart';
+import 'package:immolink_mobile/l10n/app_localizations.dart';
 import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/utils/config.dart';
-import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/utils/t_sizes.dart';
 import 'package:immolink_mobile/views/common/d_horizontal_image_text.dart';
 import 'package:immolink_mobile/views/common/d_search_bar_widget.dart';
 import 'package:immolink_mobile/views/common/d_section_heading.dart';
 import 'package:immolink_mobile/views/common/featured_property_card.dart';
-import 'package:immolink_mobile/views/common/property_card_widget.dart';
-import 'package:immolink_mobile/views/screens/article/futuread_article_details_screen.dart';
 import 'package:immolink_mobile/views/screens/article/promote_article_details_screen.dart';
-import 'package:immolink_mobile/views/widgets/default_appbar.dart';
 import 'package:shimmer/shimmer.dart';
+
+// Fonction utilitaire pour gérer les couleurs de manière sécurisée
+Color getGreyColor(int shade) {
+  switch (shade) {
+    case 100:
+      return Colors.grey.shade100;
+    case 200:
+      return Colors.grey.shade200;
+    case 300:
+      return Colors.grey.shade300;
+    default:
+      return Colors.grey;
+  }
+}
 
 class HomeContentScreen extends StatefulWidget {
   const HomeContentScreen({super.key});
@@ -30,16 +42,51 @@ class HomeContentScreen extends StatefulWidget {
 }
 
 class _HomeContentScreenState extends State<HomeContentScreen> {
-
   final CategoryController categoryController = Get.put(CategoryController());
   final DistrictController districtController = Get.put(DistrictController());
   final CommuneController communeController = Get.put(CommuneController());
   final ArticlePromotionController articlePromotionController =
-  Get.put(ArticlePromotionController());
+      Get.put(ArticlePromotionController());
 
   final ScrollController _scrollController = ScrollController();
   final LanguageController language = Get.find();
-  var userProfile = AuthRepository.instance.deviceStorage.read('USER_PROFILE');
+  Map<String, dynamic>? userProfile =
+      AuthRepository.instance.deviceStorage.read('USER_PROFILE');
+
+  @override
+  void initState() {
+    super.initState();
+    // Vérifier si le userProfile est null et le charger si nécessaire
+    if (userProfile == null) {
+      final token = AuthRepository.instance.deviceStorage.read('AUTH_TOKEN');
+      if (token != null) {
+        // Charger les données de l'utilisateur depuis le backend
+        _loadUserProfile();
+      }
+    }
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final token = AuthRepository.instance.deviceStorage.read('AUTH_TOKEN');
+      if (token != null) {
+        final response = await http.get(
+          Uri.parse('${Config.baseUrlApp}/profile'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        );
+        if (response.statusCode == 200) {
+          setState(() {
+            userProfile = json.decode(response.body);
+          });
+        }
+      }
+    } catch (e) {
+      print('Erreur lors du chargement du profil: $e');
+    }
+  }
 
   // Simulez la méthode d'actualisation des données
   Future<void> _refreshData() async {
@@ -50,33 +97,9 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
     articlePromotionController.fetchPromotionProperties();
     articlePromotionController.fetchFeaturedProperties();
   }
-  final List<Currency> currencies = [
-    Currency(
-      code: 'MRU',
-      name: 'Mauritania Ouguiya',
-      imageUrl: 'assets/flags/mauritania.png',
-      exchangeRate: 1.0,
-      symbol: 'UM',
-    ),
-    Currency(
-      code: 'EUR',
-      name: 'Euro',
-      imageUrl: 'assets/flags/europe.png',
-      exchangeRate: 0.82,
-      symbol: '€',
-    ),
-    Currency(
-      code: 'USD',
-      name: 'US Dollar',
-      imageUrl: 'assets/flags/usd.png',
-      exchangeRate: 1.0,
-      symbol: '\$',
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       drawer: _buildDrawer(context),
       backgroundColor: Colors.white,
@@ -95,8 +118,8 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
               Obx(() {
                 if (categoryController.isLoading.value) {
                   return Shimmer.fromColors(
-                    baseColor: Colors.grey[300]!,
-                    highlightColor: Colors.grey[100]!,
+                    baseColor: getGreyColor(300),
+                    highlightColor: getGreyColor(100),
                     child: Container(
                       margin: const EdgeInsets.symmetric(
                           vertical: 16.0, horizontal: 16.0),
@@ -108,23 +131,23 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                     ),
                   );
                 } else {
-                  return  const SearchBarWidget(
+                  return const SearchBarWidget(
                     text: 'Rechercher...',
-                    );
+                  );
                 }
               }),
               const SizedBox(
                 height: TSizes.spaceBtwItems,
               ),
-        
+
               ///  Categories Header
               Obx(() {
                 if (categoryController.isLoading.value) {
                   return Padding(
                     padding: const EdgeInsets.only(left: TSizes.defaultSpace),
                     child: Shimmer.fromColors(
-                      baseColor: Colors.grey[300]!,
-                      highlightColor: Colors.grey[100]!,
+                      baseColor: getGreyColor(300),
+                      highlightColor: getGreyColor(100),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -161,11 +184,11 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                   );
                 }
               }),
-        
+
               const SizedBox(
                 height: 4,
               ),
-        
+
               /// Categories
               SizedBox(
                 height: 50,
@@ -178,8 +201,8 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                           3, // Nombre d'éléments à afficher pendant le chargement
                       itemBuilder: (_, index) {
                         return Shimmer.fromColors(
-                          baseColor: Colors.grey[300]!,
-                          highlightColor: Colors.grey[100]!,
+                          baseColor: getGreyColor(300),
+                          highlightColor: getGreyColor(100),
                           child: Container(
                             margin: const EdgeInsets.only(right: 8.0),
                             width:
@@ -211,7 +234,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                       },
                     );
                   }
-        
+
                   return SizedBox(
                       height: 50,
                       child: ListView.builder(
@@ -230,7 +253,11 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                       ));
                 }),
               ),
-        
+
+              const SizedBox(
+                height: TSizes.spaceBtwItems,
+              ),
+              // Section des promotions
               const SizedBox(
                 height: TSizes.spaceBtwItems,
               ),
@@ -241,33 +268,41 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                     height: 200,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: 5, // Nombre d'éléments à afficher pendant le chargement
+                      itemCount:
+                          5, // Nombre d'éléments à afficher pendant le chargement
                       itemBuilder: (_, index) {
                         return Shimmer.fromColors(
-                          baseColor: Colors.grey[300]!,
-                          highlightColor: Colors.grey[100]!,
+                          baseColor: getGreyColor(300),
+                          highlightColor: getGreyColor(100),
                           child: Container(
                             margin: const EdgeInsets.only(right: 8.0),
-                            width: 150, // Ajuste selon la largeur souhaitée pour chaque carte
+                            width:
+                                150, // Ajuste selon la largeur souhaitée pour chaque carte
                             color: Colors.white,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Container(
-                                  width: double.infinity, // Ajuste selon la largeur souhaitée pour l'image
-                                  height: 120, // Ajuste selon la hauteur souhaitée pour l'image
+                                  width: double
+                                      .infinity, // Ajuste selon la largeur souhaitée pour l'image
+                                  height:
+                                      120, // Ajuste selon la hauteur souhaitée pour l'image
                                   color: Colors.white,
                                 ),
                                 const SizedBox(height: 8),
                                 Container(
-                                  width: 100, // Ajuste selon la largeur souhaitée pour le texte
-                                  height: 12, // Ajuste selon la hauteur souhaitée pour le texte
+                                  width:
+                                      100, // Ajuste selon la largeur souhaitée pour le texte
+                                  height:
+                                      12, // Ajuste selon la hauteur souhaitée pour le texte
                                   color: Colors.white,
                                 ),
                                 const SizedBox(height: 4),
                                 Container(
-                                  width: 80, // Ajuste selon la largeur souhaitée pour le texte
-                                  height: 12, // Ajuste selon la hauteur souhaitée pour le texte
+                                  width:
+                                      80, // Ajuste selon la largeur souhaitée pour le texte
+                                  height:
+                                      12, // Ajuste selon la hauteur souhaitée pour le texte
                                   color: Colors.white,
                                 ),
                               ],
@@ -281,13 +316,22 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                   return SizedBox(
                       height: 200,
                       child: ListView.builder(
-                        itemCount: articlePromotionController.promotionProperties.length,
+                        itemCount: articlePromotionController
+                            .promotionProperties.length,
                         scrollDirection: Axis.horizontal,
                         itemBuilder: (_, index) {
-                          var property = articlePromotionController.promotionProperties[index].article;
+                          final promotion = articlePromotionController
+                              .promotionProperties[index];
+                          final property = promotion.article;
+
+                          if (property == null) {
+                            return const SizedBox
+                                .shrink(); // Cache les éléments sans propriété
+                          }
+
                           return FeaturedPropertyCard(
-                            image: property!.image,
-                            status: property.purpose, // Vous pouvez récupérer à partir des données
+                            image: property.image,
+                            status: property.purpose ?? '',
                             isFeatured: true,
                             onTap: () async {
                               // Affiche un dialogue de chargement
@@ -300,89 +344,92 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                                   );
                                 },
                               );
-                              // Attendre quelques secondes pour simuler un chargement
-                              await Future.delayed(const Duration(seconds: 2));
-                              // Fermer le dialogue de chargement
-                              Navigator.pop(context);
-                              // Naviguer vers la page des détails
-                              Get.to(() => PromoteArticleDetailsScreen(property: property));
+
+                              try {
+                                // Attendre quelques secondes pour simuler un chargement
+                                await Future.delayed(
+                                    const Duration(seconds: 2));
+                                // Fermer le dialogue de chargement
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  // Naviguer vers la page des détails
+                                  Get.to(() => PromoteArticleDetailsScreen(
+                                      property: property));
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  Get.snackbar(
+                                    'Erreur',
+                                    'Impossible de charger les détails de la propriété',
+                                    snackPosition: SnackPosition.BOTTOM,
+                                  );
+                                }
+                              }
                             },
-                            categoryIcon: property.category!.image ?? '', // Assurez-vous que l'icône est correcte
-                            categoryName: property.category!.name ?? 'Nom indisponible', // Vous pouvez récupérer à partir des données
-                            name: property.getPropertyByLanguage(language.locale.languageCode, propertyType: "name") ?? 'Nom indisponible',
-                            location: 'Cite Plage',
+                            categoryIcon: property.category?.image ?? '',
+                            categoryName:
+                                property.category?.name ?? 'Non catégorisé',
+                            name: property.getPropertyByLanguage(
+                                language.locale.languageCode,
+                                propertyType: "name"),
+                            location: property.structure?.address
+                                    ?.split(',')
+                                    .firstOrNull ??
+                                'Localisation inconnue',
                             price: property.price,
-                            amenities: const [Icons.add, Icons.school],
+                            amenities: const [
+                              Icons.home,
+                              Icons.bathtub_outlined
+                            ],
                           );
                         },
-                      )
-                  );
+                      ));
                 }
               }),
-        
-        
-              ///  Featured Header
+              // Featured articles
               Obx(() {
                 if (articlePromotionController.isLoading.value) {
-                  // Affiche l'effet shimmer pour l'en-tête lorsque les données sont en cours de chargement
-                  return Padding(
-                    padding: const EdgeInsets.only(left: TSizes.defaultSpace),
-                    child: Shimmer.fromColors(
-                      baseColor: Colors.grey[300]!,
-                      highlightColor: Colors.grey[100]!,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 150, // Ajuste la largeur selon la taille souhaitée pour le titre
-                            height: 20, // Ajuste la hauteur selon la taille souhaitée pour le titre
-                            color: Colors.white,
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            width: 100, // Ajuste la largeur selon la taille souhaitée pour le bouton d'action
-                            height: 20, // Ajuste la hauteur selon la taille souhaitée pour le bouton d'action
-                            color: Colors.white,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                } else {
-                  // Affiche l'en-tête normal lorsque les données sont chargées
-                  return const Padding(
-                    padding: EdgeInsets.only(left: TSizes.defaultSpace),
-                    child: Column(
-                      children: [
-                        DSectionHeading(
-                          title: 'Featured',
-                          showActionButton: true,
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              }),
-            // Featured Property
-              Obx(() {
-                if (articlePromotionController.isLoading.value) {
-                  // Affiche l'effet shimmer pendant le chargement
                   return SizedBox(
-                    height: 780,
+                    height: 200,
                     child: ListView.builder(
-                      // Utilisation de `ListView.builder` pour générer des éléments de chargement
-                      itemCount: 5, // Nombre d'éléments de chargement à afficher (ajuste si nécessaire)
-                      itemBuilder: (context, index) {
-                        return Shimmer.fromColors(
-                          baseColor: Colors.grey[300]!,
-                          highlightColor: Colors.grey[100]!,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: 3,
+                      itemBuilder: (_, __) {
+                        return Padding(
+                          padding:
+                              const EdgeInsets.only(left: TSizes.defaultSpace),
+                          child: Shimmer.fromColors(
+                            baseColor: Colors.grey.shade300,
+                            highlightColor: Colors.grey.shade100,
                             child: Container(
-                              height: 180, // Ajuste la hauteur en fonction des besoins
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
+                              width: 250,
+                              padding: const EdgeInsets.all(TSizes.sm),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: double.infinity,
+                                    height: 150,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(
+                                          TSizes.cardRadiusLg),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    width: 100,
+                                    height: 12,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    width: 80,
+                                    height: 12,
+                                    color: Colors.white,
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -390,59 +437,207 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                       },
                     ),
                   );
+                } else if (articlePromotionController
+                    .promotionProperties.isEmpty) {
+                  return const SizedBox.shrink();
+                } else {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(
+                            left: TSizes.defaultSpace,
+                            top: TSizes.defaultSpace),
+                        child: DSectionHeading(
+                          title: 'Promotions',
+                          showActionButton: false,
+                        ),
+                      ),
+                      const SizedBox(height: TSizes.spaceBtwItems),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: TSizes.defaultSpace),
+                        child: GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.75,
+                            crossAxisSpacing: TSizes.spaceBtwItems,
+                            mainAxisSpacing: TSizes.spaceBtwItems,
+                          ),
+                          itemCount: articlePromotionController
+                              .promotionProperties.length,
+                          itemBuilder: (context, index) {
+                            final promotion = articlePromotionController
+                                .promotionProperties[index];
+                            final article = promotion.article;
+
+                            if (article == null) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return GestureDetector(
+                              onTap: () {
+                                Get.to(() => PromoteArticleDetailsScreen(
+                                    property: article));
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(
+                                      TSizes.cardRadiusLg),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.2),
+                                      spreadRadius: 1,
+                                      blurRadius: 5,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Image de l'article
+                                    ClipRRect(
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(
+                                            TSizes.cardRadiusLg),
+                                        topRight: Radius.circular(
+                                            TSizes.cardRadiusLg),
+                                      ),
+                                      child: article.image.isNotEmpty
+                                          ? Image.network(
+                                              article.image,
+                                              height: 120,
+                                              width: double.infinity,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error,
+                                                      stackTrace) =>
+                                                  Container(
+                                                height: 120,
+                                                color: getGreyColor(200),
+                                                child: const Icon(
+                                                    Icons.image_not_supported),
+                                              ),
+                                            )
+                                          : Container(
+                                              height: 120,
+                                              color: getGreyColor(200),
+                                              child: const Icon(
+                                                  Icons.image_not_supported),
+                                            ),
+                                    ),
+                                    // Détails de l'article
+                                    Padding(
+                                      padding: const EdgeInsets.all(TSizes.sm),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            article.getPropertyByLanguage(
+                                              language.locale.languageCode,
+                                              propertyType: "name",
+                                            ),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleSmall,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.calendar_today,
+                                                size: 12,
+                                                color: Colors.grey,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Expanded(
+                                                child: Text(
+                                                  '${promotion.startDate?.split('T')[0] ?? 'N/A'} - ${promotion.endDate?.split('T')[0] ?? 'N/A'}',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodySmall,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  '${article.price.toStringAsFixed(0)} MRU',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleMedium
+                                                      ?.copyWith(
+                                                        color: Theme.of(context)
+                                                            .primaryColor,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              if (article.reduction_percentage >
+                                                  0) ...[
+                                                const SizedBox(width: 4),
+                                                Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 4,
+                                                      vertical: 2),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.red
+                                                        .withOpacity(0.1),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            4),
+                                                  ),
+                                                  child: Text(
+                                                    '-${article.reduction_percentage}%',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                          color: Colors.red,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
                 }
-        
-                if (articlePromotionController.featuredProperties.isEmpty) {
-                  return const Center(child: Text('No properties found'));
-                }
-        
-                return SizedBox(
-                  height: 780,
-                  child: ListView.builder(
-                    // shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: articlePromotionController.featuredProperties.length,
-                    itemBuilder: (context, index) {
-                      final property = articlePromotionController.featuredProperties[index];
-                      return PropertyCardWidget(
-                        image: property.image ?? TImages.featured1,
-                        isFeatured: true,
-                        favoriteIcon: Icons.favorite_border,
-                        categoryIcon: property.category!.image ?? '',
-                        status: property.purpose,
-                        category: property.category!.name,
-                        price: property.price,
-                        name: property.getPropertyByLanguage(language.locale.languageCode, propertyType: "name") ?? 'Test',
-                        location: 'Cite Plage',
-                        onTap: () async {
-                          // Affiche un dialogue de chargement
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (BuildContext context) {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            },
-                          );
-                          // Attendre quelques secondes pour simuler un chargement
-                          await Future.delayed(const Duration(seconds: 2));
-                          // Fermer le dialogue de chargement
-                          Navigator.pop(context);
-                          // Naviguer vers la page des détails
-                          Get.to(() => FutureadArticleDetailsScreen(property: property));
-                        },
-                        onFavoriteTap: () {
-                          print('FAVORITE BUTTON: ${property.getPropertyByLanguage(language.locale.languageCode, propertyType: "name")}');
-                        },
-                      );
-                    },
-                  ),
-                );
               }),
-        
+
               //
-        
+              //
+
               const SizedBox(
                 height: TSizes.spaceBtwSections,
               ),
@@ -464,7 +659,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
               const SizedBox(
                 width: TSizes.spaceBtwItems,
               ),
-              Text(userProfile['full_name'] ?? 'Nom inconnu')
+              Text(userProfile?['full_name'] ?? 'Nom inconnu')
             ],
           ),
         ),
@@ -478,10 +673,10 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
             curve: Curves.easeInOut, // Effet d'animation
           );
         },
-        backgroundColor: Colors.deepOrangeAccent.withOpacity(0.4), // Ajustez la couleur et l'opacité ici
+        backgroundColor: Colors.deepOrangeAccent
+            .withOpacity(0.4), // Ajustez la couleur et l'opacité ici
         child: const Icon(Icons.arrow_upward),
-      )
-      ,
+      ),
     );
   }
 
@@ -552,7 +747,8 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildLanguageOption('Ar', 'عربي', currentLanguage, context),
-                _buildLanguageOption('Fr', 'Français', currentLanguage, context),
+                _buildLanguageOption(
+                    'Fr', 'Français', currentLanguage, context),
                 _buildLanguageOption('En', 'English', currentLanguage, context),
               ],
             ),
@@ -563,15 +759,15 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
   }
 
   // Widget pour afficher une option de langue
-  // Widget pour afficher une option de langue
   Widget _buildLanguageOption(
-      String languageCode,
-      String languageName,
-      String currentLanguage,
-      BuildContext context,
-      ) {
+    String languageCode,
+    String languageName,
+    String currentLanguage,
+    BuildContext context,
+  ) {
     // Déterminer si cette langue est sélectionnée
-    bool isSelected = languageCode.toLowerCase() == currentLanguage.toLowerCase();
+    bool isSelected =
+        languageCode.toLowerCase() == currentLanguage.toLowerCase();
 
     return GestureDetector(
       onTap: () {
@@ -581,7 +777,9 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.grey[200] : Colors.transparent, // Couleur active si sélectionnée
+          color: isSelected
+              ? getGreyColor(200)
+              : Colors.transparent, // Couleur active si sélectionnée
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Text(
@@ -589,7 +787,9 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
           style: TextStyle(
             fontSize: 16.0,
             fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.black : Colors.black, // Texte en bleu si sélectionné
+            color: isSelected
+                ? Colors.black
+                : Colors.black, // Texte en bleu si sélectionné
           ),
         ),
       ),

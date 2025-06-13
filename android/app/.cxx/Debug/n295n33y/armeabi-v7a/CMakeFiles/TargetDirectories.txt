@@ -1,0 +1,2 @@
+/Users/dembadiagana/Documents/Digissimmo/Immolink-mobile/android/app/.cxx/Debug/n295n33y/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/dembadiagana/Documents/Digissimmo/Immolink-mobile/android/app/.cxx/Debug/n295n33y/armeabi-v7a/CMakeFiles/rebuild_cache.dir

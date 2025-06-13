@@ -1,6 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -8,11 +6,10 @@ import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 import 'package:immolink_mobile/controllers/language/language_controller.dart';
 import 'package:immolink_mobile/controllers/login/check_auth_controller.dart';
 import 'package:immolink_mobile/models/Article.dart';
-import 'package:immolink_mobile/utils/config.dart';
-import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/views/screens/article/common/gallery_panel.dart';
 import 'package:immolink_mobile/views/screens/booking_screen.dart';
 import 'package:immolink_mobile/views/screens/login_email_screen.dart';
+import 'package:immolink_mobile/utils/config.dart';
 
 class PromoteArticleDetailsScreen extends StatefulWidget {
   const PromoteArticleDetailsScreen({super.key, required this.property});
@@ -31,27 +28,48 @@ class _PromoteArticleDetailsScreenState
   Widget build(BuildContext context) {
     final CheckAuthController authController = Get.put(CheckAuthController());
     final localStorage = GetStorage();
-    bool isLocationAvailable = widget.property.location_latitude! != null && widget.property.location_latitude!.isNotEmpty &&
-        widget.property.location_longitude != null && widget.property.location_longitude!.isNotEmpty;
+    bool isLocationAvailable = widget.property.location_latitude != null &&
+        widget.property.location_latitude!.isNotEmpty &&
+        widget.property.location_longitude != null &&
+        widget.property.location_longitude!.isNotEmpty;
     final CurrencyController currencyController = Get.find();
     final LanguageController languageController = Get.find();
+
+    // Construction de l'URL de l'image
+    String imageUrl = '';
+    if (widget.property.gallery.isNotEmpty) {
+      final galleryItem = widget.property.gallery.first;
+      imageUrl = galleryItem.original;
+    } else if (widget.property.image.isNotEmpty) {
+      imageUrl = widget.property.image;
+    }
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
         ),
-        title: Text(widget.property.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? 'Property Details'),
+        title: Text(
+          widget.property.getPropertyByLanguage(
+                  languageController.locale.languageCode,
+                  propertyType: "name") ??
+              'Property Details',
+          style: const TextStyle(
+            color: Colors.black87,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share),
+            icon: const Icon(Icons.share, color: Colors.black87),
             onPressed: () async {
               String? token = await localStorage.read('AUTH_TOKEN');
               print(token);
-              // Fonctionnalité de partage
-              print("Share button tapped");
             },
           ),
         ],
@@ -60,346 +78,491 @@ class _PromoteArticleDetailsScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image principale avec badge "Featured" et bouton favoris
+            // Image principale avec badges
             Stack(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      widget.property.image ?? 'default_image.png',
-                      width: double.infinity,
-                      height: 250,
-                      fit: BoxFit.cover,
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(24.0),
+                    bottomRight: Radius.circular(24.0),
+                  ),
+                  child: imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          width: double.infinity,
+                          height: 300,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              height: 300,
+                              color: Colors.grey[200],
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes !=
+                                          null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.blue[400]!),
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 300,
+                              color: Colors.grey[200],
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.photo_library_outlined,
+                                      size: 40.0, color: Colors.grey),
+                                  const SizedBox(height: 8.0),
+                                  Text(
+                                    'Image non disponible',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12.0,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          height: 300,
+                          color: Colors.grey[200],
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.photo_library_outlined,
+                                  size: 40.0, color: Colors.grey),
+                              const SizedBox(height: 8.0),
+                              Text(
+                                'Aucune image',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12.0,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                ),
+                if (widget.property.bookable_type!.contains('Daily'))
+                  Positioned(
+                    top: 16.0,
+                    left: 16.0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0, vertical: 6.0),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Colors.amber, Colors.orange],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.amber.withOpacity(0.3),
+                            spreadRadius: 1,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.chair_alt,
+                            color: Colors.white,
+                            size: 14.0,
+                          ),
+                          SizedBox(width: 4.0),
+                          Text(
+                            'MEUBLÉ',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.0,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
                 Positioned(
-                  left: 15,
-                  top: 15,
+                  top: 16.0,
+                  right: 16.0,
                   child: Container(
-                    padding: const EdgeInsets.all(8),
-                    color: Colors.orange,
-                    child: const Text(
-                      'Featured',
-                      style: TextStyle(color: Colors.white),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0, vertical: 6.0),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Colors.blue, Colors.blueAccent],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.3),
+                          spreadRadius: 1,
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                Positioned(
-                  right: 10,
-                  top: 10,
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.favorite_border,
-                      color: Colors.red,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.star,
+                          color: Colors.white,
+                          size: 14.0,
+                        ),
+                        const SizedBox(width: 4.0),
+                        Text(
+                          widget.property.purpose!.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
-                    onPressed: () {
-                      // Ajouter aux favoris
-                    },
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
 
             // Galerie d'images
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: widget.property.gallery.length,
-                itemBuilder: (context, index) {
-                  final image = widget.property.gallery[index];
-                  return GestureDetector(
-                    onTap: () {
-                      // Ouvrir panel de visualisation de la galerie
-                      _showGalleryPanel(
-                          context, widget.property.gallery, index);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16.0),
-                        child: FadeInImage(
-                          placeholder: const AssetImage(
-                              'assets/images/loading_placeholder.png'), // Image de chargement local
-                          image: NetworkImage(
-                              '${Config.initUrl}${image.original}'),
-                          fit: BoxFit.cover,
-                          imageErrorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.broken_image,
-                                size: 50, color: Colors.red);
-                          },
-                          fadeInDuration: const Duration(
-                              milliseconds: 300), // Animation de fade-in
+            if (widget.property.gallery.length > 1)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: SizedBox(
+                  height: 80,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    itemCount: widget.property.gallery.length,
+                    itemBuilder: (context, index) {
+                      final image = widget.property.gallery[index];
+                      return GestureDetector(
+                        onTap: () {
+                          print(widget.property.gallery);
+                          return _showGalleryPanel(
+                              context, widget.property.gallery, index);
+                        },
+                        child: Container(
+                          width: 80,
+                          margin: const EdgeInsets.only(right: 8.0),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12.0),
+                            border: Border.all(
+                              color: Colors.grey[300]!,
+                              width: 1.0,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12.0),
+                            child: Image.network(
+                              image.original,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey[200],
+                                  child: const Icon(Icons.broken_image,
+                                      color: Colors.grey),
+                                );
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Informations sur la propriété
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  // Icone et catégorie
-                  Row(
-                    children: [
-                      SvgPicture.network(widget.property.category!.image! ?? '',
-                          height: 40,
-                          width: 40,
-                          colorFilter: const ColorFilter.mode(
-                              Colors.green, BlendMode.srcIn)),
-                      const SizedBox(width: 8),
-                      Text(widget.property.category!.name ?? 'Category'),
-                    ],
+                      );
+                    },
                   ),
-                  const Spacer(),
-                  // Badge "Purpose"
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    color: Colors.blue,
-                    child: Text(
-                      widget.property.purpose,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
 
-            // Nom et prix
+            // Informations principales
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.property.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? 'Unknown Property',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  // Price
+                  // Prix
                   Obx(() {
                     double convertedPrice = widget.property.price *
                         currencyController.selectedCurrency.value.exchangeRate;
                     return Text(
-                      "${convertedPrice.toStringAsFixed(2)} ${currencyController.selectedCurrency.value.symbol}",
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall!
-                          .apply(color: Colors.green, fontWeightDelta: 2),
+                      "${convertedPrice.toStringAsFixed(0)} ${currencyController.selectedCurrency.value.symbol}",
+                      style: TextStyle(
+                        fontSize: 24.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[700],
+                      ),
                     );
                   }),
-                ],
-              ),
-            ),
+                  const SizedBox(height: 8.0),
 
-            // Commodity
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Wrap(
-                spacing: 16.0, // Espace horizontal entre les éléments
-                runSpacing: 16.0, // Espace vertical entre les lignes
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildAmenity(
-                        icon: TImages.bedroom,
-                        label: 'Bedroom',
-                        value: widget.property.bedroom ?? 0,
-                      ),
-                      _buildAmenity(
-                        icon: TImages.bathroom,
-                        label: 'Bathroom',
-                        value: widget.property.bathroom,
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildAmenity(
-                        icon: TImages.area,
-                        label: 'Area',
-                        value: '${widget.property.area} m²',
-                      ),
-                      _buildAmenity(
-                        icon: TImages.balcony,
-                        label: 'Balcony',
-                        value: widget.property.balcony,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Property Description Section
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Affiche le texte avec une limite de lignes si non expansé
+                  // Nom de la propriété
                   Text(
-                    widget.property.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "description")?? 'No description available.',
-                    maxLines: _isExpanded
-                        ? null
-                        : 5, // Limite à 5 lignes si non expansé
+                    widget.property.getPropertyByLanguage(
+                            languageController.locale.languageCode,
+                            propertyType: "name") ??
+                        'Unknown Property',
+                    style: const TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8.0),
+
+                  // Localisation
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_outlined,
+                          size: 16.0, color: Colors.grey[600]),
+                      const SizedBox(width: 4.0),
+                      Expanded(
+                        child: Text(
+                          widget.property.structure?.name ??
+                              'Localisation non disponible',
+                          style: TextStyle(
+                            fontSize: 14.0,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Caractéristiques
+                  Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12.0),
+                      border: Border.all(color: Colors.grey[200]!),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildFeatureItem(Icons.king_bed_outlined,
+                            '${widget.property.bedroom ?? 0}', 'Chambres'),
+                        _buildFeatureItem(Icons.bathtub_outlined,
+                            '${widget.property.bathroom ?? 0}', 'SDB'),
+                        _buildFeatureItem(Icons.square_foot,
+                            '${widget.property.area?.toInt() ?? 0}', 'm²'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Description
+                  const Text(
+                    'Description',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8.0),
+                  Text(
+                    widget.property.getPropertyByLanguage(
+                            languageController.locale.languageCode,
+                            propertyType: "description") ??
+                        'No description available.',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.grey[800],
+                      height: 1.5,
+                    ),
+                    maxLines: _isExpanded ? null : 3,
                     overflow: _isExpanded
                         ? TextOverflow.visible
                         : TextOverflow.ellipsis,
                   ),
-
-                  // Bouton "Voir plus" ou "Voir moins"
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isExpanded =
-                            !_isExpanded; // Alterne entre expansion et rétrécissement
-                      });
-                    },
-                    child: Text(
-                      _isExpanded ? "Voir moins" : "Voir plus",
-                      style: const TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
+                  if (widget.property.getPropertyByLanguage(
+                              languageController.locale.languageCode,
+                              propertyType: "description") !=
+                          null &&
+                      (widget.property
+                                  .getPropertyByLanguage(
+                                      languageController.locale.languageCode,
+                                      propertyType: "description")
+                                  ?.length ??
+                              0) >
+                          150)
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _isExpanded = !_isExpanded;
+                        });
+                      },
+                      child: Text(
+                        _isExpanded ? 'Voir moins' : 'Voir plus',
+                        style: TextStyle(
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
 
-            // Section de la petite carte
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: isLocationAvailable
-                  ?  GestureDetector(
-                onTap: () {
-                  // Lorsque l'utilisateur tape sur la carte, il est redirigé vers la carte en plein écran
-                  Get.to( FullMapScreen(latitude: double.parse(widget.property.location_latitude!), longitude: double.parse(widget.property.location_longitude!)));
-                },
-                child: Container(
-                  height: 150, // Petite section pour la carte
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8.0),
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: GoogleMap(
-
-                    initialCameraPosition: const CameraPosition(
-                      target: LatLng(18.110686245353225, -15.998744332959172),
-                      zoom: 14.0,
-                    ),
-                    markers: {
-                      Marker(
-                        markerId: const MarkerId('propertyLocation'),
-                        position: LatLng(double.parse(widget.property.location_latitude ?? ''), double.parse(widget.property.location_longitude ?? '')),
+            // Carte
+            if (isLocationAvailable)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Localisation',
+                      style: TextStyle(
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
-                    },
-                    zoomControlsEnabled: false,
-                    // mapType: MapType.satellite,
-                    scrollGesturesEnabled: false,
-                    tiltGesturesEnabled: false,
-                    rotateGesturesEnabled: false,
-                    onTap: (LatLng position) {
-                      Get.to( FullMapScreen(latitude: double.parse(widget.property.location_latitude!), longitude: double.parse(widget.property.location_longitude!)));
-                    },
-                  ),
-                ),
-              ) : const Center(
-                child: Text(
-                  'Position non disponible',
+                    ),
+                    const SizedBox(height: 8.0),
+                    GestureDetector(
+                      onTap: () {
+                        Get.to(FullMapScreen(
+                          latitude:
+                              double.parse(widget.property.location_latitude!),
+                          longitude:
+                              double.parse(widget.property.location_longitude!),
+                        ));
+                      },
+                      child: Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12.0),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12.0),
+                          child: GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target: LatLng(
+                                double.parse(
+                                    widget.property.location_latitude!),
+                                double.parse(
+                                    widget.property.location_longitude!),
+                              ),
+                              zoom: 15.0,
+                            ),
+                            markers: {
+                              Marker(
+                                markerId: const MarkerId('propertyLocation'),
+                                position: LatLng(
+                                  double.parse(
+                                      widget.property.location_latitude!),
+                                  double.parse(
+                                      widget.property.location_longitude!),
+                                ),
+                              ),
+                            },
+                            zoomControlsEnabled: false,
+                            scrollGesturesEnabled: false,
+                            tiltGesturesEnabled: false,
+                            rotateGesturesEnabled: false,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            )
           ],
         ),
       ),
       bottomNavigationBar: widget.property.purpose == "Rent"
           ? Container(
-        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-        color: Colors.white,
-        child: ElevatedButton(
-          onPressed: () async {
-            // Vérifier si l'utilisateur est connecté via Firebase
-            bool isAuthenticated = await authController.checkUserToken();
-            // Vérifier si l'utilisateur est connecté via Firebase ou backend
-            User? user = FirebaseAuth.instance.currentUser;
-            print(isAuthenticated);
-
-            if (isAuthenticated) {
-              // Si l'utilisateur est connecté, naviguer vers la page de réservation
-              Get.to(() => BookingScreen(
-                articleId: widget.property.id,
-                eventType: 'Mariage', // Par exemple, pour Mariage
-              ));
-            }
-            else {
-              // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
-              Get.to(() => const LoginEmailScreen(), arguments: {
-                'nextPage': BookingScreen(
-                  articleId: widget.property.id,
-                  eventType: 'Mariage',
-                )
-              });
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: const Text('Réservez Maintenant',
-              style: TextStyle(fontSize: 20, color: Colors.white)),
-        ),
-      )
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 6,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: () async {
+                  bool isAuthenticated = await authController.checkUserToken();
+                  if (isAuthenticated) {
+                    Get.to(() => BookingScreen(
+                          articleId: widget.property.id,
+                          eventType: 'Mariage',
+                        ));
+                  } else {
+                    Get.to(() => const LoginEmailScreen(), arguments: {
+                      'nextPage': BookingScreen(
+                        articleId: widget.property.id,
+                        eventType: 'Mariage',
+                      )
+                    });
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[700],
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
+                child: const Text(
+                  'Réserver maintenant',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            )
           : null,
-
     );
   }
 
-  Widget _buildAmenity(
-      {required String icon, required String label, required dynamic value}) {
-    return Row(
+  Widget _buildFeatureItem(IconData icon, String value, String label) {
+    return Column(
       children: [
-        SvgPicture.asset(
-          icon,
-          height: 40,
-          width: 40,
+        Icon(icon, size: 24.0, color: Colors.blue[700]),
+        const SizedBox(height: 4.0),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16.0,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue[700],
+          ),
         ),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '$value',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ],
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.0,
+            color: Colors.grey[600],
+          ),
         ),
       ],
     );
@@ -409,6 +572,7 @@ class _PromoteArticleDetailsScreenState
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
         return GalleryPanel(gallery: gallery, initialIndex: initialIndex);
       },
@@ -420,20 +584,33 @@ class FullMapScreen extends StatelessWidget {
   final double latitude;
   final double longitude;
 
-  const FullMapScreen({super.key, required this.latitude, required this.longitude});
+  const FullMapScreen(
+      {super.key, required this.latitude, required this.longitude});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Location de l'appartement"),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          "Localisation",
+          style: TextStyle(
+            color: Colors.black87,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: GoogleMap(
-        initialCameraPosition: const CameraPosition(
-          target: LatLng(18.110686245353225, -15.998744332959172),
+        initialCameraPosition: CameraPosition(
+          target: LatLng(latitude, longitude),
           zoom: 16.0,
         ),
-        mapType: MapType.satellite,
         markers: {
           Marker(
             markerId: const MarkerId('propertyLocationFull'),

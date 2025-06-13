@@ -12,6 +12,7 @@ import 'package:immolink_mobile/views/screens/agencies_screen.dart';
 import 'package:immolink_mobile/views/screens/article/articles_screen.dart';
 import 'package:immolink_mobile/views/screens/chat_list_screen.dart';
 import 'package:immolink_mobile/views/screens/home_content_screen.dart';
+import 'package:immolink_mobile/views/screens/home_screen.dart';
 import 'package:immolink_mobile/views/screens/map_screen.dart';
 import 'package:immolink_mobile/views/screens/wishlist_screen.dart';
 import 'package:immolink_mobile/views/widgets/default_appbar.dart';
@@ -90,7 +91,8 @@ class NavigationController extends GetxController {
 
   // Screens associées au menu de navigation
   final screens = [
-    const HomeContentScreen(),
+    // const HomeContentScreen(),
+    const HomeScreen(),
     const AgenciesScreen(),
     const MapScreen(),
      ArticlesScreen(),

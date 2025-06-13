@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
-import 'package:immolink_mobile/controllers/language/language_controller.dart';
 import 'package:immolink_mobile/models/Currency.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:immolink_mobile/views/screens/language_screen.dart';
 
 class DefaultAppBar extends StatelessWidget implements PreferredSizeWidget {

@@ -9,7 +9,7 @@ import 'package:immolink_mobile/views/screens/article/create_article_by_map_scre
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'dart:math' as math;
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:immolink_mobile/l10n/app_localizations.dart'; 
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -301,7 +301,7 @@ class _MapScreenState extends State<MapScreen>
             final polygon = Polygon(
               polygonId: const PolygonId('selectedPolygon'),
               points: polygonCoords,
-              fillColor: Colors.red.withOpacity(0.3),
+              fillColor: Colors.red.withValues(alpha: 0.3),
               strokeColor: Colors.red,
               strokeWidth: 2,
             );

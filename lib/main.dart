@@ -1,28 +1,18 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:immolink_mobile/bindings/general_bindings.dart';
-import 'package:immolink_mobile/bloc/authentication/auth_bloc.dart';
-import 'package:immolink_mobile/bloc/authentication/auth_event.dart';
-import 'package:immolink_mobile/bloc/authentication/login_bloc/profile_bloc_phone.dart';
-import 'package:immolink_mobile/bloc/authentication/register/register_with_email_bloc.dart';
-import 'package:immolink_mobile/bloc/authentication/register/register_with_phone_bloc.dart';
-import 'package:immolink_mobile/bloc/currencies/currency_bloc.dart';
-import 'package:immolink_mobile/bloc/languages/localization_bloc.dart';
 import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 import 'package:immolink_mobile/controllers/language/language_controller.dart';
 import 'package:immolink_mobile/firebase_options.dart';
+import 'package:immolink_mobile/l10n/app_localizations.dart';
 import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/services/notification/notification_services.dart';
 import 'package:immolink_mobile/utils/iteneray.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
-import 'bloc/authentication/login_bloc/profile_bloc.dart';
 
 void main() async {
  final WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();

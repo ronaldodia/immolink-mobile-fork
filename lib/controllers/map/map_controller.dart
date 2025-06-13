@@ -75,6 +75,12 @@ class MapController extends GetxController {
     if (!serviceEnabled) {
       serviceEnabled = await locationController.requestService();
       if (!serviceEnabled) {
+        Get.snackbar(
+          'Erreur',
+          'Les services de localisation sont désactivés',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
         return;
       }
     }
@@ -83,16 +89,31 @@ class MapController extends GetxController {
     if (permissionGranted == PermissionStatus.denied) {
       permissionGranted = await locationController.requestPermission();
       if (permissionGranted != PermissionStatus.granted) {
+        Get.snackbar(
+          'Permission refusée',
+          'Veuillez accorder la permission de localisation pour utiliser la carte',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
         return;
       }
     }
 
-    locationController.onLocationChanged.listen((currentLocation) {
-      if (currentLocation.latitude != null &&
-          currentLocation.longitude != null) {
-        currentPosition.value = LatLng(currentLocation.latitude!, currentLocation.longitude!);
-      }
-    });
+    try {
+      locationController.onLocationChanged.listen((currentLocation) {
+        if (currentLocation.latitude != null &&
+            currentLocation.longitude != null) {
+          currentPosition.value = LatLng(currentLocation.latitude!, currentLocation.longitude!);
+        }
+      });
+    } catch (e) {
+      Get.snackbar(
+        'Erreur',
+        'Impossible d\'obtenir la localisation : ${e.toString()}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
   Future<void> searchLot(String lot, String? selectedMoughataa, String? selectedLotissement) async {

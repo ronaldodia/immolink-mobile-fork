@@ -52,32 +52,40 @@ class SearchBarWidget extends StatelessWidget {
                     },
                   ),
                 ),
-                IconButton(onPressed: (){
-                  Get.to( FilterScreen());
-                }, icon: Icon(secondIcon, color: Colors.grey)),
+                IconButton(
+                    onPressed: () {
+                      Get.to(FilterScreen());
+                    },
+                    icon: Icon(secondIcon, color: Colors.grey)),
               ],
             ),
           ),
           const SizedBox(height: 10),
           Obx(() {
             if (searchController.query.value.isEmpty) {
-              return Container();  // Pas de liste si l'utilisateur n'a rien tapé
+              return Container(); // Pas de liste si l'utilisateur n'a rien tapé
             } else if (searchController.isLoading.value) {
-              return const CircularProgressIndicator();  // Loader pendant la recherche
+              return const CircularProgressIndicator(); // Loader pendant la recherche
             } else if (searchController.searchResults.isEmpty) {
-              return const Text('Aucun résultat trouvé');  // Message en cas d'absence de résultats
+              return const Text(
+                  'Aucun résultat trouvé'); // Message en cas d'absence de résultats
             } else {
               return ListView.builder(
                 shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),  // Empêche le scroll interne
+                physics:
+                    const NeverScrollableScrollPhysics(), // Empêche le scroll interne
                 itemCount: searchController.searchResults.length,
                 itemBuilder: (context, index) {
                   final Article article = searchController.searchResults[index];
 
                   return ListTile(
-                    leading: Image.network(article.image, width: 50, height: 50, fit: BoxFit.cover),
-                    title: Text( article.getPropertyByLanguage(languageController.locale.languageCode, propertyType: "name") ?? 'Sans titre'),  // Protection contre les valeurs nulles
-                    subtitle: Text(article.purpose),
+                    leading: Image.network(article.image,
+                        width: 50, height: 50, fit: BoxFit.cover),
+                    title: Text(article.getPropertyByLanguage(
+                            languageController.locale.languageCode,
+                            propertyType: "name") ??
+                        'Sans titre'), // Protection contre les valeurs nulles
+                    subtitle: Text(article.purpose ?? ''),
                     onTap: () async {
                       if (article.id != null) {
                         // Affiche un dialogue de chargement

@@ -5,7 +5,8 @@ class GalleryPanel extends StatefulWidget {
   final List gallery;
   final int initialIndex;
 
-  const GalleryPanel({super.key, required this.gallery, required this.initialIndex});
+  const GalleryPanel(
+      {super.key, required this.gallery, required this.initialIndex});
 
   @override
   _GalleryPanelState createState() => _GalleryPanelState();
@@ -30,9 +31,9 @@ class _GalleryPanelState extends State<GalleryPanel> {
             itemCount: widget.gallery.length,
             itemBuilder: (context, index) {
               final image = widget.gallery[index];
-              // print('URL IMAGE: ${Config.initUrl}/${image.original}');
+              // print('URL IMAGE: ${image.original}');
               return Image.network(
-               '${Config.initUrl}${image.original}',
+                image.original,
                 fit: BoxFit.contain,
               );
             },

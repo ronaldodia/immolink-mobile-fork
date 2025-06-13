@@ -6,27 +6,27 @@ class Article {
   final int district_id;
   final int? structure_id;
   final int author_id;
-  final String name_ar;
-  final String name_fr;
-  final String name_en;
+  final String? name_ar;
+  final String? name_fr;
+  final String? name_en;
   final String slug;
   final String image;
   final List<Gallery> gallery;
   final String language;
-  final String description_ar;
-  final String description_fr;
-  final String description_en;
-  final String purpose;
-  final String bookable_type;
+  final String? description_ar;
+  final String? description_fr;
+  final String? description_en;
+  final String? purpose;
+  final String? bookable_type;
   final double price;
   final double? sale_price;
   final int reduction_percentage;
-  final int bedroom;
-  final int bathroom;
-  final int balcony;
-  final int area;
+  final int? bedroom;
+  final int? bathroom;
+  final int? balcony;
+  final int? area;
   final String? video;
-  final String floor_plan;
+  final String? floor_plan;
   final String location_latitude;
   final String location_longitude;
   final String status;
@@ -36,49 +36,55 @@ class Article {
 
   Article({
     required this.id,
-    required this.category,
+    this.category,
     required this.district_id,
     this.structure_id,
     required this.author_id,
-    required this.name_ar,
-    required this.name_fr,
-    required this.name_en,
+    this.name_ar,
+    this.name_fr,
+    this.name_en,
     required this.slug,
     required this.image,
     required this.gallery,
     required this.language,
-    required this.description_ar,
-    required this.description_fr,
-    required this.description_en,
-    required this.purpose,
-    required this.bookable_type,
+    this.description_ar,
+    this.description_fr,
+    this.description_en,
+    this.purpose,
+    this.bookable_type,
     required this.price,
     this.sale_price,
     required this.reduction_percentage,
-    required this.bedroom,
-    required this.bathroom,
-    required this.balcony,
-    required this.area,
+    this.bedroom,
+    this.bathroom,
+    this.balcony,
+    this.area,
     this.video,
-    required this.floor_plan,
+    this.floor_plan,
     required this.location_latitude,
     required this.location_longitude,
     required this.status,
     required this.created_at,
     required this.updated_at,
-    required this.structure,
+    this.structure,
   });
 
   String getPropertyByLanguage(String language,
       {required String propertyType}) {
     switch (language) {
       case 'ar':
-        return propertyType == 'name' ? name_ar : description_ar;
+        return propertyType == 'name'
+            ? (name_ar ?? '')
+            : (description_ar ?? '');
       case 'fr':
-        return propertyType == 'name' ? name_fr : description_fr;
+        return propertyType == 'name'
+            ? (name_fr ?? '')
+            : (description_fr ?? '');
       case 'en':
       default:
-        return propertyType == 'name' ? name_fr : description_fr;
+        return propertyType == 'name'
+            ? (name_en ?? '')
+            : (description_en ?? '');
     }
   }
 
@@ -105,20 +111,19 @@ class Article {
       description_ar: json['description_ar'],
       description_fr: json['description_fr'],
       description_en: json['description_en'],
-      purpose: json['purpose'],
-      bookable_type: json['bookable_type'],
-      price: json['price'].toDouble(),
-      sale_price:
-          json['sale_price'] != null ? json['sale_price'].toDouble() : null,
-      reduction_percentage: json['reduction_percentage'],
+      purpose: json['purpose'] ?? '',
+      bookable_type: json['bookable_type'] ?? '',
+      price: (json['price'] ?? 0).toDouble(),
+      sale_price: json['sale_price']?.toDouble(),
+      reduction_percentage: json['reduction_percentage'] ?? 0,
       bedroom: json['bedroom'],
       bathroom: json['bathroom'],
       balcony: json['balcony'],
       area: json['area'],
       video: json['video'],
       floor_plan: json['floor_plan'],
-      location_latitude: json['location_latitude'],
-      location_longitude: json['location_longitude'],
+      location_latitude: json['location_latitude'] ?? '',
+      location_longitude: json['location_longitude'] ?? '',
       status: json['status'],
       created_at: DateTime.parse(json['created_at']),
       updated_at: DateTime.parse(json['updated_at']),

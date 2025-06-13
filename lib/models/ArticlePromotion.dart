@@ -3,13 +3,16 @@ import 'package:immolink_mobile/models/Article.dart';
 class ArticlePromotion {
   final int id;
   final int articleId;
-  final String startDate;
-  final String endDate;
-  final String amount;
-  final String status;
-  final String paymentStatus;
-  final int prospectsCount;
-  final Article? article; // Article peut être null
+  final String? startDate;
+  final String? endDate;
+  final String? amount;
+  final String? status;
+  final String? paymentStatus;
+  final int? prospectsCount;
+  final String? payedBy;
+  final Article? article;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   ArticlePromotion({
     required this.id,
@@ -20,20 +23,32 @@ class ArticlePromotion {
     required this.status,
     required this.paymentStatus,
     required this.prospectsCount,
-    this.article, // Rendre optionnel
+    required this.payedBy,
+    this.article,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   factory ArticlePromotion.fromJson(Map<String, dynamic> json) {
     return ArticlePromotion(
-      id: json['id'],
-      articleId: json['article_id'],
-      startDate: json['start_date'],
-      endDate: json['end_date'],
-      amount: json['amount'],
-      status: json['status'],
-      paymentStatus: json['payment_status'],
-      prospectsCount: json['prospects_count'],
-      article: json['article'] != null ? Article.fromJson(json['article']) : null, // Gestion du cas null
+      id: json['id'] as int? ?? 0,
+      articleId: json['article_id'] as int? ?? 0,
+      startDate: json['start_date'] as String?,
+      endDate: json['end_date'] as String?,
+      amount: json['amount']?.toString(),
+      status: json['status'] as String?,
+      paymentStatus: json['payment_status'] as String?,
+      prospectsCount: json['prospects_count'] as int?,
+      payedBy: json['payed_by'] as String?,
+      article: json['article'] != null
+          ? Article.fromJson(json['article'] as Map<String, dynamic>)
+          : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'].toString())
+          : null,
     );
   }
 }
