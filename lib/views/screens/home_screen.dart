@@ -1,14 +1,17 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:immolink_mobile/controllers/home/categories_controller.dart';
 import 'package:immolink_mobile/controllers/home/article_promotion_controller.dart';
 import 'package:immolink_mobile/controllers/home/search_app_controller.dart';
+import 'package:immolink_mobile/controllers/articles/filter_controller.dart';
 import 'package:immolink_mobile/controllers/language/language_controller.dart';
-import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/views/screens/article/promote_article_details_screen.dart';
 import 'package:immolink_mobile/views/common/featured_property_card.dart';
 import 'package:immolink_mobile/views/screens/all_properties_screen.dart';
+import 'package:immolink_mobile/l10n/app_localizations.dart';
 
 enum ContentState { loading, success, error }
 
@@ -112,11 +115,13 @@ class _HomeScreenState extends State<HomeScreen> {
       Get.put(ArticlePromotionController());
   final CategoryController categoryController = Get.put(CategoryController());
   final SearchAppController searchController = Get.put(SearchAppController());
+  final FilterController filterController = Get.put(FilterController());
   final LanguageController languageController = Get.find();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final RxBool _showSearchResults = false.obs;
   final RxBool _isSearchExpanded = false.obs;
+  final RxBool _showFilterOverlay = false.obs;
 
   // Propriétés pour gérer les états de chargement et d'erreur
   final RxBool _isLoadingCategories = false.obs;
@@ -149,8 +154,85 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Search Bar
-                _buildSearchBar(),
+                // Barre de recherche
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12.0),
+                            border: Border.all(
+                              color: Colors.grey[300]!,
+                              width: 1.0,
+                            ),
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            focusNode: _searchFocusNode,
+                            onTap: () {
+                              _isSearchExpanded.value = true;
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Rechercher une propriété...',
+                              hintStyle: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 14.0,
+                              ),
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: Colors.grey[500],
+                                size: 20.0,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                                vertical: 12.0,
+                              ),
+                            ),
+                            onChanged: (value) {
+                              if (value.length >= 3) {
+                                _showSearchResults.value = true;
+                                searchController.updateQuery(value);
+                              } else {
+                                _showSearchResults.value = false;
+                                searchController.searchResults.clear();
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8.0),
+                      // Bouton de filtre
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(12.0),
+                          border: Border.all(
+                            color: Colors.blue[100]!,
+                            width: 1.0,
+                          ),
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            _showFilterOverlay.value = true;
+                          },
+                          icon: Icon(
+                            Icons.filter_list,
+                            color: Colors.blue[700],
+                            size: 24.0,
+                          ),
+                          tooltip: 'Filtrer',
+                          padding: const EdgeInsets.all(12.0),
+                          constraints: const BoxConstraints(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
                 // Categories Section
                 _buildSectionTitle('Catégories'),
@@ -203,309 +285,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           // Overlay de recherche
-          Obx(() {
-            if (!_isSearchExpanded.value) return const SizedBox.shrink();
-
-            return Positioned.fill(
-              child: Container(
-                color: Colors.white,
-                child: Column(
-                  children: [
-                    // Barre de recherche étendue
-                    Container(
-                      padding: const EdgeInsets.fromLTRB(16.0, 48.0, 16.0, 8.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            spreadRadius: 1,
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back),
-                            onPressed: () {
-                              _isSearchExpanded.value = false;
-                              _showSearchResults.value = false;
-                              _searchController.clear();
-                              searchController.updateQuery('');
-                              _searchFocusNode.unfocus();
-                            },
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              focusNode: _searchFocusNode,
-                              autofocus: true,
-                              onChanged: (value) {
-                                if (value.length >= 3) {
-                                  _showSearchResults.value = true;
-                                  searchController.updateQuery(value);
-                                } else {
-                                  _showSearchResults.value = false;
-                                  searchController.searchResults.clear();
-                                }
-                              },
-                              decoration: InputDecoration(
-                                hintText: 'Rechercher une propriété...',
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0),
-                              ),
-                            ),
-                          ),
-                          if (_searchController.text.isNotEmpty)
-                            IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                                searchController.updateQuery('');
-                                _showSearchResults.value = false;
-                              },
-                            ),
-                        ],
-                      ),
-                    ),
-                    // Résultats de recherche
-                    Expanded(
-                      child: Obx(() {
-                        if (!_showSearchResults.value) {
-                          return const Center(
-                            child: Text(
-                              'Commencez à taper pour rechercher...',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          );
-                        }
-
-                        if (searchController.isLoading.value) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-
-                        if (searchController.errorMessage.isNotEmpty) {
-                          return Center(
-                            child: Text(
-                              searchController.errorMessage.value,
-                              style: TextStyle(color: Colors.red[400]),
-                            ),
-                          );
-                        }
-
-                        if (searchController.searchResults.isEmpty) {
-                          return const Center(
-                            child: Text(
-                              'Aucun résultat trouvé',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          );
-                        }
-
-                        return ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          itemCount: searchController.searchResults.length,
-                          itemBuilder: (context, index) {
-                            final article =
-                                searchController.searchResults[index];
-                            String imageUrl = '';
-                            if (article.gallery.isNotEmpty) {
-                              imageUrl = article.gallery.first.original;
-                            } else if (article.image.isNotEmpty) {
-                              imageUrl = article.image;
-                            }
-
-                            return GestureDetector(
-                              onTap: () {
-                                if (article.purpose == "Rent" &&
-                                    (article.bookable_type?.contains("Daily") ??
-                                        false)) {
-                                  Get.to(() => PromoteArticleDetailsScreen(
-                                      property: article));
-                                } else {
-                                  Get.to(() => FeaturedPropertyCard(
-                                        image: imageUrl,
-                                        status: article.status,
-                                        isFeatured:
-                                            article.status == 'featured',
-                                        categoryIcon: article.category?.image,
-                                        categoryName:
-                                            article.category?.name ?? '',
-                                        name: article.getPropertyByLanguage(
-                                            languageController
-                                                .locale.languageCode,
-                                            propertyType: "name"),
-                                        location: article.structure?.name ??
-                                            'Localisation non disponible',
-                                        price: article.price,
-                                        amenities: const [
-                                          Icons.king_bed_outlined,
-                                          Icons.bathtub_outlined,
-                                          Icons.square_foot,
-                                        ],
-                                      ));
-                                }
-                                _isSearchExpanded.value = false;
-                                _showSearchResults.value = false;
-                                _searchController.clear();
-                                searchController.updateQuery('');
-                                _searchFocusNode.unfocus();
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.only(bottom: 12.0),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  border: Border.all(color: Colors.grey[200]!),
-                                ),
-                                child: Row(
-                                  children: [
-                                    // Image
-                                    ClipRRect(
-                                      borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(8.0),
-                                        bottomLeft: Radius.circular(8.0),
-                                      ),
-                                      child: Image.network(
-                                        imageUrl,
-                                        width: 80,
-                                        height: 80,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) =>
-                                                Container(
-                                          width: 80,
-                                          height: 80,
-                                          color: Colors.grey[100],
-                                          child: const Icon(
-                                              Icons.photo_library_outlined,
-                                              color: Colors.grey),
-                                        ),
-                                      ),
-                                    ),
-                                    // Détails
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              article.getPropertyByLanguage(
-                                                  languageController
-                                                      .locale.languageCode,
-                                                  propertyType: "name"),
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14.0,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 4.0),
-                                            Row(
-                                              children: [
-                                                Icon(Icons.location_on_outlined,
-                                                    size: 12.0,
-                                                    color: Colors.grey[400]),
-                                                const SizedBox(width: 4.0),
-                                                Expanded(
-                                                  child: Text(
-                                                    article.structure?.name ??
-                                                        'Localisation non disponible',
-                                                    style: TextStyle(
-                                                      fontSize: 12.0,
-                                                      color: Colors.grey[600],
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 4.0),
-                                            Text(
-                                              '${article.price.toStringAsFixed(0)} MRU',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.blue[700],
-                                                fontSize: 14.0,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
+          _buildSearchOverlay(),
+          // Overlay de filtres
+          _buildFilterOverlay(),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Container(
-      margin: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: _searchController,
-        focusNode: _searchFocusNode,
-        onTap: () {
-          _isSearchExpanded.value = true;
-          if (_searchController.text.length >= 3) {
-            _showSearchResults.value = true;
-            searchController.updateQuery(_searchController.text);
-          }
-        },
-        onChanged: (value) {
-          if (value.length >= 3) {
-            _showSearchResults.value = true;
-            searchController.updateQuery(value);
-          } else {
-            _showSearchResults.value = false;
-            searchController.searchResults.clear();
-          }
-        },
-        decoration: InputDecoration(
-          hintText: 'Rechercher une propriété...',
-          prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              // TODO: Implement filter functionality
-            },
-          ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-        ),
       ),
     );
   }
@@ -1401,5 +1184,607 @@ class _HomeScreenState extends State<HomeScreen> {
     } finally {
       _isLoadingFeatured.value = false;
     }
+  }
+
+  Widget _buildSearchOverlay() {
+    return Obx(() {
+      if (!_isSearchExpanded.value) return const SizedBox.shrink();
+
+      return Positioned.fill(
+        child: Container(
+          color: Colors.white,
+          child: Column(
+            children: [
+              // Barre de recherche étendue
+              Container(
+                padding: const EdgeInsets.fromLTRB(16.0, 48.0, 16.0, 8.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () {
+                        _isSearchExpanded.value = false;
+                        _showSearchResults.value = false;
+                        _searchController.clear();
+                        searchController.updateQuery('');
+                        _searchFocusNode.unfocus();
+                      },
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        focusNode: _searchFocusNode,
+                        autofocus: true,
+                        onChanged: (value) {
+                          if (value.length >= 3) {
+                            _showSearchResults.value = true;
+                            searchController.updateQuery(value);
+                          } else {
+                            _showSearchResults.value = false;
+                            searchController.searchResults.clear();
+                          }
+                        },
+                        decoration: const InputDecoration(
+                          hintText: 'Rechercher une propriété...',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.only(
+                            left: 8.0,
+                            right: 8.0,
+                            top: 8.0,
+                            bottom: 8.0,
+                          ),
+                          isDense: true,
+                          hintStyle: TextStyle(
+                            height: 1.0,
+                            fontSize: 14.0,
+                          ),
+                          alignLabelWithHint: true,
+                          prefixIconConstraints: BoxConstraints(
+                            minWidth: 40,
+                            minHeight: 40,
+                          ),
+                          suffixIconConstraints: BoxConstraints(
+                            minWidth: 40,
+                            minHeight: 40,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (_searchController.text.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          searchController.updateQuery('');
+                          _showSearchResults.value = false;
+                        },
+                      ),
+                  ],
+                ),
+              ),
+              // Résultats de recherche
+              Expanded(
+                child: Obx(() {
+                  if (!_showSearchResults.value) {
+                    return const Center(
+                      child: Text(
+                        'Commencez à taper pour rechercher...',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    );
+                  }
+
+                  if (searchController.isLoading.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (searchController.errorMessage.isNotEmpty) {
+                    return Center(
+                      child: Text(
+                        searchController.errorMessage.value,
+                        style: TextStyle(color: Colors.red[400]),
+                      ),
+                    );
+                  }
+
+                  if (searchController.searchResults.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'Aucun résultat trouvé',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    itemCount: searchController.searchResults.length,
+                    itemBuilder: (context, index) {
+                      final article = searchController.searchResults[index];
+                      String imageUrl = '';
+                      if (article.gallery.isNotEmpty) {
+                        imageUrl = article.gallery.first.original;
+                      } else if (article.image.isNotEmpty) {
+                        imageUrl = article.image;
+                      }
+
+                      return GestureDetector(
+                        onTap: () {
+                          if (article.purpose == "Rent" &&
+                              (article.bookable_type?.contains("Daily") ??
+                                  false)) {
+                            Get.to(() =>
+                                PromoteArticleDetailsScreen(property: article));
+                          } else {
+                            Get.to(() => FeaturedPropertyCard(
+                                  image: imageUrl,
+                                  status: article.status,
+                                  isFeatured: article.status == 'featured',
+                                  categoryIcon: article.category?.image,
+                                  categoryName: article.category?.name ?? '',
+                                  name: article.getPropertyByLanguage(
+                                      languageController.locale.languageCode,
+                                      propertyType: "name"),
+                                  location: article.structure?.name ??
+                                      'Localisation non disponible',
+                                  price: article.price,
+                                  amenities: const [
+                                    Icons.king_bed_outlined,
+                                    Icons.bathtub_outlined,
+                                    Icons.square_foot,
+                                  ],
+                                ));
+                          }
+                          _isSearchExpanded.value = false;
+                          _showSearchResults.value = false;
+                          _searchController.clear();
+                          searchController.updateQuery('');
+                          _searchFocusNode.unfocus();
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12.0),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8.0),
+                            border: Border.all(color: Colors.grey[200]!),
+                          ),
+                          child: Row(
+                            children: [
+                              // Image
+                              ClipRRect(
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(8.0),
+                                  bottomLeft: Radius.circular(8.0),
+                                ),
+                                child: Image.network(
+                                  imageUrl,
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                    width: 80,
+                                    height: 80,
+                                    color: Colors.grey[100],
+                                    child: const Icon(
+                                        Icons.photo_library_outlined,
+                                        color: Colors.grey),
+                                  ),
+                                ),
+                              ),
+                              // Détails
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        article.getPropertyByLanguage(
+                                            languageController
+                                                .locale.languageCode,
+                                            propertyType: "name"),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14.0,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4.0),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.location_on_outlined,
+                                              size: 12.0,
+                                              color: Colors.grey[400]),
+                                          const SizedBox(width: 4.0),
+                                          Expanded(
+                                            child: Text(
+                                              article.structure?.name ??
+                                                  'Localisation non disponible',
+                                              style: TextStyle(
+                                                fontSize: 12.0,
+                                                color: Colors.grey[600],
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4.0),
+                                      Text(
+                                        '${article.price.toStringAsFixed(0)} MRU',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blue[700],
+                                          fontSize: 14.0,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildFilterOverlay() {
+    final l10n = AppLocalizations.of(context)!;
+    return Obx(() {
+      if (!_showFilterOverlay.value) return const SizedBox.shrink();
+
+      return Positioned.fill(
+        child: Container(
+          color: Colors.white,
+          child: Column(
+            children: [
+              // En-tête du filtre
+              Container(
+                padding: const EdgeInsets.fromLTRB(16.0, 48.0, 16.0, 8.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () {
+                        _showFilterOverlay.value = false;
+                      },
+                    ),
+                    Expanded(
+                      child: Text(
+                        l10n.filters,
+                        style: const TextStyle(
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        filterController.clearFilters();
+                      },
+                      child: Text(
+                        l10n.reset,
+                        style: TextStyle(
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Contenu des filtres
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Type de transaction
+                      Text(
+                        l10n.transaction_type,
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      Obx(() => Row(
+                            children: [
+                              Expanded(
+                                child: _buildFilterChip(
+                                  l10n.for_sale,
+                                  filterController.isForSellSelected.value,
+                                  () => filterController.toggleForSell(true),
+                                ),
+                              ),
+                              const SizedBox(width: 8.0),
+                              Expanded(
+                                child: _buildFilterChip(
+                                  l10n.for_rent,
+                                  !filterController.isForSellSelected.value,
+                                  () => filterController.toggleForSell(false),
+                                ),
+                              ),
+                            ],
+                          )),
+                      const SizedBox(height: 24.0),
+
+                      // Type de propriété
+                      Text(
+                        l10n.property_type,
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      Obx(() => Wrap(
+                            spacing: 8.0,
+                            runSpacing: 8.0,
+                            children: [
+                              _buildFilterChip(
+                                l10n.all,
+                                filterController.selectedPropertyType.value ==
+                                    'All',
+                                () =>
+                                    filterController.selectPropertyType('All'),
+                              ),
+                              ...categoryController.categories.map((category) {
+                                final name = category['name'] as String;
+                                final id = category['id'].toString();
+                                return _buildFilterChip(
+                                  name,
+                                  filterController.selectedPropertyType.value ==
+                                      id,
+                                  () => filterController.selectPropertyType(id),
+                                );
+                              }).toList(),
+                            ],
+                          )),
+                      const SizedBox(height: 24.0),
+
+                      // Prix
+                      Text(
+                        l10n.property_price,
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: TextEditingController(
+                                text: filterController.minPrice.value,
+                              ),
+                              onChanged: (value) =>
+                                  filterController.minPrice.value = value,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                hintText: 'Min',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12.0,
+                                  vertical: 8.0,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8.0),
+                          Expanded(
+                            child: TextField(
+                              controller: TextEditingController(
+                                text: filterController.maxPrice.value,
+                              ),
+                              onChanged: (value) =>
+                                  filterController.maxPrice.value = value,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                hintText: 'Max',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12.0,
+                                  vertical: 8.0,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24.0),
+
+                      // Superficie
+                      Text(
+                        l10n.property_area,
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: TextEditingController(
+                                text: filterController.minArea.value,
+                              ),
+                              onChanged: (value) =>
+                                  filterController.minArea.value = value,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                hintText: 'Min m²',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12.0,
+                                  vertical: 8.0,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8.0),
+                          Expanded(
+                            child: TextField(
+                              controller: TextEditingController(
+                                text: filterController.maxArea.value,
+                              ),
+                              onChanged: (value) =>
+                                  filterController.maxArea.value = value,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                hintText: 'Max m²',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12.0,
+                                  vertical: 8.0,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24.0),
+
+                      // Période de publication
+                      Text(
+                        l10n.published,
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      Obx(() => Wrap(
+                            spacing: 8.0,
+                            runSpacing: 8.0,
+                            children: [
+                              _buildFilterChip(
+                                l10n.anytime,
+                                filterController.selectedPostedSince.value ==
+                                    'Anytime',
+                                () => filterController
+                                    .selectPostedSince('Anytime'),
+                              ),
+                              _buildFilterChip(
+                                l10n.today,
+                                filterController.selectedPostedSince.value ==
+                                    'Today',
+                                () =>
+                                    filterController.selectPostedSince('Today'),
+                              ),
+                              _buildFilterChip(
+                                l10n.this_week,
+                                filterController.selectedPostedSince.value ==
+                                    'ThisWeek',
+                                () => filterController
+                                    .selectPostedSince('ThisWeek'),
+                              ),
+                              _buildFilterChip(
+                                l10n.this_month,
+                                filterController.selectedPostedSince.value ==
+                                    'ThisMonth',
+                                () => filterController
+                                    .selectPostedSince('ThisMonth'),
+                              ),
+                            ],
+                          )),
+                      const SizedBox(height: 32.0),
+
+                      // Bouton Appliquer
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            await filterController.applyFilters();
+                            _showFilterOverlay.value = false;
+                            // TODO: Mettre à jour la liste des propriétés avec les résultats filtrés
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue[700],
+                            padding: const EdgeInsets.symmetric(vertical: 16.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                          ),
+                          child: Text(
+                            l10n.apply_filters,
+                            style: const TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildFilterChip(String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue[700] : Colors.grey[100],
+          borderRadius: BorderRadius.circular(20.0),
+          border: Border.all(
+            color: isSelected ? Colors.blue[700]! : Colors.grey[300]!,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey[700],
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
   }
 }

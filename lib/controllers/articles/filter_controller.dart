@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:immolink_mobile/utils/config.dart';
+import 'package:immolink_mobile/views/screens/filtered_properties_screen.dart';
 
 class FilterController extends GetxController {
   // Variables existantes
@@ -15,7 +17,6 @@ class FilterController extends GetxController {
   var location = ''.obs;
   var selectedFacilities = <String>[].obs;
   final filteredArticles = [].obs;
-
 
   // Résultats du filtre
   var filteredProperties = [].obs;
@@ -33,10 +34,6 @@ class FilterController extends GetxController {
     location.value = '';
     selectedFacilities.clear();
   }
-
-
-
-
 
   // Changement d'état pour For Sell / For Rent
   void toggleForSell(bool isSell) {
@@ -67,7 +64,9 @@ class FilterController extends GetxController {
 
     // Construire les paramètres de requête
     final queryParams = {
-      'category_id': selectedPropertyType.value != 'All' ? selectedPropertyType.value : null,
+      'category_id': selectedPropertyType.value != 'All'
+          ? selectedPropertyType.value
+          : null,
       'minprice': minPrice.value.isNotEmpty ? minPrice.value : null,
       'maxprice': maxPrice.value.isNotEmpty ? maxPrice.value : null,
       'minarea': minArea.value.isNotEmpty ? minArea.value : null,
@@ -78,7 +77,7 @@ class FilterController extends GetxController {
     // Supprimer les paramètres nulls
     queryParams.removeWhere((key, value) => value == null);
 
-    final uri = Uri.parse('http://daar.server1.digissimmo.org/mobile/home/filter_properties')
+    final uri = Uri.parse('${Config.baseUrlApp}/home/filter_properties')
         .replace(queryParameters: queryParams);
     print('API: Filters $uri');
 
@@ -89,6 +88,8 @@ class FilterController extends GetxController {
         final data = json.decode(response.body);
         print(data);
         filteredProperties.value = data['data'];
+        // Naviguer vers l'écran des résultats filtrés
+        Get.to(() => const FilteredPropertiesScreen());
       } else {
         Get.snackbar('Error', 'Failed to fetch properties.');
       }
