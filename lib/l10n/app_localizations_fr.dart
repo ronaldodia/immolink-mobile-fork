@@ -388,4 +388,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get property_under_modernization => 'En modernisation';
+
+  @override
+  String get continue_without_login => 'Continuer sans connexion';
 }

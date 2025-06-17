@@ -1,10 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:get/get_rx/get_rx.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
-import 'package:immolink_mobile/views/screens/login_email_screen.dart';
 
 class OnBoardingController extends GetxController {
 

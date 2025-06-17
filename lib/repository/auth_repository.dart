@@ -16,7 +16,7 @@ import 'package:immolink_mobile/models/Profile.dart';
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
 import 'package:immolink_mobile/views/screens/home_screen.dart';
-import 'package:immolink_mobile/views/screens/login_email_screen.dart';
+import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
 import 'package:immolink_mobile/views/screens/onboarding/onboarding_screen.dart';
 import 'package:immolink_mobile/views/screens/verify_email_screen.dart';
 import 'package:immolink_mobile/views/widgets/loaders/loader.dart';
@@ -90,7 +90,7 @@ class AuthRepository extends GetxController{
     }else {
       // Local Storage
       deviceStorage.writeIfNull('isFirstTime', true);
-      deviceStorage.read('isFirstTime') != true ? Get.offAll(() => const LoginEmailScreen()) : Get.offAll(const OnBoardingScreen());
+      deviceStorage.read('isFirstTime') != true ? Get.offAll(() => const  LoginPhoneScreen()) : Get.offAll(const OnBoardingScreen());
     }
 
   }
@@ -99,7 +99,7 @@ class AuthRepository extends GetxController{
   Future<void> logout() async{
     try{
       await FirebaseAuth.instance.signOut();
-      Get.offAll(() => const LoginEmailScreen());
+      Get.offAll(() => const LoginPhoneScreen());
     } on FirebaseAuthException catch(e) {
       throw FirebaseAuthException(code: e.code);
     } on FirebaseException catch(e) {

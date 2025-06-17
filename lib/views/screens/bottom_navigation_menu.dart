@@ -13,10 +13,10 @@ import 'package:immolink_mobile/views/screens/article/articles_screen.dart';
 import 'package:immolink_mobile/views/screens/chat_list_screen.dart';
 import 'package:immolink_mobile/views/screens/home_content_screen.dart';
 import 'package:immolink_mobile/views/screens/home_screen.dart';
+import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
 import 'package:immolink_mobile/views/screens/map_screen.dart';
 import 'package:immolink_mobile/views/screens/wishlist_screen.dart';
 import 'package:immolink_mobile/views/widgets/default_appbar.dart';
-import 'package:immolink_mobile/views/screens/login_email_screen.dart'; // Import LoginScreen
 
 class BottomNavigationMenu extends StatelessWidget {
   const BottomNavigationMenu({super.key});
@@ -109,7 +109,7 @@ class NavigationController extends GetxController {
     // Vérifiez si le token est nul avant de continuer
     if (token == null) {
       // Redirigez vers la page de connexion
-      Get.to(() => const LoginEmailScreen());
+      Get.to(() => const LoginPhoneScreen());
       return false;
     }
 
@@ -123,7 +123,7 @@ class NavigationController extends GetxController {
     } else {
       // Token invalide, supprimez le token et redirigez
       localStorage.remove('AUTH_TOKEN');
-      Get.to(() => const LoginEmailScreen());
+      Get.to(() => const LoginPhoneScreen());
       return false;
     }
   }

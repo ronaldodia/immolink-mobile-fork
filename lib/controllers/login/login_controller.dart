@@ -10,15 +10,14 @@ import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/utils/network_manager.dart';
 import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
-import 'package:immolink_mobile/views/screens/login_email_screen.dart';
 import 'package:immolink_mobile/views/screens/phone_login_confirmation_screen.dart';
 import 'package:immolink_mobile/views/widgets/loaders/fullscreen_loader.dart';
 import 'package:immolink_mobile/views/widgets/loaders/loader.dart';
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
+import 'package:country_code_picker/country_code_picker.dart';
 
 import 'package:immolink_mobile/models/Profile.dart';
 
-class LoginController extends GetxController{
+class LoginController extends GetxController {
   //variables
   final emailRememberMe = false.obs;
   final hideEmailPassword = true.obs;
@@ -28,13 +27,12 @@ class LoginController extends GetxController{
   final phoneController = TextEditingController();
   final emailPasswordController = TextEditingController();
   final phonePasswordController = TextEditingController();
-  final phoneNumberInput = Rx<PhoneNumber?>(null);
+  final countryCode = Rxn<CountryCode>();
   final localStorage = GetStorage();
-  GlobalKey<FormState> emailLoginFormKey = GlobalKey<FormState>();
-  GlobalKey<FormState> phoneLoginFormKey = GlobalKey<FormState>();
+  final phoneLoginFormKey = GlobalKey<FormState>();
+  final emailLoginFormKey = GlobalKey<FormState>();
 
   final userController = Get.put(UserController());
-
 
   @override
   void onInit() {
@@ -42,59 +40,57 @@ class LoginController extends GetxController{
     // emailPasswordController.text = localStorage.read('REMEMBER_ME_EMAIL_PASSWORD');
     // phonePasswordController.text = localStorage.read('REMEMBER_ME_PHONE_PASSWORD');
     super.onInit();
+    phoneLoginFormKey.currentState?.reset();
   }
 
-  // Fonction pour gérer les changements dans le champ de numéro de téléphone
-  void onPhoneNumberChanged(PhoneNumber number) {
-    phoneNumberInput.value = number;
+  void onCountryChanged(CountryCode code) {
+    countryCode.value = code;
   }
 
   @override
-  void dispose() {
-      phoneController.dispose();
-  } // // Nettoyage des ressources
-  // @override
-  // void onClose() {
-
-  //   super.onClose();
-  // }
-
+  void onClose() {
+    phoneController.dispose();
+    phonePasswordController.dispose();
+    super.onClose();
+  }
 
   Future<void> loginWithEmailPassword() async {
     try {
       // Start Loading
-      FullscreenLoader.openDialog('Logging you in..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
+      FullscreenLoader.openDialog('Logging you in..',
+          'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Check Internet Connectivity
       final isConnected = await NetworkManager.instance.isConnected();
-      if(!isConnected) return;
+      if (!isConnected) return;
 
       //Form Validation
-      if(!emailLoginFormKey.currentState!.validate()){
+      if (!emailLoginFormKey.currentState!.validate()) {
         // FullscreenLoader.stopLoading();
         return;
       }
 
-
-      if(emailRememberMe.value){
+      if (emailRememberMe.value) {
         localStorage.write('REMEMBER_ME_EMAIL', emailController.text.trim());
-        localStorage.write('REMEMBER_ME_EMAIL_PASSWORD', emailPasswordController.text.trim());
+        localStorage.write(
+            'REMEMBER_ME_EMAIL_PASSWORD', emailPasswordController.text.trim());
       }
 
-
-
       // login with backend
-      final resultByEmail = await AuthRepository.instance.loginWithEmail(emailController.text.trim(), emailPasswordController.text.trim());
+      final resultByEmail = await AuthRepository.instance.loginWithEmail(
+          emailController.text.trim(), emailPasswordController.text.trim());
 
-      if (resultByEmail != null && resultByEmail != "error credentials" && resultByEmail != "Unauthenticated") {
+      if (resultByEmail != null &&
+          resultByEmail != "error credentials" &&
+          resultByEmail != "Unauthenticated") {
         // Résultat valide : On écrit dans le localStorage
         localStorage.write('AUTH_TOKEN', resultByEmail['token']);
         localStorage.write('USER_PROFILE', resultByEmail['user']);
-         final json = await AuthRepository.instance.getProfileByToken(resultByEmail);
-         Profile profile  = Profile.fromJson(json);
-         localStorage.write('FULL_NAME', profile.user?.fullName);
-         localStorage.write('AVATAR', profile.user?.avatar);
-
+        final json =
+            await AuthRepository.instance.getProfileByToken(resultByEmail);
+        Profile profile = Profile.fromJson(json);
+        localStorage.write('FULL_NAME', profile.user?.fullName);
+        localStorage.write('AVATAR', profile.user?.avatar);
       } else {
         // Résultat invalide ou erreur : Afficher un message d'erreur approprié
         DLoader.errorSnackBar(title: 'OH Snap!', message: resultByEmail);
@@ -103,12 +99,12 @@ class LoginController extends GetxController{
       // Register user in the Firebase Auth
       // final userCredential = await AuthRepository.instance.loginWithEmailFirebase(emailController.text.trim(), emailPasswordController.text.trim());
 
-
       //Remove Loader
       FullscreenLoader.stopLoading();
 
       /// Show Success Message
-      DLoader.successSnackBar(title: 'Congratulation', message: 'Your successfuly loggin in.');
+      DLoader.successSnackBar(
+          title: 'Congratulation', message: 'Your successfuly loggin in.');
       localStorage.write('AUTH_TOKEN', resultByEmail['token']);
       localStorage.write('USER_PROFILE', resultByEmail['user']);
       AuthRepository.instance.screenRedirect();
@@ -118,8 +114,7 @@ class LoginController extends GetxController{
       // });
     } catch (e) {
       DLoader.errorSnackBar(title: 'OH Snap!', message: 'Erreur de saisie');
-    }
-    finally {
+    } finally {
       FullscreenLoader.stopLoading();
     }
   }
@@ -128,72 +123,88 @@ class LoginController extends GetxController{
   Future<void> loginWithPhonePassword() async {
     try {
       // Start Loading
-      FullscreenLoader.openDialog('Logging you in..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
+      FullscreenLoader.openDialog('Logging you in..',
+          'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Check Internet Connectivity
       final isConnected = await NetworkManager.instance.isConnected();
-      if(!isConnected) return;
-
-      //Form Validation
-      if(!phoneLoginFormKey.currentState!.validate()){
-        // FullscreenLoader.stopLoading();
+      if (!isConnected) {
+        FullscreenLoader.stopLoading();
         return;
       }
 
-
-      if(phoneRememberMe.value){
-        localStorage.write('REMEMBER_ME_PHONE', phoneNumberInput.value!.phoneNumber!.replaceAll(phoneNumberInput.value!.isoCode.toString(), ''));
-        localStorage.write('REMEMBER_ME_PHONE_PASSWORD', phonePasswordController.text.trim());
+      //Form Validation
+      if (!phoneLoginFormKey.currentState!.validate()) {
+        FullscreenLoader.stopLoading();
+        return;
       }
 
-      final phoneNumber = phoneNumberInput.value!.phoneNumber!.replaceAll('+', '');
-      print("final phone number = $phoneNumber");
+      if (phoneRememberMe.value) {
+        localStorage.write('REMEMBER_ME_PHONE', phoneController.text.trim());
+        localStorage.write(
+            'REMEMBER_ME_PHONE_PASSWORD', phonePasswordController.text.trim());
+      }
+
+      // Construire le numéro de téléphone complet avec le code pays
+      final fullPhoneNumber =
+          countryCode.value?.dialCode ?? '+222' + phoneController.text.trim();
+      final phoneNumber = fullPhoneNumber; // Enlever le + pour le backend
+
+      print("Backend phone number = $phoneNumber");
+      print("Firebase phone number = $fullPhoneNumber");
+
       // login with backend
-      final resultByPhone = await AuthRepository.instance.loginWithPhone(phoneNumber, phonePasswordController.text.trim());
-      if (resultByPhone != null || resultByPhone != "error credentials" || resultByPhone != "Unauthenticated") {
+      final resultByPhone = await AuthRepository.instance
+          .loginWithPhone(phoneNumber, phonePasswordController.text.trim());
+
+      if (resultByPhone != null && resultByPhone['token'] != null) {
         // Résultat valide : On écrit dans le localStorage
         print('GET_TOKEN: ${resultByPhone['token']}');
         localStorage.write('AUTH_TOKEN', resultByPhone['token']);
         localStorage.write('USER_PROFILE', resultByPhone['user']);
+
+        // Login user in the Firebase Auth
+        try {
+          await AuthRepository.instance.loginWithPhoneNumber(fullPhoneNumber);
+          FullscreenLoader.stopLoading();
+
+          // Show Success Message
+          DLoader.successSnackBar(
+              title: 'Félicitations', message: 'Connexion réussie');
+
+          // Navigate to confirmation screen
+          Get.to(() => PhoneLoginConfirmationScreen(
+                phoneNumber: phoneNumber,
+              ));
+        } catch (e) {
+          print('Firebase Auth Error: $e');
+          DLoader.errorSnackBar(
+              title: 'Erreur', message: 'Erreur lors de l\'authentification');
+        }
       } else {
-        // Résultat invalide ou erreur : Afficher un message d'erreur approprié
-        DLoader.errorSnackBar(title: 'OH Snap!', message: resultByPhone);
+        // Résultat invalide ou erreur
+        FullscreenLoader.stopLoading();
+        DLoader.errorSnackBar(
+            title: 'Erreur', message: 'Identifiants invalides');
       }
-
-
-    // Login user in the Firebase Auth
-    await AuthRepository.instance.loginWithPhoneNumber('+$phoneNumber');
-
-      //Remove Loader
-      FullscreenLoader.stopLoading();
-
-      /// Show Success Message
-      DLoader.successSnackBar(title: 'Congratulation', message: 'Your successfuly loggin in.');
-      Future.delayed(const Duration(milliseconds: 100), () {
-        Get.to(() =>  PhoneLoginConfirmationScreen(phoneNumber: '+$phoneNumber',));
-      });
-
-
     } catch (e) {
-      DLoader.errorSnackBar(title: 'OH Snap!', message: e.toString());
-    }
-    finally {
+      print('Login Error: $e');
       FullscreenLoader.stopLoading();
+      DLoader.errorSnackBar(
+          title: 'Erreur', message: 'Une erreur est survenue');
     }
   }
 
-
-
-
   // -- Google SignIn Authentication
   Future<void> googleSign() async {
-    try{
+    try {
       // Start Loading...
-      FullscreenLoader.openDialog('Logging you in..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
+      FullscreenLoader.openDialog('Logging you in..',
+          'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Check Internet Connectivity
       final isConnected = await NetworkManager.instance.isConnected();
-      if(!isConnected){
+      if (!isConnected) {
         FullscreenLoader.stopLoading();
         return;
       }
@@ -212,8 +223,9 @@ class LoginController extends GetxController{
       FullscreenLoader.stopLoading();
 
       AuthRepository.instance.screenRedirect();
-      DLoader.successSnackBar(title: 'Congratulation', message: 'Your are login in');
-    }catch(e) {
+      DLoader.successSnackBar(
+          title: 'Congratulation', message: 'Your are login in');
+    } catch (e) {
       FullscreenLoader.stopLoading();
       DLoader.errorSnackBar(title: 'Oh Snap', message: e.toString());
     }
@@ -221,19 +233,21 @@ class LoginController extends GetxController{
 
   // -- Facebbok SignIn Authentication
   Future<void> facebookSign() async {
-    try{
+    try {
       // Start Loading...
-      FullscreenLoader.openDialog('Logging you in..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
+      FullscreenLoader.openDialog('Logging you in..',
+          'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Check Internet Connectivity
       final isConnected = await NetworkManager.instance.isConnected();
-      if(!isConnected){
+      if (!isConnected) {
         FullscreenLoader.stopLoading();
         return;
       }
 
       // google Authentication
-      final userCredentials = await AuthRepository.instance.signInWithFacebook();
+      final userCredentials =
+          await AuthRepository.instance.signInWithFacebook();
 
       var token = FirebaseAuth.instance.currentUser;
       final idToken = await token!.getIdToken();
@@ -247,10 +261,11 @@ class LoginController extends GetxController{
       FullscreenLoader.stopLoading();
 
       // AuthRepository.instance.screenRedirect();
-        Get.to(() =>  const BottomNavigationMenu());
+      Get.to(() => const BottomNavigationMenu());
 
-      DLoader.successSnackBar(title: 'Congratulation', message: 'Your are login in');
-    }catch(e) {
+      DLoader.successSnackBar(
+          title: 'Congratulation', message: 'Your are login in');
+    } catch (e) {
       FullscreenLoader.stopLoading();
       DLoader.errorSnackBar(title: 'Oh Snap', message: e.toString());
     }
@@ -258,19 +273,20 @@ class LoginController extends GetxController{
 
   Future<void> verifySmsCode(String smsCode) async {
     try {
-
       // Check Internet Connectivity
       final isConnected = await NetworkManager.instance.isConnected();
-      if(!isConnected) return;
+      if (!isConnected) return;
       // Start Loading
-      FullscreenLoader.openDialog('Verifying code..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
+      FullscreenLoader.openDialog('Verifying code..',
+          'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Verify the SMS code
       await AuthRepository.instance.signInWithSmsCode(smsCode);
 
       // User successfully signed in
       FullscreenLoader.stopLoading();
-      DLoader.successSnackBar(title: 'Congratulation', message: 'Your account has been verified!');
+      DLoader.successSnackBar(
+          title: 'Congratulation', message: 'Your account has been verified!');
 
       // AuthRepository.instance.screenRedirect();
 
@@ -279,7 +295,6 @@ class LoginController extends GetxController{
       });
 
       // Navigate to the home screen or wherever you want
-
     } catch (e) {
       DLoader.errorSnackBar(title: 'OH Snap!', message: e.toString());
     } finally {
@@ -290,33 +305,31 @@ class LoginController extends GetxController{
   Future<void> logout() async {
     try {
       // Start Loading
-      FullscreenLoader.openDialog('Logout you in..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
+      FullscreenLoader.openDialog('Logout you in..',
+          'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Check Internet Connectivity
       final isConnected = await NetworkManager.instance.isConnected();
-      if(!isConnected) return;
+      if (!isConnected) return;
 
-
-
-      if(emailRememberMe.value){
+      if (emailRememberMe.value) {
         localStorage.remove('REMEMBER_ME_EMAIL');
         localStorage.remove('REMEMBER_ME_EMAIL_PASSWORD');
       }
 
-
-
       // login with backend
-      await AuthRepository.instance.logOutBackend(localStorage.read('AUTH_TOKEN'));
+      await AuthRepository.instance
+          .logOutBackend(localStorage.read('AUTH_TOKEN'));
       localStorage.remove('AUTH_TOKEN');
       localStorage.remove('USER_PROFILE');
       // localStorage.remove('FCM_TOKEN');
-
 
       //Remove Loader
       FullscreenLoader.stopLoading();
 
       /// Show Success Message
-      DLoader.successSnackBar(title: 'Congratulation', message: 'Your successfuly loggin in.');
+      DLoader.successSnackBar(
+          title: 'Congratulation', message: 'Your successfuly loggin in.');
 
       AuthRepository.instance.screenRedirect();
 
@@ -325,10 +338,12 @@ class LoginController extends GetxController{
       // });
     } catch (e) {
       DLoader.errorSnackBar(title: 'OH Snap!', message: e.toString());
-    }
-    finally {
+    } finally {
       FullscreenLoader.stopLoading();
     }
   }
 
+  void toggleForSell(bool value) {
+    phoneRememberMe.value = value;
+  }
 }

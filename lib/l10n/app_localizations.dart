@@ -858,6 +858,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Under Modernization'**
   String get property_under_modernization;
+
+  /// No description provided for @continue_without_login.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue without login'**
+  String get continue_without_login;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

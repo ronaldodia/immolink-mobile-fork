@@ -137,5 +137,6 @@
   "property_under_maintenance": "En maintenance",
   "property_under_repair": "En réparation",
   "property_under_upgrade": "En amélioration",
-  "property_under_modernization": "En modernisation"
+  "property_under_modernization": "En modernisation",
+  "continue_without_login": "Continuer sans connexion"
 }

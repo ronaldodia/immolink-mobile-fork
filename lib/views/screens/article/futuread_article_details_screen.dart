@@ -14,7 +14,7 @@ import 'package:immolink_mobile/views/screens/article/common/gallery_panel.dart'
 import 'package:immolink_mobile/views/screens/article/promote_article_details_screen.dart';
 import 'package:immolink_mobile/views/screens/booking_screen.dart';
 import 'package:immolink_mobile/views/screens/chat_screen.dart';
-import 'package:immolink_mobile/views/screens/login_email_screen.dart';
+import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
 
 class FutureadArticleDetailsScreen extends StatefulWidget {
   const FutureadArticleDetailsScreen({super.key, required this.property});
@@ -204,14 +204,15 @@ class _FutureadArticleDetailsScreenState
                   const SizedBox(height: 4),
                   // Price
                   Obx(() {
-                    double convertedPrice = widget.property.price *
-                        currencyController.selectedCurrency.value.exchangeRate;
+                    double convertedPrice =
+                        currencyController.convertPrice(widget.property.price);
                     return Text(
-                      "${convertedPrice.toStringAsFixed(2)} ${currencyController.selectedCurrency.value.symbol}",
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall!
-                          .apply(color: Colors.green, fontWeightDelta: 2),
+                      "${convertedPrice.toStringAsFixed(2)} ${currencyController.getCurrentSymbol()}",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                        fontSize: 13.0,
+                      ),
                     );
                   }),
                 ],
@@ -377,7 +378,7 @@ class _FutureadArticleDetailsScreenState
                         ));
                   } else {
                     // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
-                    Get.to(() => const LoginEmailScreen(), arguments: {
+                    Get.to(() => const LoginPhoneScreen(), arguments: {
                       'nextPage': BookingScreen(
                         articleId: widget.property.id,
                         eventType: 'Mariage',
@@ -426,7 +427,7 @@ class _FutureadArticleDetailsScreenState
                         conversationId: conversation.id, agentId: agentId));
                   } else {
                     // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
-                    Get.to(() => const LoginEmailScreen(), arguments: {
+                    Get.to(() => const LoginPhoneScreen(), arguments: {
                       'nextPage': ChatScreen(
                         conversationId: conversation.id,
                       )

@@ -131,5 +131,6 @@
     "property_under_maintenance": "Under Maintenance",
     "property_under_repair": "Under Repair",
     "property_under_upgrade": "Under Upgrade",
-    "property_under_modernization": "Under Modernization"
+    "property_under_modernization": "Under Modernization",
+    "continue_without_login": "Continue without login"
 }

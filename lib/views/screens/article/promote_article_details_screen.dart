@@ -8,7 +8,7 @@ import 'package:immolink_mobile/controllers/login/check_auth_controller.dart';
 import 'package:immolink_mobile/models/Article.dart';
 import 'package:immolink_mobile/views/screens/article/common/gallery_panel.dart';
 import 'package:immolink_mobile/views/screens/booking_screen.dart';
-import 'package:immolink_mobile/views/screens/login_email_screen.dart';
+import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
 import 'package:immolink_mobile/utils/config.dart';
 
 class PromoteArticleDetailsScreen extends StatefulWidget {
@@ -301,10 +301,10 @@ class _PromoteArticleDetailsScreenState
                 children: [
                   // Prix
                   Obx(() {
-                    double convertedPrice = widget.property.price *
-                        currencyController.selectedCurrency.value.exchangeRate;
+                    double convertedPrice =
+                        currencyController.convertPrice(widget.property.price);
                     return Text(
-                      "${convertedPrice.toStringAsFixed(0)} ${currencyController.selectedCurrency.value.symbol}",
+                      "${convertedPrice.toStringAsFixed(0)} ${currencyController.getCurrentSymbol()}",
                       style: TextStyle(
                         fontSize: 24.0,
                         fontWeight: FontWeight.bold,
@@ -515,7 +515,7 @@ class _PromoteArticleDetailsScreenState
                           eventType: 'Mariage',
                         ));
                   } else {
-                    Get.to(() => const LoginEmailScreen(), arguments: {
+                    Get.to(() => const LoginPhoneScreen(), arguments: {
                       'nextPage': BookingScreen(
                         articleId: widget.property.id,
                         eventType: 'Mariage',

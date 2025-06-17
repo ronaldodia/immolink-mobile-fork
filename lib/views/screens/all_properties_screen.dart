@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:immolink_mobile/controllers/home/article_promotion_controller.dart';
-import 'package:immolink_mobile/views/screens/article/promote_article_details_screen.dart';
-import 'package:immolink_mobile/views/common/featured_property_card.dart';
-
+import 'package:immolink_mobile/utils/navigation_fix.dart';
 class AllPropertiesScreen extends StatelessWidget {
   const AllPropertiesScreen({super.key});
 
@@ -60,7 +58,6 @@ class AllPropertiesScreen extends StatelessWidget {
             final article =
                 articlePromotionController.featuredProperties[index];
             final status = article.status.toLowerCase();
-            final isFeatured = status == 'featured';
 
             // Construction de l'URL de l'image
             String imageUrl = '';
@@ -78,7 +75,7 @@ class AllPropertiesScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12.0),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withValues(alpha: 0.1),
                     spreadRadius: 1,
                     blurRadius: 6,
                     offset: const Offset(0, 2),
@@ -87,30 +84,7 @@ class AllPropertiesScreen extends StatelessWidget {
               ),
               child: GestureDetector(
                 onTap: () {
-                  if (article.purpose == "Rent" &&
-                      (article.bookable_type?.contains("Daily") ?? false)) {
-                    Get.to(
-                        () => PromoteArticleDetailsScreen(property: article));
-                  } else {
-                    Get.to(() => FeaturedPropertyCard(
-                          image: imageUrl,
-                          status: status,
-                          isFeatured: isFeatured,
-                          categoryIcon: article.category?.image,
-                          categoryName: article.category?.name ?? '',
-                          name: article.getPropertyByLanguage(
-                              Get.locale?.languageCode ?? 'fr',
-                              propertyType: "name"),
-                          location: article.structure?.name ??
-                              'Localisation non disponible',
-                          price: article.price,
-                          amenities: const [
-                            Icons.king_bed_outlined,
-                            Icons.bathtub_outlined,
-                            Icons.square_foot,
-                          ],
-                        ));
-                  }
+                  navigateToPropertyDetails(article);
                 },
                 child: IntrinsicHeight(
                   child: Row(

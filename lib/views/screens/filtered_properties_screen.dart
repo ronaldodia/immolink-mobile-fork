@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:immolink_mobile/controllers/articles/filter_controller.dart';
+import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 import 'package:immolink_mobile/controllers/language/language_controller.dart';
 import 'package:immolink_mobile/l10n/app_localizations.dart';
-import 'package:immolink_mobile/views/screens/article/promote_article_details_screen.dart';
-import 'package:immolink_mobile/views/common/featured_property_card.dart';
+import 'package:immolink_mobile/utils/navigation_fix.dart';
 
 class FilteredPropertiesScreen extends StatelessWidget {
   const FilteredPropertiesScreen({super.key});
@@ -28,8 +28,11 @@ class FilteredPropertiesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final filterController = Get.find<FilterController>();
-    final languageController = Get.find<LanguageController>();
+    final FilterController filterController = Get.find<FilterController>();
+    final LanguageController languageController =
+        Get.find<LanguageController>();
+    final CurrencyController currencyController =
+        Get.find<CurrencyController>();
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -164,29 +167,8 @@ class FilteredPropertiesScreen extends StatelessWidget {
               ),
               child: GestureDetector(
                 onTap: () {
-                  if (property['purpose'] == "Rent" &&
-                      (property['bookable_type']?.contains("Daily") ?? false)) {
-                    Get.to(
-                        () => PromoteArticleDetailsScreen(property: property));
-                  } else {
-                    Get.to(() => FeaturedPropertyCard(
-                          image: imageUrl,
-                          status: property['status'] ?? '',
-                          isFeatured: property['status'] == 'featured',
-                          categoryIcon: property['categories']?['image'],
-                          categoryName: getCategoryName(
-                              property, languageController.locale.languageCode),
-                          name: property['name'] ?? '',
-                          location: property['structure']?['name'] ??
-                              'Localisation non disponible',
-                          price: property['price']?.toDouble() ?? 0.0,
-                          amenities: const [
-                            Icons.king_bed_outlined,
-                            Icons.bathtub_outlined,
-                            Icons.square_foot,
-                          ],
-                        ));
-                  }
+                  // Utiliser la fonction de navigation unifiée
+                  navigateToPropertyDetails(property);
                 },
                 child: IntrinsicHeight(
                   child: Row(
@@ -244,14 +226,20 @@ class FilteredPropertiesScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 8.0),
-                              Text(
-                                '${property['price']?.toStringAsFixed(0) ?? 'N/A'} MRU',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue,
-                                  fontSize: 16.0,
-                                ),
-                              ),
+                              Obx(() {
+                                final price =
+                                    property['price']?.toDouble() ?? 0.0;
+                                final convertedPrice =
+                                    currencyController.convertPrice(price);
+                                return Text(
+                                  "${convertedPrice.toStringAsFixed(0)} ${currencyController.getCurrentSymbol()}",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue,
+                                    fontSize: 16.0,
+                                  ),
+                                );
+                              }),
                               const SizedBox(height: 4.0),
                               Text(
                                 property['name'] ?? '',
@@ -288,13 +276,17 @@ class FilteredPropertiesScreen extends StatelessWidget {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  _buildFeatureItem(
-                                    '${property['bedroom'] ?? 0} ${l10n.bedrooms}',
-                                    Icons.king_bed_outlined,
+                                  Expanded(
+                                    child: _buildFeatureItem(
+                                      '${property['bedroom'] ?? 0} ${l10n.bedrooms}',
+                                      Icons.king_bed_outlined,
+                                    ),
                                   ),
-                                  _buildFeatureItem(
-                                    '${property['bathroom'] ?? 0} ${l10n.bathrooms}',
-                                    Icons.bathtub_outlined,
+                                  Expanded(
+                                    child: _buildFeatureItem(
+                                      '${property['bathroom'] ?? 0} ${l10n.bathrooms}',
+                                      Icons.bathtub_outlined,
+                                    ),
                                   ),
                                   if (![
                                     'apartment',
@@ -302,9 +294,11 @@ class FilteredPropertiesScreen extends StatelessWidget {
                                     'office',
                                     'store'
                                   ].contains(property['categories']?['slug']))
-                                    _buildFeatureItem(
-                                      '${property['area']?.toInt() ?? 0} ${l10n.square_meters}',
-                                      Icons.square_foot,
+                                    Expanded(
+                                      child: _buildFeatureItem(
+                                        '${property['area']?.toInt() ?? 0} ${l10n.square_meters}',
+                                        Icons.square_foot,
+                                      ),
                                     ),
                                 ],
                               ),
@@ -325,15 +319,20 @@ class FilteredPropertiesScreen extends StatelessWidget {
 
   Widget _buildFeatureItem(String text, IconData icon) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14.0, color: Colors.blue[400]),
+        Icon(icon, size: 14.0, color: const Color(0xFF231717)),
         const SizedBox(width: 4.0),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 12.0,
-            color: Colors.grey[700],
-            fontWeight: FontWeight.w500,
+        Flexible(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 12.0,
+              color: Color(0xFF231717),
+              fontWeight: FontWeight.w500,
+              decoration: TextDecoration.none,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

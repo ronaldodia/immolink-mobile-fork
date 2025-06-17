@@ -26,7 +26,10 @@ class PropertyCardWidget extends StatelessWidget {
     required this.price,
     required this.name,
     required this.location,
-    this.onFavoriteTap, this.onTap, this.favoriteIcon = Icons.favorite_border,  this.categoryIcon,
+    this.onFavoriteTap,
+    this.onTap,
+    this.favoriteIcon = Icons.favorite_border,
+    this.categoryIcon,
   });
 
   @override
@@ -41,19 +44,22 @@ class PropertyCardWidget extends StatelessWidget {
           children: [
             Card(
               color: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               elevation: 4,
               child: Row(
                 children: [
                   // Image section
                   SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.33,  // 1/3 of the width
+                    width: MediaQuery.of(context).size.width *
+                        0.33, // 1/3 of the width
                     height: 130,
                     child: Stack(
                       children: [
                         ClipRRect(
                           borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
+                              topLeft: Radius.circular(16),
+                              bottomLeft: Radius.circular(16)),
                           child: Image.network(
                             image,
                             width: double.infinity,
@@ -66,20 +72,20 @@ class PropertyCardWidget extends StatelessWidget {
                           left: 8,
                           child: isFeatured
                               ? Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Text(
-                              'FEATURED',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12),
-                            ),
-                          )
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withOpacity(0.8),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'FEATURED',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12),
+                                  ),
+                                )
                               : const SizedBox.shrink(),
                         ),
                         Positioned(
@@ -115,38 +121,42 @@ class PropertyCardWidget extends StatelessWidget {
                           Row(
                             children: [
                               categoryIcon != null
-                                  ? SvgPicture.network(
-                                categoryIcon!,
-                                height: 20,
-                                width: 20,
-                                colorFilter: const ColorFilter.mode(Colors.green, BlendMode.srcIn)
-                              )
+                                  ? SvgPicture.network(categoryIcon!,
+                                      height: 20,
+                                      width: 20,
+                                      colorFilter: const ColorFilter.mode(
+                                          Colors.green, BlendMode.srcIn))
                                   : Image.asset(
-                                'assets/images/default_icon.png', // Image par défaut
-                                height: 20,
-                                width: 20,
-                                fit: BoxFit.cover,
-                              ),
+                                      'assets/images/default_icon.png', // Image par défaut
+                                      height: 20,
+                                      width: 20,
+                                      fit: BoxFit.cover,
+                                    ),
                               const SizedBox(width: 8),
                               Text(
                                 category,
-                                style: Theme.of(context).textTheme.bodySmall!.apply(
-                                  color: Colors.blueGrey,
-                                  fontWeightDelta: 2,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall!
+                                    .apply(
+                                      color: Colors.blueGrey,
+                                      fontWeightDelta: 2,
+                                    ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 4),
                           // Price
                           Obx(() {
-                            double convertedPrice = price * currencyController.selectedCurrency.value.exchangeRate;
+                            double convertedPrice =
+                                currencyController.convertPrice(price);
                             return Text(
-                              "${convertedPrice.toStringAsFixed(2)} ${currencyController.selectedCurrency.value.symbol}",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall!
-                                  .apply(color: Colors.black87, fontWeightDelta: 2),
+                              "${convertedPrice.toStringAsFixed(2)} ${currencyController.getCurrentSymbol()}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                                fontSize: 13.0,
+                              ),
                             );
                           }),
                           const SizedBox(height: 4),
@@ -162,7 +172,8 @@ class PropertyCardWidget extends StatelessWidget {
                           // Location
                           Row(
                             children: [
-                              const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                              const Icon(Icons.location_on,
+                                  size: 16, color: Colors.grey),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
@@ -183,26 +194,25 @@ class PropertyCardWidget extends StatelessWidget {
                 ],
               ),
             ),
-
-           isRtl ?
-           Positioned(
-             top: 8,
-             left: 8,
-             child: IconButton(
-               icon:  Icon(favoriteIcon, color: Colors.red),
-               onPressed: onFavoriteTap,
-             ),
-           )
-           :
-            // Favorite button in the top right corner
-            Positioned(
-              top: 8,
-              right: 8,
-              child: IconButton(
-                icon:  Icon(favoriteIcon, color: Colors.red),
-                onPressed: onFavoriteTap,
-              ),
-            ),
+            isRtl
+                ? Positioned(
+                    top: 8,
+                    left: 8,
+                    child: IconButton(
+                      icon: Icon(favoriteIcon, color: Colors.red),
+                      onPressed: onFavoriteTap,
+                    ),
+                  )
+                :
+                // Favorite button in the top right corner
+                Positioned(
+                    top: 8,
+                    right: 8,
+                    child: IconButton(
+                      icon: Icon(favoriteIcon, color: Colors.red),
+                      onPressed: onFavoriteTap,
+                    ),
+                  ),
           ],
         ),
       ),

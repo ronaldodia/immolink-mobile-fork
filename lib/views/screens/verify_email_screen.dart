@@ -5,7 +5,6 @@ import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/utils/helpers.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/utils/t_sizes.dart';
-import 'package:immolink_mobile/views/screens/login_email_screen.dart';
 
 class VerifyEmailScreen extends StatelessWidget {
   const VerifyEmailScreen({super.key, this.email});

@@ -13,89 +13,72 @@ import 'package:immolink_mobile/l10n/app_localizations.dart';
 import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/services/notification/notification_services.dart';
 import 'package:immolink_mobile/utils/iteneray.dart';
+import 'package:immolink_mobile/views/screens/splash_screen.dart';
 
 void main() async {
- final WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
 
-  await GetStorage.init();
-
-
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
- // Initialize the LanguageController
- Get.put(LanguageController());
- Get.put(CurrencyController());
+  // Initialiser Firebase
   await Firebase.initializeApp(
-  options: DefaultFirebaseOptions.currentPlatform)
- .then((FirebaseApp value) => Get.put(AuthRepository()));
-
- await NotificationServices.instance.initialize();
-
-  // final prefs = await SharedPreferences.getInstance();
-  // print('get auth_token ${prefs.getString('auth_token')}');
-  runApp(
-
-    const MyApp(),
+    options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // AuthRepository authRepository = AuthRepository();
-  // authRepository.loginWithPhone('22241905565', 'password');
+  // Initialiser le contrôleur de langue
+  Get.put(LanguageController());
+
+  // Demander les permissions de notification
+  requestPermission();
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final LanguageController languageController = Get.find();
-    requestPermission();
-        return Obx(() => GetMaterialApp(
-              title: 'Immo Place',
-              theme: ThemeData(
-                colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrangeAccent),
-                useMaterial3: true,
-              ),
-              locale: languageController.locale,  // This will automatically update when the locale changes
-              // fallbackLocale: const Locale('en'),
-              themeMode: ThemeMode.system,
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: const [
-                Locale('fr'), // Français
-                Locale('en'), // English
-                Locale('ar'), // Arabic
-              ],
-              onGenerateRoute: CustomeRoute.allRoutes,
-              initialBinding: GeneralBindings(),
-              home: const Scaffold(
-                backgroundColor: Colors.blue,
-                body: Center(
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                  ),
-                ),
-              ),
 
-            )
-        );
+    return Obx(() => GetMaterialApp(
+          title: 'IMMOLINK',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            colorScheme:
+                ColorScheme.fromSeed(seedColor: Colors.deepOrangeAccent),
+            useMaterial3: true,
+          ),
+          locale: languageController.locale,
+          themeMode: ThemeMode.system,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('fr'), // Français
+            Locale('en'), // English
+            Locale('ar'), // Arabic
+          ],
+          onGenerateRoute: CustomeRoute.allRoutes,
+          home: const SplashScreen(),
+        ));
   }
-  void requestPermission() async {
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
+}
 
-    NotificationSettings settings = await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      provisional: false,
-      sound: true,
-    );
+void requestPermission() async {
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      print('User granted permission');
-    } else {
-      print('User declined or has not accepted permission');
-    }
+  NotificationSettings settings = await messaging.requestPermission(
+    alert: true,
+    badge: true,
+    provisional: false,
+    sound: true,
+  );
+
+  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+    print('User granted permission');
+  } else {
+    print('User declined or has not accepted permission');
   }
 }

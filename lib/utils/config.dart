@@ -17,4 +17,6 @@ class Config {
   static const String privacyPolicy = "Privacy Policy";
   static const String textAnd = " and ";
   static const String termsOfUse = " Terms of use";
+  static const String registerSubTitle =
+      'Créez votre compte pour commencer à explorer nos propriétés';
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:immolink_mobile/controllers/articles/filter_controller.dart';
 import 'package:immolink_mobile/controllers/home/categories_controller.dart';
+import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 import 'package:immolink_mobile/l10n/app_localizations.dart';
 
 class FilterScreen extends StatefulWidget {
@@ -55,6 +56,8 @@ class _FilterScreenState extends State<FilterScreen> {
     final FilterController filterController = Get.find<FilterController>();
     final CategoryController categoryController =
         Get.find<CategoryController>();
+    final CurrencyController currencyController =
+        Get.find<CurrencyController>();
     final l10n = AppLocalizations.of(context)!;
 
     void applyFilters() {
@@ -197,6 +200,10 @@ class _FilterScreenState extends State<FilterScreen> {
                     decoration: InputDecoration(
                       hintText: l10n.min_price,
                       border: const OutlineInputBorder(),
+                      suffix: Obx(() => Text(
+                            currencyController.getCurrentSymbol(),
+                            style: const TextStyle(color: Colors.grey),
+                          )),
                     ),
                     keyboardType: TextInputType.number,
                   ),
@@ -208,6 +215,10 @@ class _FilterScreenState extends State<FilterScreen> {
                     decoration: InputDecoration(
                       hintText: l10n.max_price,
                       border: const OutlineInputBorder(),
+                      suffix: Obx(() => Text(
+                            currencyController.getCurrentSymbol(),
+                            style: const TextStyle(color: Colors.grey),
+                          )),
                     ),
                     keyboardType: TextInputType.number,
                   ),

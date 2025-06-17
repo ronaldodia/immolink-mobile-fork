@@ -9,7 +9,8 @@ import 'package:immolink_mobile/utils/t_sizes.dart';
 import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
 import 'package:immolink_mobile/views/widgets/form_divider_widget.dart';
 import 'package:immolink_mobile/views/widgets/social_auth_widget.dart';
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
+import 'package:country_code_picker/country_code_picker.dart';
+import 'package:immolink_mobile/l10n/app_localizations.dart';
 
 class LoginPhoneScreen extends StatefulWidget {
   const LoginPhoneScreen({super.key});
@@ -19,177 +20,260 @@ class LoginPhoneScreen extends StatefulWidget {
 }
 
 class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
-  PhoneNumber? _phoneNumber;
+  late final LoginController controller;
+  String _countryCode = '+222';
 
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.put(LoginController());
+  }
+
+  @override
+  void dispose() {
+    Get.delete<LoginController>();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    var screenSize = MediaQuery.of(context).size;
-    var buttonHeight =
-        screenSize.height * 0.05;
-    var textSize =
-        screenSize.width * 0.035;
-    var textScaleFactor = MediaQuery.of(context).textScaleFactor;
-    // Initializing PhoneNumber with Mauritania's country code
-    final PhoneNumber initialPhoneNumber = PhoneNumber(isoCode: 'MR');
+    final l10n = AppLocalizations.of(context)!;
+    final screenSize = MediaQuery.of(context).size;
+    final buttonHeight = screenSize.height * 0.05;
+    final textScaleFactor = MediaQuery.of(context).textScaleFactor;
 
-    final LoginController controller = Get.put(LoginController());
     return Scaffold(
       body: SingleChildScrollView(
-        // Use SingleChildScrollView to avoid RenderFlex errors when keyboard appears
         child: Padding(
-        padding: SpacingStyles.paddingWithAppBarHeight,
-        child: Column(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                /// logo, Title & Sub-Tile
-                const Image(image: AssetImage(TImages.darkAppLogo), height: 150,),
-                TextButton(
-                  onPressed: () {
-                    Get.to(() => const BottomNavigationMenu()); // Navigue vers la page d'accueil
-                  },
-                  child: const Text("Accueil", style: TextStyle(fontSize: 16)),
+          padding: SpacingStyles.paddingWithAppBarHeight,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Logo et titre
+              const Center(
+                child: Image(
+                  image: AssetImage(TImages.darkAppLogo),
+                  height: 150,
                 ),
-                Text(Config.appLoginTitle, style: Theme.of(context).textTheme.headlineMedium,),
-                const SizedBox(height: TSizes.sm,),
-                Text(Config.appLoginSubTitle, style: Theme.of(context).textTheme.bodyMedium,),
+              ),
 
+              // Bouton d'accès direct
+              Center(
+                child: TextButton.icon(
+                  onPressed: () => Get.to(() => const BottomNavigationMenu()),
+                  icon: const Icon(Icons.home_outlined, color: Colors.blue),
+                  label: Text(
+                    l10n.continue_without_login,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
 
-              ],
-            ),
-            Container(
-              child: Form(
+              // Titre et sous-titre
+              Text(
+                Config.appLoginTitle,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: TSizes.sm),
+              Text(
+                Config.appLoginSubTitle,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+
+              // Formulaire de connexion
+              Form(
                 key: controller.phoneLoginFormKey,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: TSizes.spaceBtwSections),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: TSizes.spaceBtwSections),
                   child: Column(
-                    // mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      InternationalPhoneNumberInput(
-                        autoFocus: true,
-                        initialValue: initialPhoneNumber,
-                        onInputChanged: (PhoneNumber number) {
-                          controller.onPhoneNumberChanged(number);
-                          // print('Phone Number: ${number.phoneNumber}');
-                          // setState(() {
-                          //   _phoneNumber = number;
-                          // });
-                        },
-                        onInputValidated: (bool value) {
-                          print(value);
-                        },
-                        selectorConfig: const SelectorConfig(
-                            selectorType: PhoneInputSelectorType.DIALOG,
-                            setSelectorButtonAsPrefixIcon: true,
-                            useBottomSheetSafeArea: true),
-                        ignoreBlank: false,
-                        autoValidateMode: AutovalidateMode.disabled,
-                        selectorTextStyle: const TextStyle(color: Colors.black),
-                        textFieldController: controller.phoneController,
-                        formatInput: false,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            signed: true, decimal: true),
-                        inputDecoration: const InputDecoration(labelText: 'Phone Number'),
-                        locale: Localizations.localeOf(context).languageCode,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your phone number';
-                          }
-                          return null;
-                        },
+                      // Champ de numéro de téléphone
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: Row(
+                          children: [
+                            CountryCodePicker(
+                              onChanged: (CountryCode code) {
+                                setState(() {
+                                  _countryCode = code.dialCode!;
+                                });
+                                controller.onCountryChanged(code);
+                              },
+                              initialSelection: 'MR',
+                              favorite: const ['MR', 'SN', 'ML'],
+                              showCountryOnly: false,
+                              showOnlyCountryWhenClosed: false,
+                              alignLeft: false,
+                              padding: EdgeInsets.zero,
+                              textStyle: const TextStyle(fontSize: 14),
+                            ),
+                            Expanded(
+                              child: TextFormField(
+                                controller: controller.phoneController,
+                                keyboardType: TextInputType.phone,
+                                decoration: const InputDecoration(
+                                  hintText: 'Numéro de téléphone',
+                                  border: InputBorder.none,
+                                  contentPadding:
+                                      EdgeInsets.symmetric(horizontal: 16),
+                                ),
+                                onChanged: (value) {
+                                  controller.phoneController.text = value;
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: TSizes.spaceBtwInputFields,),
-                      Obx(() => TextFormField(
-                        controller: controller.phonePasswordController,
-                        decoration:  InputDecoration(
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                                onPressed: () => controller.hidePhonePassword.value = !controller.hidePhonePassword.value,
-                                icon: Icon(controller.hidePhonePassword.value ? Icons.remove_red_eye_outlined : Icons.remove_red_eye)),
-                            labelText: 'Password'),
-                        obscureText: controller.hidePhonePassword.value,
-                        style: TextStyle(fontSize: textScaleFactor * 14),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
-                          }
-                          return null;
-                        },
-                      )),
-                      const SizedBox(height: TSizes.spaceBtwInputFields / 2.0),
-                      // Remember Me & Forget Password
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Obx(() => Checkbox(value: controller.phoneRememberMe.value, onChanged: (value) => controller.phoneRememberMe.value  = !controller.phoneRememberMe.value)),
-                              const Text(Config.loginRememberMe),
-                            ],
-                          ),
+                      const SizedBox(height: TSizes.spaceBtwInputFields),
 
-                          // Forget password
-                          TextButton(onPressed: () => Navigator.of(context).pushReplacementNamed(forgotPasswordRoute), child: const Text("Forgot Password ?")),
-                        ],
+                      // Champ de mot de passe
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: Obx(() => TextFormField(
+                              controller: controller.phonePasswordController,
+                              obscureText: controller.hidePhonePassword.value,
+                              decoration: InputDecoration(
+                                hintText: 'Mot de passe',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  onPressed: () =>
+                                      controller.hidePhonePassword.value =
+                                          !controller.hidePhonePassword.value,
+                                  icon: Icon(
+                                    controller.hidePhonePassword.value
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                              ),
+                            )),
                       ),
-                      const SizedBox(height: TSizes.spaceBtwSections,),
-                      // Remember Me & Forget Password
+
+                      // Se souvenir de moi et mot de passe oublié
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: TSizes.spaceBtwInputFields / 2),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Obx(() => Checkbox(
+                                      value: controller.phoneRememberMe.value,
+                                      onChanged: (value) =>
+                                          controller.phoneRememberMe.value =
+                                              !controller.phoneRememberMe.value,
+                                    )),
+                                const Text(Config.loginRememberMe),
+                              ],
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context)
+                                  .pushReplacementNamed(forgotPasswordRoute),
+                              child: const Text("Mot de passe oublié ?"),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Bouton de connexion
                       SizedBox(
                         width: double.infinity,
                         height: buttonHeight,
                         child: ElevatedButton(
                           onPressed: () {
-                            final phoneNumber = controller.phoneNumberInput.value!.phoneNumber!.replaceAll('+', '');
-                            print("Final phone Number = $phoneNumber");
+                            final phoneNumber = _countryCode +
+                                controller.phoneController.text
+                                    .replaceAll(_countryCode, '');
+                            print("Numéro de téléphone final = $phoneNumber");
                             controller.loginWithPhonePassword();
                           },
                           style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             padding: EdgeInsets.symmetric(
-                                vertical: buttonHeight * 0.2,
-                                horizontal: buttonHeight * 0.5),
-                            backgroundColor: Colors.blueAccent,
+                                vertical: buttonHeight * 0.2),
                           ),
                           child: Text(
-                            'Login',
+                            'Se connecter',
                             style: TextStyle(
-                                color: Colors.white, fontSize: textScaleFactor * 14),
+                              color: Colors.white,
+                              fontSize: textScaleFactor * 14,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        )
+                        ),
                       ),
-                      const SizedBox(height: TSizes.spaceBtwItems,),
 
-                      // Create account button
-                      SizedBox(width: double.infinity, child: OutlinedButton(onPressed: (){
-                        Navigator.of(context).pushReplacementNamed(registerRoute);
-                      }, child: const Text("Create Account")),),
-                      // const SizedBox(height: TSizes.spaceBtwSections,)
+                      // Bouton de création de compte
+                      Padding(
+                        padding:
+                            const EdgeInsets.only(top: TSizes.spaceBtwItems),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(context)
+                                .pushReplacementNamed(registerRoute),
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                  vertical: buttonHeight * 0.2),
+                            ),
+                            child: const Text("Créer un compte"),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
 
-            ),
-            const FormDividerWidget(deividerText: Config.loginOrSignIn),
+              // Séparateur
+              const FormDividerWidget(deividerText: Config.loginOrSignIn),
+              const SizedBox(height: TSizes.spaceBtwSections),
 
-            const SizedBox(height: TSizes.spaceBtwSections,),
-
-            TextButton(
-              onPressed: () {
-                Get.offAll(() => const LoginPhoneScreen());
-              },
-              child: Text( "Se connecter avec un numéro de téléphone",
-                style: TextStyle(fontSize: textSize),
+              // Connexion avec email
+              Center(
+                child: TextButton(
+                  onPressed: () => Get.offAll(() => const LoginPhoneScreen()),
+                  child: Text(
+                    "Se connecter avec un email",
+                    style: TextStyle(
+                      fontSize: textScaleFactor * 14,
+                      color: Colors.blue[700],
+                    ),
+                  ),
+                ),
               ),
-            ),
 
-            // Footer
-            const SocialAuthWidget()
-          ],
+              // Connexion sociale
+              const SocialAuthWidget(),
+            ],
+          ),
         ),
-    )
-      )
+      ),
     );
   }
 }

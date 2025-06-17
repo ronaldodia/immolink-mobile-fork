@@ -16,9 +16,10 @@ import 'package:immolink_mobile/utils/t_sizes.dart';
 import 'package:immolink_mobile/views/common/d_horizontal_image_text.dart';
 import 'package:immolink_mobile/views/common/d_search_bar_widget.dart';
 import 'package:immolink_mobile/views/common/d_section_heading.dart';
-import 'package:immolink_mobile/views/common/featured_property_card.dart';
-import 'package:immolink_mobile/views/screens/article/promote_article_details_screen.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:immolink_mobile/utils/navigation_fix.dart';
+import 'package:immolink_mobile/views/common/property_card_widget.dart';
+import 'package:immolink_mobile/controllers/app_drawer_controller.dart';
 
 // Fonction utilitaire pour gérer les couleurs de manière sécurisée
 Color getGreyColor(int shade) {
@@ -47,6 +48,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
   final CommuneController communeController = Get.put(CommuneController());
   final ArticlePromotionController articlePromotionController =
       Get.put(ArticlePromotionController());
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final ScrollController _scrollController = ScrollController();
   final LanguageController language = Get.find();
@@ -100,7 +102,11 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final _scaffoldKey = GlobalKey<ScaffoldState>();
+    Get.put(_scaffoldKey);
+
     return Scaffold(
+      key: _scaffoldKey,
       drawer: _buildDrawer(context),
       backgroundColor: Colors.white,
       body: RefreshIndicator(
@@ -329,10 +335,26 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                                 .shrink(); // Cache les éléments sans propriété
                           }
 
-                          return FeaturedPropertyCard(
+                          final propertyName = property.getPropertyByLanguage(
+                            language.locale.languageCode,
+                            propertyType: 'name',
+                          );
+                          final structureName = property.structure?.name;
+                          final propertyLocation =
+                              structureName != null && structureName.isNotEmpty
+                                  ? structureName
+                                  : 'Localisation non disponible';
+                          final purpose =
+                              property.purpose?.toLowerCase() ?? 'vente';
+
+                          return PropertyCardWidget(
                             image: property.image,
-                            status: property.purpose ?? '',
                             isFeatured: true,
+                            status: purpose,
+                            category: property.category?.name ?? 'Autre',
+                            price: property.price?.toDouble() ?? 0,
+                            name: propertyName,
+                            location: propertyLocation,
                             onTap: () async {
                               // Affiche un dialogue de chargement
                               showDialog(
@@ -349,12 +371,11 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                                 // Attendre quelques secondes pour simuler un chargement
                                 await Future.delayed(
                                     const Duration(seconds: 2));
-                                // Fermer le dialogue de chargement
+                                // Fermer le dialogue de chargement et naviguer
                                 if (context.mounted) {
                                   Navigator.pop(context);
-                                  // Naviguer vers la page des détails
-                                  Get.to(() => PromoteArticleDetailsScreen(
-                                      property: property));
+                                  // Utiliser la fonction de navigation unifiée
+                                  navigateToPropertyDetails(property);
                                 }
                               } catch (e) {
                                 if (context.mounted) {
@@ -367,21 +388,9 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                                 }
                               }
                             },
-                            categoryIcon: property.category?.image ?? '',
-                            categoryName:
-                                property.category?.name ?? 'Non catégorisé',
-                            name: property.getPropertyByLanguage(
-                                language.locale.languageCode,
-                                propertyType: "name"),
-                            location: property.structure?.address
-                                    ?.split(',')
-                                    .firstOrNull ??
-                                'Localisation inconnue',
-                            price: property.price,
-                            amenities: const [
-                              Icons.home,
-                              Icons.bathtub_outlined
-                            ],
+                            onFavoriteTap: () {
+                              // TODO: Implémenter la logique d'ajout aux favoris
+                            },
                           );
                         },
                       ));
@@ -480,8 +489,8 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
 
                             return GestureDetector(
                               onTap: () {
-                                Get.to(() => PromoteArticleDetailsScreen(
-                                    property: article));
+                                // Utiliser la fonction de navigation unifiée
+                                navigateToPropertyDetails(article);
                               },
                               child: Container(
                                 decoration: BoxDecoration(

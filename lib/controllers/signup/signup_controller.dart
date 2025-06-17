@@ -1,3 +1,4 @@
+import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:immolink_mobile/models/User.dart';
@@ -5,12 +6,10 @@ import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/repository/user_repository.dart';
 import 'package:immolink_mobile/utils/network_manager.dart';
 import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
-import 'package:immolink_mobile/views/screens/home_screen.dart';
+import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
 import 'package:immolink_mobile/views/screens/phone_register_confirmation_screen.dart';
-import 'package:immolink_mobile/views/screens/verify_email_screen.dart';
 import 'package:immolink_mobile/views/widgets/loaders/fullscreen_loader.dart';
 import 'package:immolink_mobile/views/widgets/loaders/loader.dart';
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
 class SignupController extends GetxController {
   static SignupController get instance => Get.find();
@@ -27,204 +26,149 @@ class SignupController extends GetxController {
   final passwordPhoneController = TextEditingController();
   final passwordPhoneConfirmController = TextEditingController();
   final phoneNumberController = TextEditingController();
-  final phoneNumberInput = Rx<PhoneNumber?>(null);
+  final phoneNumber = ''.obs;
+  final countryCode = Rxn<CountryCode>();
 
-  final  privacyPolicy = true.obs;
-  final  phoneprivacyPolicy = true.obs;
+  final privacyPolicy = true.obs;
+  final phoneprivacyPolicy = true.obs;
   var verificationId = ''.obs;
 
-  // Form keys
-  final GlobalKey<FormState> emailFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> phoneFormKey = GlobalKey<FormState>();
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Initialiser le code pays par défaut (Mauritanie)
+    countryCode.value = CountryCode(
+      name: 'Mauritania',
+      code: 'MR',
+      dialCode: '+222',
+    );
+    print('Initialized country code: ${countryCode.value?.dialCode}');
+  }
 
   @override
   void dispose() {
     phoneNumberController.dispose();
+    super.dispose();
   }
 
-/// --- SIGNUP Email Firebase
-Future<void> signupWithEmailFirebase() async {
-  try {
-    // Start Loading
-    FullscreenLoader.openDialog('We are processing your information..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
-
-    // Check Internet Connectivity
-    final isConnected = await NetworkManager.instance.isConnected();
-    if(!isConnected) return;
-
-    //Form Validation
-    if(!emailFormKey.currentState!.validate()){
-      // FullscreenLoader.stopLoading();
-      return;
+  void onCountryChanged(CountryCode code) {
+    print('Country code changed to: ${code.dialCode}');
+    countryCode.value = code;
+    // Mettre à jour le numéro de téléphone si un numéro existe déjà
+    if (phoneNumberController.text.isNotEmpty) {
+      updatePhoneNumber(phoneNumberController.text);
     }
-    
-    // Privacy Policy Check
-    if(!privacyPolicy.value) {
-      DLoader.warningSnackBar(title: 'Accept Privacy Policy', message: 'In order to create account, you must have to read and accept the Privacy policy & Terms of Use.');
+  }
 
-      return;
+  void updatePhoneNumber(String number) {
+    print('Updating phone number with: $number');
+    print('Current country code: ${countryCode.value?.dialCode}');
+
+    if (countryCode.value != null) {
+      final fullNumber = countryCode.value!.dialCode! + number;
+      print('Setting full phone number to: $fullNumber');
+      phoneNumber.value = fullNumber;
+    } else {
+      print('Warning: Country code is null, using default +222');
+      // Utiliser le code pays par défaut si null
+      final fullNumber = '+222' + number;
+      print('Setting full phone number with default code: $fullNumber');
+      phoneNumber.value = fullNumber;
     }
-
-    // Register user in the Firebase Auth
-    final userCredential = await AuthRepository.instance.registerWithEmailFirebase(emailController.text.trim(), passwordEmailController.text.trim());
-    final newUser = UserModel(
-      id: userCredential.user!.uid,
-      fullName: '${firstNameEmailController.text.trim()} ${lastNameEmailController.text.trim()}',
-      email: emailController.text.trim(),
-    );
-
-    final userRepository = Get.put(UserRepository());
-    await  userRepository.saveUserRecord(newUser);
-
-    // save to backend
-    final authRepository = Get.put(AuthRepository());
-    final backToken = await authRepository.registerWithEmail(
-      '${firstNameEmailController.text.trim()} ${lastNameEmailController.text.trim()}',
-      emailController.text.trim() ?? '',
-      passwordEmailController.text.trim(),
-      passwordEmailConfirmController.text.trim(),
-      'customer'
-    );
-
-    print('======= token created ===========');
-    print(backToken);
-
-    //Remove Loader
-    FullscreenLoader.stopLoading();
-
-    /// Show Success Message
-    DLoader.successSnackBar(title: 'Congratulation', message: 'Your account has been create! verify email to continue.');
-
-    // Get.to(() => const VerifyEmailScreen());
-
-    Future.delayed(const Duration(milliseconds: 100), () {
-      Get.to(() =>  VerifyEmailScreen(email: emailController.text.trim(),));
-    });
-  } catch (e) {
-    DLoader.errorSnackBar(title: 'OH Snap!', message: e.toString());
-  }
-  finally {
-        FullscreenLoader.stopLoading();
-  }
-}
-
-// Fonction pour gérer les changements dans le champ de numéro de téléphone
-  void onPhoneNumberChanged(PhoneNumber number) {
-    phoneNumberInput.value = number;
   }
 
   /// --- SIGNUP Phone Firebase
-
   Future<void> signupWithPhoneFirebase() async {
-
     try {
       // Start Loading
-      print(' ================== ${phoneNumberInput.value!.phoneNumber!.replaceAll('+', '')}==============');
-      FullscreenLoader.openDialog('We are processing your information..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
+      print('Starting signup with phone number: ${phoneNumber.value}');
+      print('Country code: ${countryCode.value?.dialCode}');
+      print('Phone controller text: ${phoneNumberController.text}');
+
+      // S'assurer que nous avons un numéro de téléphone valide
+      if (phoneNumber.value.isEmpty) {
+        if (countryCode.value != null &&
+            phoneNumberController.text.isNotEmpty) {
+          final fullNumber =
+              countryCode.value!.dialCode! + phoneNumberController.text;
+          print('Constructing phone number: $fullNumber');
+          phoneNumber.value = fullNumber;
+        } else {
+          // Utiliser le code pays par défaut si nécessaire
+          final fullNumber = '+222' + phoneNumberController.text;
+          print('Constructing phone number with default code: $fullNumber');
+          phoneNumber.value = fullNumber;
+        }
+      }
+
+      if (phoneNumber.value.isEmpty) {
+        DLoader.errorSnackBar(
+            title: 'Erreur',
+            message: 'Veuillez entrer un numéro de téléphone valide');
+        return;
+      }
+
+      print('Using phone number for registration: ${phoneNumber.value}');
+      FullscreenLoader.openDialog('We are processing your information..',
+          'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Check Internet Connectivity
       final isConnected = await NetworkManager.instance.isConnected();
-      if(!isConnected) return;
+      if (!isConnected) {
+        FullscreenLoader.stopLoading();
+        return;
+      }
 
       //Form Validation
-      if(!phoneFormKey.currentState!.validate()){
-        // FullscreenLoader.stopLoading();
+      if (!phoneFormKey.currentState!.validate()) {
+        FullscreenLoader.stopLoading();
         return;
       }
 
       // Privacy Policy Check
-      if(!phoneprivacyPolicy.value) {
-        DLoader.warningSnackBar(title: 'Accept Privacy Policy', message: 'In order to create account, you must have to read and accept the Privacy policy & Terms of Use.');
-
+      if (!phoneprivacyPolicy.value) {
+        FullscreenLoader.stopLoading();
+        DLoader.warningSnackBar(
+            title: 'Accept Privacy Policy',
+            message:
+                'In order to create account, you must have to read and accept the Privacy policy & Terms of Use.');
         return;
       }
 
-
       // Register user in the Firebase Auth
-      await AuthRepository.instance.registerWithPhoneNumber(phoneNumberInput.value!.phoneNumber!);
-
+      await AuthRepository.instance.registerWithPhoneNumber(phoneNumber.value);
 
       //Remove Loader
       FullscreenLoader.stopLoading();
 
       /// Show Success Message
-      DLoader.successSnackBar(title: 'Congratulation', message: 'Your account has been create! verify email to continue.');
+      DLoader.successSnackBar(
+          title: 'Félicitations',
+          message:
+              'Votre compte a été créé ! Veuillez vérifier votre numéro de téléphone.');
 
-
-
-      // Get.to(() => const VerifyEmailScreen());
-
-      Future.delayed(const Duration(milliseconds: 100), () {
-        Get.to(() =>  PhoneRegisterConfirmationScreen(phoneNumber: phoneNumberInput.value!.phoneNumber!,));
-      });
-    } catch (e) {
-      DLoader.errorSnackBar(title: 'OH Snap!', message: e.toString());
-    }
-    finally {
+      // Navigate to confirmation screen
+      Get.to(() => PhoneRegisterConfirmationScreen(
+            phoneNumber: phoneNumber.value,
+          ));
+    } catch (e, stack) {
+      print('Error during phone registration: $e');
+      print('Stack trace: $stack');
       FullscreenLoader.stopLoading();
+      DLoader.errorSnackBar(
+          title: 'Erreur',
+          message:
+              'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.');
     }
   }
 
   Future<void> verifySmsCode(String smsCode) async {
     try {
-
       // Check Internet Connectivity
       final isConnected = await NetworkManager.instance.isConnected();
-      if(!isConnected) return;
-      // Start Loading
-      // FullscreenLoader.openDialog('Verifying code..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
-
-      // Verify the SMS code
-       await AuthRepository.instance.signInWithSmsCode(smsCode);
-
-      // User successfully signed in
-      FullscreenLoader.stopLoading();
-      DLoader.successSnackBar(title: 'Congratulation', message: 'Your account has been verified!');
-
-      final newUser = UserModel(
-          id: phoneNumberInput.value!.phoneNumber!,
-          fullName: '${firstNamePhoneController.text.trim()} ${lastNamePhoneController.text.trim()}',
-          email: '${phoneNumberController.text.trim()}@gmail.com',
-          phone: phoneNumberController.text.trim()
-      );
-
-      final userRepository = Get.put(UserRepository());
-      await  userRepository.saveUserRecord(newUser);
-
-      // save to backend
-      final authRepository = Get.put(AuthRepository());
-      final backToken = await authRepository.registerWithPhone(
-          '${firstNamePhoneController.text.trim()} ${lastNamePhoneController.text.trim()}',
-          phoneNumberInput.value!.phoneNumber!.replaceAll('+', '') ?? '',
-          passwordPhoneController.text.trim(),
-          passwordPhoneConfirmController.text.trim(),
-          'customer'
-      );
-
-      print('======= token created ===========');
-      print(backToken);
-
-      Future.delayed(const Duration(milliseconds: 100), () {
-        Get.offAll(() => const BottomNavigationMenu());
-      });
-
-      // AuthRepository.instance.screenRedirect();
-
-      // Navigate to the home screen or wherever you want
-
-    } catch (e) {
-      DLoader.errorSnackBar(title: 'OH Snap!', message: e.toString());
-    } finally {
-      FullscreenLoader.stopLoading();
-    }
-  }
-
-  Future<void> loginVerifySmsCode(String smsCode) async {
-    try {
-
-      // Check Internet Connectivity
-      final isConnected = await NetworkManager.instance.isConnected();
-      if(!isConnected) return;
+      if (!isConnected) return;
       // Start Loading
       // FullscreenLoader.openDialog('Verifying code..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
@@ -233,15 +177,72 @@ Future<void> signupWithEmailFirebase() async {
 
       // User successfully signed in
       FullscreenLoader.stopLoading();
-      DLoader.successSnackBar(title: 'Congratulation', message: 'Your account has been verified!');
+      DLoader.successSnackBar(
+          title: 'Félicitations',
+          message: 'Votre compte a été créé avec succès !');
 
+      final newUser = UserModel(
+          id: phoneNumber.value!,
+          fullName:
+              '${firstNamePhoneController.text.trim()} ${lastNamePhoneController.text.trim()}',
+          email: '${phoneNumberController.text.trim()}@gmail.com',
+          phone: phoneNumber.value!);
+
+      final userRepository = Get.put(UserRepository());
+      await userRepository.saveUserRecord(newUser);
+
+      // save to backend
+      final authRepository = Get.put(AuthRepository());
+      final backToken = await authRepository.registerWithPhone(
+          '${firstNamePhoneController.text.trim()} ${lastNamePhoneController.text.trim()}',
+          phoneNumber.value ?? '',
+          passwordPhoneController.text.trim(),
+          passwordPhoneConfirmController.text.trim(),
+          'customer');
+
+      print('======= token created ===========');
+      print(backToken);
+
+      // Rediriger vers la page de connexion
+      Future.delayed(const Duration(milliseconds: 100), () {
+        // Nettoyer les contrôleurs avant la navigation
+        firstNamePhoneController.clear();
+        lastNamePhoneController.clear();
+        phoneNumberController.clear();
+        passwordPhoneController.clear();
+        passwordPhoneConfirmController.clear();
+
+        // Naviguer vers l'écran de connexion
+        Get.offAll(() => const LoginPhoneScreen());
+      });
+    } catch (e) {
+      DLoader.errorSnackBar(title: 'Erreur', message: e.toString());
+    } finally {
+      FullscreenLoader.stopLoading();
+    }
+  }
+
+  Future<void> loginVerifySmsCode(String smsCode) async {
+    try {
+      // Check Internet Connectivity
+      final isConnected = await NetworkManager.instance.isConnected();
+      if (!isConnected) return;
+      // Start Loading
+      // FullscreenLoader.openDialog('Verifying code..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
+
+      // Verify the SMS code
+      await AuthRepository.instance.signInWithSmsCode(smsCode);
+
+      // User successfully signed in
+      FullscreenLoader.stopLoading();
+      DLoader.successSnackBar(
+          title: 'Congratulation', message: 'Your account has been verified!');
 
       Future.delayed(const Duration(milliseconds: 100), () {
         Get.offAll(() => const BottomNavigationMenu());
       });
 
       // Navigate to the home screen or wherever you want
-
     } catch (e) {
       DLoader.errorSnackBar(title: 'OH Snap!', message: e.toString());
     } finally {

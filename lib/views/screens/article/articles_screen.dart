@@ -8,7 +8,7 @@ import 'package:immolink_mobile/models/Article.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/views/common/d_search_bar_widget.dart';
 import 'package:immolink_mobile/views/screens/article/create_article_screen.dart';
-import 'package:immolink_mobile/views/screens/login_email_screen.dart';
+import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
 
 
 
@@ -79,7 +79,7 @@ class ArticlesScreen extends StatelessWidget {
           if (isAuthenticated) {
             Get.to(() =>  CreateArticleScreen());
           } else {
-            Get.to(() => const LoginEmailScreen());
+            Get.to(() => const LoginPhoneScreen());
           }
         },
         backgroundColor: Colors.teal,

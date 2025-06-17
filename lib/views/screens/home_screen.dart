@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -8,10 +6,22 @@ import 'package:immolink_mobile/controllers/home/article_promotion_controller.da
 import 'package:immolink_mobile/controllers/home/search_app_controller.dart';
 import 'package:immolink_mobile/controllers/articles/filter_controller.dart';
 import 'package:immolink_mobile/controllers/language/language_controller.dart';
-import 'package:immolink_mobile/views/screens/article/promote_article_details_screen.dart';
-import 'package:immolink_mobile/views/common/featured_property_card.dart';
+import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
+import 'package:immolink_mobile/controllers/login/check_auth_controller.dart';
+import 'package:immolink_mobile/controllers/communes/commune_controller.dart';
+import 'package:immolink_mobile/controllers/communes/district_controller.dart';
 import 'package:immolink_mobile/views/screens/all_properties_screen.dart';
+import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
+import 'package:immolink_mobile/views/screens/agencies_screen.dart';
+import 'package:immolink_mobile/views/screens/map_screen.dart';
+import 'package:immolink_mobile/views/screens/article/articles_screen.dart';
+import 'package:immolink_mobile/views/screens/chat_list_screen.dart';
 import 'package:immolink_mobile/l10n/app_localizations.dart';
+import 'package:immolink_mobile/utils/navigation_fix.dart';
+import 'package:immolink_mobile/utils/image_constants.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:immolink_mobile/repository/auth_repository.dart';
+import 'package:immolink_mobile/views/widgets/default_appbar.dart';
 
 enum ContentState { loading, success, error }
 
@@ -117,11 +127,15 @@ class _HomeScreenState extends State<HomeScreen> {
   final SearchAppController searchController = Get.put(SearchAppController());
   final FilterController filterController = Get.put(FilterController());
   final LanguageController languageController = Get.find();
+  final CurrencyController currencyController = Get.find();
+  final DistrictController districtController = Get.put(DistrictController());
+  final CommuneController communeController = Get.put(CommuneController());
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final RxBool _showSearchResults = false.obs;
   final RxBool _isSearchExpanded = false.obs;
   final RxBool _showFilterOverlay = false.obs;
+  final Rx<int> selectIndex = 0.obs;
 
   // Propriétés pour gérer les états de chargement et d'erreur
   final RxBool _isLoadingCategories = false.obs;
@@ -146,150 +160,223 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const DefaultAppBar(),
+      drawer: _buildDrawer(),
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // Contenu principal
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Barre de recherche
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 8.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(12.0),
-                            border: Border.all(
-                              color: Colors.grey[300]!,
-                              width: 1.0,
-                            ),
-                          ),
-                          child: TextField(
-                            controller: _searchController,
-                            focusNode: _searchFocusNode,
-                            onTap: () {
-                              _isSearchExpanded.value = true;
-                            },
-                            decoration: InputDecoration(
-                              hintText: 'Rechercher une propriété...',
-                              hintStyle: TextStyle(
-                                color: Colors.grey[500],
-                                fontSize: 14.0,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.search,
-                                color: Colors.grey[500],
-                                size: 20.0,
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                                vertical: 12.0,
-                              ),
-                            ),
-                            onChanged: (value) {
-                              if (value.length >= 3) {
-                                _showSearchResults.value = true;
-                                searchController.updateQuery(value);
-                              } else {
-                                _showSearchResults.value = false;
-                                searchController.searchResults.clear();
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8.0),
-                      // Bouton de filtre
-                      Container(
+      bottomNavigationBar: Obx(
+        () => NavigationBar(
+          height: 80,
+          elevation: 0,
+          backgroundColor: Colors.white,
+          selectedIndex: selectIndex.value,
+          onDestinationSelected: onDestinationSelected,
+          destinations: [
+            NavigationDestination(
+              icon: SvgPicture.asset(
+                TImages.home,
+                colorFilter:
+                    const ColorFilter.mode(Colors.blueGrey, BlendMode.srcIn),
+              ),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: SvgPicture.asset(
+                TImages.officeSvg,
+                colorFilter:
+                    const ColorFilter.mode(Colors.blueGrey, BlendMode.srcIn),
+              ),
+              label: 'Agencies',
+            ),
+            const NavigationDestination(
+              icon: Icon(
+                Icons.map_rounded,
+                color: Colors.blueGrey,
+              ),
+              label: 'Map',
+            ),
+            NavigationDestination(
+              icon: SvgPicture.asset(
+                TImages.ads,
+                colorFilter:
+                    const ColorFilter.mode(Colors.blueGrey, BlendMode.srcIn),
+              ),
+              label: 'Annonces',
+            ),
+            NavigationDestination(
+              icon: SvgPicture.asset(
+                TImages.inactiveChat,
+                colorFilter:
+                    const ColorFilter.mode(Colors.blueGrey, BlendMode.srcIn),
+              ),
+              label: 'Chat',
+            ),
+          ],
+        ),
+      ),
+      body: Obx(() => _buildBody()),
+    );
+  }
+
+  Widget _buildBody() {
+    switch (selectIndex.value) {
+      case 0:
+        return _buildHomeContent();
+      case 1:
+        return const AgenciesScreen();
+      case 2:
+        return const MapScreen();
+      case 3:
+        return ArticlesScreen();
+      case 4:
+        return ChatListScreen();
+      default:
+        return _buildHomeContent();
+    }
+  }
+
+  Widget _buildHomeContent() {
+    return Stack(
+      children: [
+        // Contenu principal
+        SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Barre de recherche
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.blue[50],
+                          color: Colors.grey[100],
                           borderRadius: BorderRadius.circular(12.0),
                           border: Border.all(
-                            color: Colors.blue[100]!,
+                            color: Colors.grey[300]!,
                             width: 1.0,
                           ),
                         ),
-                        child: IconButton(
-                          onPressed: () {
-                            _showFilterOverlay.value = true;
+                        child: TextField(
+                          controller: _searchController,
+                          focusNode: _searchFocusNode,
+                          onTap: () {
+                            _isSearchExpanded.value = true;
                           },
-                          icon: Icon(
-                            Icons.filter_list,
-                            color: Colors.blue[700],
-                            size: 24.0,
+                          decoration: InputDecoration(
+                            hintText: 'Rechercher une propriété...',
+                            hintStyle: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 14.0,
+                            ),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: Colors.grey[500],
+                              size: 20.0,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 12.0,
+                            ),
                           ),
-                          tooltip: 'Filtrer',
-                          padding: const EdgeInsets.all(12.0),
-                          constraints: const BoxConstraints(),
+                          onChanged: (value) {
+                            if (value.length >= 3) {
+                              _showSearchResults.value = true;
+                              searchController.updateQuery(value);
+                            } else {
+                              _showSearchResults.value = false;
+                              searchController.searchResults.clear();
+                            }
+                          },
                         ),
                       ),
-                    ],
-                  ),
-                ),
-
-                // Categories Section
-                _buildSectionTitle('Catégories'),
-                _buildCategories(),
-
-                // Featured Properties
-                _buildSectionTitle('Propriétés en vedette'),
-                _buildFeaturedProperties(),
-
-                // Latest Properties
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Dernières annonces',
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
+                    ),
+                    const SizedBox(width: 8.0),
+                    // Bouton de filtre
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(12.0),
+                        border: Border.all(
+                          color: Colors.blue[100]!,
+                          width: 1.0,
                         ),
                       ),
-                      TextButton(
+                      child: IconButton(
                         onPressed: () {
-                          Get.to(() => const AllPropertiesScreen());
+                          _showFilterOverlay.value = true;
                         },
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Voir tout',
-                              style: TextStyle(
-                                color: Colors.blue[700],
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_forward_ios,
-                              size: 14,
-                              color: Colors.blue[700],
-                            ),
-                          ],
+                        icon: Icon(
+                          Icons.filter_list,
+                          color: Colors.blue[700],
+                          size: 24.0,
                         ),
+                        tooltip: 'Filtrer',
+                        padding: const EdgeInsets.all(12.0),
+                        constraints: const BoxConstraints(),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                _buildLatestProperties(),
-              ],
-            ),
+              ),
+
+              // Categories Section
+              _buildSectionTitle('Catégories'),
+              _buildCategories(),
+
+              // Featured Properties
+              _buildSectionTitle('Propriétés en vedette'),
+              _buildFeaturedProperties(),
+
+              // Latest Properties
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Dernières annonces',
+                      style: TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Get.to(() => const AllPropertiesScreen());
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Voir tout',
+                            style: TextStyle(
+                              color: Colors.blue[700],
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 14,
+                            color: Colors.blue[700],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _buildLatestProperties(),
+            ],
           ),
-          // Overlay de recherche
-          _buildSearchOverlay(),
-          // Overlay de filtres
-          _buildFilterOverlay(),
-        ],
-      ),
+        ),
+        // Overlay de recherche
+        _buildSearchOverlay(),
+        // Overlay de filtres
+        _buildFilterOverlay(),
+      ],
     );
   }
 
@@ -513,28 +600,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       child: GestureDetector(
                         onTap: () {
-                          if (article.purpose == "Rent" &&
-                              article.bookable_type!.contains("Daily")) {
-                            Get.to(() =>
-                                PromoteArticleDetailsScreen(property: article));
-                          } else {
-                            Get.to(() => FeaturedPropertyCard(
-                                  image: imageUrl,
-                                  status: status,
-                                  isFeatured: isFeatured,
-                                  categoryIcon: article.category?.image,
-                                  categoryName: article.category?.name ?? '',
-                                  name: name,
-                                  location: article.structure?.name ??
-                                      'Localisation non disponible',
-                                  price: article.price,
-                                  amenities: const [
-                                    Icons.king_bed_outlined,
-                                    Icons.bathtub_outlined,
-                                    Icons.square_foot,
-                                  ],
-                                ));
-                          }
+                          // Utiliser la fonction de navigation unifiée
+                          navigateToPropertyDetails(article);
                         },
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -782,15 +849,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       // Prix
                                       Flexible(
-                                        child: Text(
-                                          '${article.price?.toStringAsFixed(0) ?? 'N/A'} MRU',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.blue,
-                                            fontSize: 13.0,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
+                                        child: Obx(() {
+                                          final price = article.price ?? 0;
+                                          final convertedPrice =
+                                              currencyController
+                                                  .convertPrice(price);
+                                          return Text(
+                                            "${convertedPrice.toStringAsFixed(0)} ${currencyController.getCurrentSymbol()}",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.blue,
+                                              fontSize: 13.0,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          );
+                                        }),
                                       ),
                                     ],
                                   ),
@@ -903,7 +976,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildLatestProperties() {
     return Obx(() {
-      // Vérifier l'état de chargement et d'erreur
       final state = _featuredError.value.isNotEmpty
           ? ContentState.error
           : _isLoadingFeatured.value
@@ -931,66 +1003,41 @@ class _HomeScreenState extends State<HomeScreen> {
                     return const SizedBox.shrink();
                   }
 
-                  // Récupérer le nom de l'article dans la langue actuelle
                   final language = Get.locale?.languageCode ?? 'fr';
                   final name = article.getPropertyByLanguage(language,
                       propertyType: 'name');
 
-                  // Construire l'URL de l'image
                   String imageUrl = '';
                   if (article.gallery.isNotEmpty) {
-                    final galleryItem = article.gallery.first;
-                    imageUrl = galleryItem.original;
+                    imageUrl = article.gallery.first.original;
                   } else if (article.image.isNotEmpty) {
                     imageUrl = article.image;
                   }
 
-                  final status = property.status.toLowerCase() ?? 'vente';
-                  final isFeatured = status == 'featured';
-
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12.0),
+                    height: 110.0, // Hauteur fixe
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12.0),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withValues(alpha: 0.1),
+                          color: Colors.grey.withOpacity(0.1),
                           spreadRadius: 1,
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: GestureDetector(
-                      onTap: () {
-                        if (article.purpose == "Rent" &&
-                                article.bookable_type!.contains("Daily") ??
-                            false) {
-                          Get.to(() =>
-                              PromoteArticleDetailsScreen(property: article));
-                        } else {
-                          Get.to(() => FeaturedPropertyCard(
-                                image: imageUrl,
-                                status: status,
-                                isFeatured: isFeatured,
-                                categoryIcon: article.category?.image,
-                                categoryName: article.category?.name ?? '',
-                                name: name,
-                                location: article.structure?.name ??
-                                    'Localisation non disponible',
-                                price: article.price,
-                                amenities: const [
-                                  Icons.king_bed_outlined,
-                                  Icons.bathtub_outlined,
-                                  Icons.square_foot,
-                                ],
-                              ));
-                        }
-                      },
-                      child: IntrinsicHeight(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12.0),
+                        onTap: () {
+                          // Utiliser la fonction de navigation unifiée
+                          navigateToPropertyDetails(article);
+                        },
                         child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             // Image à gauche
                             ClipRRect(
@@ -1010,8 +1057,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: Colors.grey[100],
                                   child: const Icon(
                                       Icons.photo_library_outlined,
-                                      color: Colors.grey,
-                                      size: 32.0),
+                                      color: Colors.grey),
                                 ),
                               ),
                             ),
@@ -1021,105 +1067,85 @@ class _HomeScreenState extends State<HomeScreen> {
                                 padding: const EdgeInsets.all(10.0),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    // Badge de catégorie
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6.0, vertical: 2.0),
-                                      decoration: BoxDecoration(
-                                        color: Colors.blue[50],
-                                        borderRadius:
-                                            BorderRadius.circular(4.0),
-                                        border: Border.all(
-                                          color: Colors.blue[100]!,
-                                          width: 1.0,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          if (article.category?.image
-                                                  ?.isNotEmpty ??
-                                              false)
-                                            SvgPicture.network(
-                                              article.category!.image!,
-                                              height: 12,
-                                              width: 12,
-                                              colorFilter: ColorFilter.mode(
-                                                  Colors.blue[800]!,
-                                                  BlendMode.srcIn),
-                                            ),
-                                          if (article.category?.image
-                                                  ?.isNotEmpty ??
-                                              false)
-                                            const SizedBox(width: 4),
-                                          Text(
-                                            article.category?.name ??
-                                                'Catégorie',
-                                            style: TextStyle(
-                                              color: Colors.blue[800],
-                                              fontSize: 9.0,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    // Prix
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Flexible(
-                                          child: Text(
-                                            '${article.price?.toStringAsFixed(0) ?? 'N/A'} MRU',
+                                        // Badge de catégorie
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6.0, vertical: 2.0),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue[50],
+                                            borderRadius:
+                                                BorderRadius.circular(4.0),
+                                            border: Border.all(
+                                                color: Colors.blue[100]!,
+                                                width: 1.0),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (article.category?.image
+                                                      ?.isNotEmpty ??
+                                                  false)
+                                                SvgPicture.network(
+                                                  article.category!.image!,
+                                                  height: 12,
+                                                  width: 12,
+                                                  colorFilter: ColorFilter.mode(
+                                                      Colors.blue[800]!,
+                                                      BlendMode.srcIn),
+                                                ),
+                                              if (article.category?.image
+                                                      ?.isNotEmpty ??
+                                                  false)
+                                                const SizedBox(width: 4),
+                                              Text(
+                                                article.category?.name ??
+                                                    'Catégorie',
+                                                style: TextStyle(
+                                                  color: Colors.blue[800],
+                                                  fontSize: 9.0,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4.0),
+                                        // Prix
+                                        Obx(() {
+                                          final price = article.price ?? 0;
+                                          final convertedPrice =
+                                              currencyController
+                                                  .convertPrice(price);
+                                          return Text(
+                                            "${convertedPrice.toStringAsFixed(0)} ${currencyController.getCurrentSymbol()}",
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: Colors.blue,
                                               fontSize: 13.0,
                                             ),
-                                            overflow: TextOverflow.ellipsis,
+                                          );
+                                        }),
+                                        const SizedBox(height: 4.0),
+                                        // Nom de la propriété
+                                        Text(
+                                          name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13.0,
+                                            height: 1.2,
                                           ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 6.0),
-                                    // Nom de la propriété
-                                    Text(
-                                      name,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 13.0,
-                                        height: 1.2,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 2.0),
-                                    // Localisation
-                                    Row(
-                                      children: [
-                                        Icon(Icons.location_on_outlined,
-                                            size: 11.0,
-                                            color: Colors.grey[400]),
-                                        const SizedBox(width: 2.0),
-                                        Expanded(
-                                          child: Text(
-                                            article.structure?.name ??
-                                                'Localisation non disponible',
-                                            style: TextStyle(
-                                              fontSize: 10.0,
-                                              color: Colors.grey[600],
-                                              height: 1.3,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const Spacer(),
                                     // Caractéristiques
                                     Row(
                                       mainAxisAlignment:
@@ -1127,10 +1153,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                       children: [
                                         _buildAmenity(Icons.king_bed_outlined,
                                             '${article.bedroom ?? 0}'),
-                                        const SizedBox(width: 4.0),
                                         _buildAmenity(Icons.bathtub_outlined,
                                             '${article.bathroom ?? 0}'),
-                                        const Spacer(),
                                         if (![
                                           'apartment',
                                           'hostel',
@@ -1321,31 +1345,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       return GestureDetector(
                         onTap: () {
-                          if (article.purpose == "Rent" &&
-                              (article.bookable_type?.contains("Daily") ??
-                                  false)) {
-                            Get.to(() =>
-                                PromoteArticleDetailsScreen(property: article));
-                          } else {
-                            Get.to(() => FeaturedPropertyCard(
-                                  image: imageUrl,
-                                  status: article.status,
-                                  isFeatured: article.status == 'featured',
-                                  categoryIcon: article.category?.image,
-                                  categoryName: article.category?.name ?? '',
-                                  name: article.getPropertyByLanguage(
-                                      languageController.locale.languageCode,
-                                      propertyType: "name"),
-                                  location: article.structure?.name ??
-                                      'Localisation non disponible',
-                                  price: article.price,
-                                  amenities: const [
-                                    Icons.king_bed_outlined,
-                                    Icons.bathtub_outlined,
-                                    Icons.square_foot,
-                                  ],
-                                ));
-                          }
+                          // Utiliser la fonction de navigation unifiée
+                          navigateToPropertyDetails(article);
                           _isSearchExpanded.value = false;
                           _showSearchResults.value = false;
                           _searchController.clear();
@@ -1425,14 +1426,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ],
                                       ),
                                       const SizedBox(height: 4.0),
-                                      Text(
-                                        '${article.price.toStringAsFixed(0)} MRU',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.blue[700],
-                                          fontSize: 14.0,
-                                        ),
-                                      ),
+                                      Obx(() {
+                                        final price = article.price ?? 0;
+                                        final convertedPrice =
+                                            currencyController
+                                                .convertPrice(price);
+                                        return Text(
+                                          "${convertedPrice.toStringAsFixed(0)} ${currencyController.getCurrentSymbol()}",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.blue[700],
+                                            fontSize: 14.0,
+                                          ),
+                                        );
+                                      }),
                                     ],
                                   ),
                                 ),
@@ -1592,38 +1599,42 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Expanded(
                             child: TextField(
-                              controller: TextEditingController(
-                                text: filterController.minPrice.value,
-                              ),
-                              onChanged: (value) =>
-                                  filterController.minPrice.value = value,
+                              controller: filterController.minPriceController,
+                              onChanged: filterController.updateMinPrice,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 hintText: 'Min',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
+                                border: const OutlineInputBorder(),
+                                contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12.0,
                                   vertical: 8.0,
                                 ),
+                                suffix: Obx(() => Text(
+                                      currencyController.getCurrentSymbol(),
+                                      style:
+                                          const TextStyle(color: Colors.grey),
+                                    )),
                               ),
                             ),
                           ),
                           const SizedBox(width: 8.0),
                           Expanded(
                             child: TextField(
-                              controller: TextEditingController(
-                                text: filterController.maxPrice.value,
-                              ),
-                              onChanged: (value) =>
-                                  filterController.maxPrice.value = value,
+                              controller: filterController.maxPriceController,
+                              onChanged: filterController.updateMaxPrice,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 hintText: 'Max',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
+                                border: const OutlineInputBorder(),
+                                contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12.0,
                                   vertical: 8.0,
                                 ),
+                                suffix: Obx(() => Text(
+                                      currencyController.getCurrentSymbol(),
+                                      style:
+                                          const TextStyle(color: Colors.grey),
+                                    )),
                               ),
                             ),
                           ),
@@ -1644,11 +1655,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Expanded(
                             child: TextField(
-                              controller: TextEditingController(
-                                text: filterController.minArea.value,
-                              ),
-                              onChanged: (value) =>
-                                  filterController.minArea.value = value,
+                              controller: filterController.minAreaController,
+                              onChanged: filterController.updateMinArea,
                               keyboardType: TextInputType.number,
                               decoration: const InputDecoration(
                                 hintText: 'Min m²',
@@ -1663,11 +1671,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(width: 8.0),
                           Expanded(
                             child: TextField(
-                              controller: TextEditingController(
-                                text: filterController.maxArea.value,
-                              ),
-                              onChanged: (value) =>
-                                  filterController.maxArea.value = value,
+                              controller: filterController.maxAreaController,
+                              onChanged: filterController.updateMaxArea,
                               keyboardType: TextInputType.number,
                               decoration: const InputDecoration(
                                 hintText: 'Max m²',
@@ -1786,5 +1791,158 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header avec l'abréviation et le nom complet de l'utilisateur
+          const UserAccountsDrawerHeader(
+            accountName: Text('John Doe'),
+            accountEmail: Text(''), // Abréviation
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Text(
+                'JD',
+                style: TextStyle(fontSize: 24.0),
+              ),
+            ),
+          ),
+          // Option Déconnexion en rouge
+          ListTile(
+            title: const Text(
+              'Déconnexion',
+              style: TextStyle(color: Colors.red),
+            ),
+            leading: const Icon(Icons.logout, color: Colors.red),
+            onTap: () {
+              AuthRepository.instance.logout();
+              final localStorage = GetStorage();
+              AuthRepository.instance
+                  .logOutBackend(localStorage.read('AUTH_TOKEN'));
+              localStorage.remove('AUTH_TOKEN');
+            },
+          ),
+          const Divider(),
+          // Options de navigation
+          ListTile(
+            title: const Text('Notifications'),
+            leading: const Icon(Icons.notifications),
+            onTap: () {
+              // Action pour Notifications
+            },
+          ),
+          ListTile(
+            title: const Text('Mes Réservations'),
+            leading: const Icon(Icons.book_online),
+            onTap: () {
+              // Action pour Mes Réservations
+            },
+          ),
+          ListTile(
+            title: const Text('Mon Compte'),
+            leading: const Icon(Icons.account_circle),
+            onTap: () {
+              // Action pour Mon Compte
+            },
+          ),
+          ListTile(
+            title: const Text('Mes Annonces'),
+            leading: const Icon(Icons.announcement),
+            onTap: () {
+              // Action pour Mes Annonces
+            },
+          ),
+          const Spacer(),
+          // Liste horizontale pour la sélection de la langue
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildLanguageOption('Ar', 'عربي',
+                    languageController.locale.languageCode, context),
+                _buildLanguageOption('Fr', 'Français',
+                    languageController.locale.languageCode, context),
+                _buildLanguageOption('En', 'English',
+                    languageController.locale.languageCode, context),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget pour afficher une option de langue
+  Widget _buildLanguageOption(
+    String languageCode,
+    String languageName,
+    String currentLanguage,
+    BuildContext context,
+  ) {
+    // Déterminer si cette langue est sélectionnée
+    bool isSelected =
+        languageCode.toLowerCase() == currentLanguage.toLowerCase();
+
+    return GestureDetector(
+      onTap: () {
+        // Logique pour changer la langue
+        languageController.changeLanguage(languageCode);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.grey[200] : Colors.transparent,
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: Text(
+          languageName,
+          style: TextStyle(
+            fontSize: 16.0,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.black : Colors.black,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Méthode pour vérifier l'état de connexion
+  Future<bool> checkLoginStatus(int index) async {
+    final localStorage = GetStorage();
+    final CheckAuthController authController = Get.put(CheckAuthController());
+
+    final String? token = await localStorage.read('AUTH_TOKEN');
+
+    if (token == null) {
+      Get.to(() => const LoginPhoneScreen());
+      return false;
+    }
+
+    final response = await authController.checkToken(token);
+    print('Reponse $response');
+
+    if (response) {
+      selectIndex.value = index;
+      return true;
+    } else {
+      localStorage.remove('AUTH_TOKEN');
+      Get.to(() => const LoginPhoneScreen());
+      return false;
+    }
+  }
+
+  // Gérer la sélection des onglets
+  void onDestinationSelected(int index) async {
+    if (index == 3) {
+      checkLoginStatus(3);
+    } else if (index == 4) {
+      checkLoginStatus(4);
+    } else {
+      selectIndex.value = index;
+    }
   }
 }

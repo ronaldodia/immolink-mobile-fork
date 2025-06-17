@@ -78,6 +78,7 @@ dependencies:
   connectivity_plus: ^5.0.2
   fluttertoast: ^8.2.1
   libphonenumber_plugin: ^0.3.3
+  country_code_picker: ^3.3.0
 
 dependency_overrides:
   intl: 0.20.2

@@ -388,4 +388,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get property_under_modernization => 'قيد التحديث';
+
+  @override
+  String get continue_without_login => 'المتابعة بدون تسجيل الدخول';
 }

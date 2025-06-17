@@ -132,6 +132,7 @@
     "property_under_maintenance": "قيد الصيانة",
     "property_under_repair": "قيد الإصلاح",
     "property_under_upgrade": "قيد التحديث",
-    "property_under_modernization": "قيد التحديث"
+    "property_under_modernization": "قيد التحديث",
+    "continue_without_login": "المتابعة بدون تسجيل الدخول"
 }
   

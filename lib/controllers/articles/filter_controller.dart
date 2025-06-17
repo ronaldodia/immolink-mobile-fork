@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/views/screens/filtered_properties_screen.dart';
+import 'package:flutter/material.dart';
 
 class FilterController extends GetxController {
   // Variables existantes
@@ -22,8 +23,32 @@ class FilterController extends GetxController {
   var filteredProperties = [].obs;
   var isLoading = false.obs;
 
+  // Contrôleurs pour les champs de saisie
+  late final TextEditingController minPriceController;
+  late final TextEditingController maxPriceController;
+  late final TextEditingController minAreaController;
+  late final TextEditingController maxAreaController;
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Initialiser les contrôleurs
+    minPriceController = TextEditingController(text: minPrice.value);
+    maxPriceController = TextEditingController(text: maxPrice.value);
+    minAreaController = TextEditingController(text: minArea.value);
+    maxAreaController = TextEditingController(text: maxArea.value);
+  }
+
+  @override
+  void onClose() {
+    // Ne pas disposer les contrôleurs ici car ils sont toujours utilisés
+    // Les contrôleurs seront automatiquement disposés quand le GetXController est supprimé
+    super.onClose();
+  }
+
   // Réinitialisation des filtres
   void clearFilters() {
+    // Réinitialiser les valeurs observables
     isForSellSelected.value = true;
     selectedPropertyType.value = 'All';
     minPrice.value = '';
@@ -31,8 +56,29 @@ class FilterController extends GetxController {
     minArea.value = '';
     maxArea.value = '';
     selectedPostedSince.value = 'Anytime';
-    location.value = '';
-    selectedFacilities.clear();
+
+    // Réinitialiser les contrôleurs de texte
+    minPriceController.text = '';
+    maxPriceController.text = '';
+    minAreaController.text = '';
+    maxAreaController.text = '';
+  }
+
+  // Mettre à jour les valeurs observables quand les contrôleurs changent
+  void updateMinPrice(String value) {
+    minPrice.value = value;
+  }
+
+  void updateMaxPrice(String value) {
+    maxPrice.value = value;
+  }
+
+  void updateMinArea(String value) {
+    minArea.value = value;
+  }
+
+  void updateMaxArea(String value) {
+    maxArea.value = value;
   }
 
   // Changement d'état pour For Sell / For Rent
