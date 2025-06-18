@@ -11,6 +11,7 @@ import 'package:immolink_mobile/controllers/login/check_auth_controller.dart';
 import 'package:immolink_mobile/controllers/communes/commune_controller.dart';
 import 'package:immolink_mobile/controllers/communes/district_controller.dart';
 import 'package:immolink_mobile/views/screens/all_properties_screen.dart';
+import 'package:immolink_mobile/views/screens/filters/filter_screen.dart';
 import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
 import 'package:immolink_mobile/views/screens/agencies_screen.dart';
 import 'package:immolink_mobile/views/screens/map_screen.dart';
@@ -130,6 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final CurrencyController currencyController = Get.find();
   final DistrictController districtController = Get.put(DistrictController());
   final CommuneController communeController = Get.put(CommuneController());
+  final AuthRepository _authRepository = Get.put(AuthRepository());
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   final RxBool _showSearchResults = false.obs;
@@ -306,7 +308,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       child: IconButton(
                         onPressed: () {
-                          _showFilterOverlay.value = true;
+                          // _showFilterOverlay.value = true;
+                          Get.to(() => const FilterScreen());
                         },
                         icon: Icon(
                           Icons.filter_list,
@@ -1818,10 +1821,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             leading: const Icon(Icons.logout, color: Colors.red),
             onTap: () {
-              AuthRepository.instance.logout();
+              _authRepository.logout();
               final localStorage = GetStorage();
-              AuthRepository.instance
-                  .logOutBackend(localStorage.read('AUTH_TOKEN'));
+              _authRepository.logOutBackend(localStorage.read('AUTH_TOKEN'));
               localStorage.remove('AUTH_TOKEN');
             },
           ),
@@ -1918,6 +1920,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final String? token = await localStorage.read('AUTH_TOKEN');
 
     if (token == null) {
+      _authRepository.logout();
+      final localStorage = GetStorage();
+      localStorage.remove('AUTH_TOKEN');
       Get.to(() => const LoginPhoneScreen());
       return false;
     }
@@ -1929,6 +1934,8 @@ class _HomeScreenState extends State<HomeScreen> {
       selectIndex.value = index;
       return true;
     } else {
+      _authRepository.logout();
+      final localStorage = GetStorage();
       localStorage.remove('AUTH_TOKEN');
       Get.to(() => const LoginPhoneScreen());
       return false;

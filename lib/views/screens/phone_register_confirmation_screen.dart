@@ -1,21 +1,56 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:immolink_mobile/controllers/signup/signup_controller.dart';
 import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/utils/helpers.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
-import 'package:immolink_mobile/utils/route_name.dart';
 import 'package:immolink_mobile/utils/t_sizes.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
-class PhoneRegisterConfirmationScreen extends StatelessWidget {
+class PhoneRegisterConfirmationScreen extends StatefulWidget {
   final String phoneNumber;
+  final SignupController controller;
 
-   PhoneRegisterConfirmationScreen({super.key, required this.phoneNumber});
+  PhoneRegisterConfirmationScreen({super.key, required this.phoneNumber})
+      : controller = Get.isRegistered<SignupController>()
+            ? Get.find<SignupController>()
+            : Get.put(SignupController()) {
+    // S'assurer que le numéro de téléphone est défini dans le contrôleur
+    print(
+        'PhoneRegisterConfirmationScreen - Received phone number: $phoneNumber');
+    print(
+        'PhoneRegisterConfirmationScreen - Controller phone number before: ${controller.phoneNumber.value}');
 
+    if (controller.phoneNumber.value.isEmpty) {
+      controller.phoneNumber.value = phoneNumber;
+      print('Phone number set in controller: ${controller.phoneNumber.value}');
+    } else {
+      print(
+          'Phone number already set in controller: ${controller.phoneNumber.value}');
+    }
+
+    // S'assurer que le contrôleur de texte contient aussi le numéro
+    if (controller.phoneNumberController.text.isEmpty &&
+        phoneNumber.isNotEmpty) {
+      // Extraire le numéro sans le code pays pour le contrôleur de texte
+      final countryCode = controller.countryCode.value?.dialCode ?? '+222';
+      if (phoneNumber.startsWith(countryCode)) {
+        final numberWithoutCode = phoneNumber.substring(countryCode.length);
+        controller.phoneNumberController.text = numberWithoutCode;
+        print('Phone number controller set to: $numberWithoutCode');
+      }
+    }
+  }
+
+  @override
+  State<PhoneRegisterConfirmationScreen> createState() =>
+      _PhoneRegisterConfirmationScreenState();
+}
+
+class _PhoneRegisterConfirmationScreenState
+    extends State<PhoneRegisterConfirmationScreen> {
   final TextEditingController _codeController = TextEditingController();
-  final SignupController controller = Get.put(SignupController());
+  bool _isVerifying = false;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +60,7 @@ class PhoneRegisterConfirmationScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         actions: [
-          IconButton(onPressed: () =>  AuthRepository.instance.logout(), icon: const Icon(Icons.clear))
+          IconButton(onPressed: () => Get.back(), icon: const Icon(Icons.clear))
         ],
       ),
       body: SingleChildScrollView(
@@ -34,12 +69,20 @@ class PhoneRegisterConfirmationScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image(image: const AssetImage(TImages.smsSendImage), width: Helper.getScreenWidth(context) * 0.5,),
-              const SizedBox(height: TSizes.spaceBtwSections,),
-              Text('A verification code has been sent to $phoneNumber.'),
-              const SizedBox(height: TSizes.spaceBtwItems,),
-
+              Image(
+                image: const AssetImage(TImages.smsSendImage),
+                width: Helper.getScreenWidth(context) * 0.5,
+              ),
+              const SizedBox(
+                height: TSizes.spaceBtwSections,
+              ),
+              Text(
+                  'A verification code has been sent to ${widget.phoneNumber}.'),
+              const SizedBox(
+                height: TSizes.spaceBtwItems,
+              ),
               PinCodeTextField(
+                keyboardType: TextInputType.number,
                 appContext: context,
                 length: 6, // Nombre de cases pour le code OTP
                 obscureText: false,
@@ -72,15 +115,53 @@ class PhoneRegisterConfirmationScreen extends StatelessWidget {
                   return true;
                 },
               ),
-              const SizedBox(height: TSizes.spaceBtwItems,),
+              const SizedBox(
+                height: TSizes.spaceBtwItems,
+              ),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => controller.verifySmsCode(_codeController.text.trim()),
+                  onPressed: _isVerifying
+                      ? null
+                      : () async {
+                          setState(() {
+                            _isVerifying = true;
+                          });
+
+                          try {
+                            print(
+                                'Verifying SMS code: ${_codeController.text.trim()}');
+                            print(
+                                'Controller phone number: ${widget.controller.phoneNumber.value}');
+                            await widget.controller
+                                .verifySmsCode(_codeController.text.trim());
+                          } catch (e) {
+                            print('Error during verification: $e');
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                _isVerifying = false;
+                              });
+                            }
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
                   ),
-                  child: const Text('Verify', style: TextStyle(color: Colors.white),),
+                  child: _isVerifying
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          'Verify',
+                          style: TextStyle(color: Colors.white),
+                        ),
                 ),
               ),
             ],

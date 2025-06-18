@@ -4,8 +4,9 @@ import 'package:immolink_mobile/views/screens/account_screen.dart';
 import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
 import 'package:immolink_mobile/views/screens/filters/filter_screen.dart';
 import 'package:immolink_mobile/views/screens/forgot_password_screen.dart';
+import 'package:immolink_mobile/views/screens/home_screen.dart';
 import 'package:immolink_mobile/views/screens/language_screen.dart';
-import 'package:immolink_mobile/views/screens/login_phone_screen.dart'; 
+import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
 import 'package:immolink_mobile/views/screens/map_screen.dart';
 import 'package:immolink_mobile/views/screens/onboarding/onboarding_screen.dart';
 import 'package:immolink_mobile/views/screens/register_phone_screen.dart';
@@ -17,25 +18,25 @@ class CustomeRoute {
       // case onBoardingRoute:
       //   return MaterialPageRoute(builder: (_) => const OnBoardingScreen());
       case homeRoute:
-        return MaterialPageRoute(builder: (_) => const BottomNavigationMenu());
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
       case languageRoute:
         return MaterialPageRoute(builder: (_) => const LanguageScreen());
       case accountRoute:
         return MaterialPageRoute(builder: (_) => const AccountScreen());
-        case filterRoute:
-        return MaterialPageRoute(builder: (_) =>  const FilterScreen());
+      case filterRoute:
+        return MaterialPageRoute(builder: (_) => const FilterScreen());
       case loginRoute:
-        return MaterialPageRoute(builder: (_) =>  const LoginPhoneScreen());
+        return MaterialPageRoute(builder: (_) => const LoginPhoneScreen());
       // case loginRoute:
       //   return MaterialPageRoute(builder: (_) =>  const LoginScreen());
       // case loginRoute:
       //   return MaterialPageRoute(builder: (_) =>  const LoginScreen());
       case registerRoute:
-        return MaterialPageRoute(builder: (_) =>  const RegisterPhoneScreen());
+        return MaterialPageRoute(builder: (_) => const RegisterPhoneScreen());
       case verifyEmail:
-        return MaterialPageRoute(builder: (_) =>  const VerifyEmailScreen());
+        return MaterialPageRoute(builder: (_) => const VerifyEmailScreen());
       case mapRoute:
-        return MaterialPageRoute(builder: (_) =>  const MapScreen());
+        return MaterialPageRoute(builder: (_) => const MapScreen());
       case onBoardingRoute:
         return MaterialPageRoute(builder: (_) => const OnBoardingScreen());
       case forgotPasswordRoute:
@@ -46,6 +47,6 @@ class CustomeRoute {
       //   return MaterialPageRoute(builder: (_) => const SettingScreen());
     }
 
-    return MaterialPageRoute(builder: (_) => const BottomNavigationMenu());
+    return MaterialPageRoute(builder: (_) => const HomeScreen());
   }
 }

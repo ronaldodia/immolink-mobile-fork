@@ -10,6 +10,7 @@ import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:immolink_mobile/utils/network_manager.dart';
 import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
+import 'package:immolink_mobile/views/screens/home_screen.dart';
 import 'package:immolink_mobile/views/screens/phone_login_confirmation_screen.dart';
 import 'package:immolink_mobile/views/widgets/loaders/fullscreen_loader.dart';
 import 'package:immolink_mobile/views/widgets/loaders/loader.dart';
@@ -29,8 +30,8 @@ class LoginController extends GetxController {
   final phonePasswordController = TextEditingController();
   final countryCode = Rxn<CountryCode>();
   final localStorage = GetStorage();
-  final phoneLoginFormKey = GlobalKey<FormState>();
-  final emailLoginFormKey = GlobalKey<FormState>();
+  final NetworkManager _networkManager = Get.put(NetworkManager());
+  final AuthRepository _authRepository = Get.put(AuthRepository());
 
   final userController = Get.put(UserController());
 
@@ -40,7 +41,6 @@ class LoginController extends GetxController {
     // emailPasswordController.text = localStorage.read('REMEMBER_ME_EMAIL_PASSWORD');
     // phonePasswordController.text = localStorage.read('REMEMBER_ME_PHONE_PASSWORD');
     super.onInit();
-    phoneLoginFormKey.currentState?.reset();
   }
 
   void onCountryChanged(CountryCode code) {
@@ -54,18 +54,18 @@ class LoginController extends GetxController {
     super.onClose();
   }
 
-  Future<void> loginWithEmailPassword() async {
+  Future<void> loginWithEmailPassword(GlobalKey<FormState>? formKey) async {
     try {
       // Start Loading
       FullscreenLoader.openDialog('Logging you in..',
           'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Check Internet Connectivity
-      final isConnected = await NetworkManager.instance.isConnected();
+      final isConnected = await _networkManager.isConnected();
       if (!isConnected) return;
 
       //Form Validation
-      if (!emailLoginFormKey.currentState!.validate()) {
+      if (formKey != null && !formKey.currentState!.validate()) {
         // FullscreenLoader.stopLoading();
         return;
       }
@@ -77,7 +77,7 @@ class LoginController extends GetxController {
       }
 
       // login with backend
-      final resultByEmail = await AuthRepository.instance.loginWithEmail(
+      final resultByEmail = await _authRepository.loginWithEmail(
           emailController.text.trim(), emailPasswordController.text.trim());
 
       if (resultByEmail != null &&
@@ -86,8 +86,7 @@ class LoginController extends GetxController {
         // Résultat valide : On écrit dans le localStorage
         localStorage.write('AUTH_TOKEN', resultByEmail['token']);
         localStorage.write('USER_PROFILE', resultByEmail['user']);
-        final json =
-            await AuthRepository.instance.getProfileByToken(resultByEmail);
+        final json = await _authRepository.getProfileByToken(resultByEmail);
         Profile profile = Profile.fromJson(json);
         localStorage.write('FULL_NAME', profile.user?.fullName);
         localStorage.write('AVATAR', profile.user?.avatar);
@@ -107,7 +106,7 @@ class LoginController extends GetxController {
           title: 'Congratulation', message: 'Your successfuly loggin in.');
       localStorage.write('AUTH_TOKEN', resultByEmail['token']);
       localStorage.write('USER_PROFILE', resultByEmail['user']);
-      AuthRepository.instance.screenRedirect();
+      _authRepository.screenRedirect();
 
       // Future.delayed(const Duration(milliseconds: 100), () {
       //   Get.to(() =>  VerifyEmailScreen(email: emailController.text.trim(),));
@@ -120,21 +119,24 @@ class LoginController extends GetxController {
   }
 
   // login with phone number
-  Future<void> loginWithPhonePassword() async {
+  Future<void> loginWithPhonePassword(GlobalKey<FormState>? formKey) async {
     try {
       // Start Loading
       FullscreenLoader.openDialog('Logging you in..',
           'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Check Internet Connectivity
-      final isConnected = await NetworkManager.instance.isConnected();
+      final isConnected = await _networkManager.isConnected();
       if (!isConnected) {
         FullscreenLoader.stopLoading();
+        DLoader.errorSnackBar(
+            title: 'Erreur de connexion',
+            message: 'Veuillez vérifier votre connexion internet');
         return;
       }
 
       //Form Validation
-      if (!phoneLoginFormKey.currentState!.validate()) {
+      if (formKey != null && !formKey.currentState!.validate()) {
         FullscreenLoader.stopLoading();
         return;
       }
@@ -148,14 +150,14 @@ class LoginController extends GetxController {
       // Construire le numéro de téléphone complet avec le code pays
       final fullPhoneNumber =
           countryCode.value?.dialCode ?? '+222' + phoneController.text.trim();
-      final phoneNumber = fullPhoneNumber; // Enlever le + pour le backend
+      final phoneNumber = fullPhoneNumber; // Garder le + pour le backend
 
       print("Backend phone number = $phoneNumber");
       print("Firebase phone number = $fullPhoneNumber");
 
       // login with backend
-      final resultByPhone = await AuthRepository.instance
-          .loginWithPhone(phoneNumber, phonePasswordController.text.trim());
+      final resultByPhone = await _authRepository.loginWithPhone(
+          phoneNumber, phonePasswordController.text.trim());
 
       if (resultByPhone != null && resultByPhone['token'] != null) {
         // Résultat valide : On écrit dans le localStorage
@@ -163,24 +165,15 @@ class LoginController extends GetxController {
         localStorage.write('AUTH_TOKEN', resultByPhone['token']);
         localStorage.write('USER_PROFILE', resultByPhone['user']);
 
-        // Login user in the Firebase Auth
-        try {
-          await AuthRepository.instance.loginWithPhoneNumber(fullPhoneNumber);
-          FullscreenLoader.stopLoading();
+        // Connexion réussie via le backend
+        FullscreenLoader.stopLoading();
 
-          // Show Success Message
-          DLoader.successSnackBar(
-              title: 'Félicitations', message: 'Connexion réussie');
+        // Show Success Message
+        DLoader.successSnackBar(
+            title: 'Félicitations', message: 'Connexion réussie');
 
-          // Navigate to confirmation screen
-          Get.to(() => PhoneLoginConfirmationScreen(
-                phoneNumber: phoneNumber,
-              ));
-        } catch (e) {
-          print('Firebase Auth Error: $e');
-          DLoader.errorSnackBar(
-              title: 'Erreur', message: 'Erreur lors de l\'authentification');
-        }
+        // Navigate directly to home screen
+        Get.offAll(() => const HomeScreen());
       } else {
         // Résultat invalide ou erreur
         FullscreenLoader.stopLoading();
@@ -203,14 +196,14 @@ class LoginController extends GetxController {
           'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Check Internet Connectivity
-      final isConnected = await NetworkManager.instance.isConnected();
+      final isConnected = await _networkManager.isConnected();
       if (!isConnected) {
         FullscreenLoader.stopLoading();
         return;
       }
 
       // google Authentication
-      final userCredentials = await AuthRepository.instance.signInWithGoogle();
+      final userCredentials = await _authRepository.signInWithGoogle();
 
       var token = FirebaseAuth.instance.currentUser;
       final idToken = await token!.getIdToken();
@@ -239,15 +232,14 @@ class LoginController extends GetxController {
           'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Check Internet Connectivity
-      final isConnected = await NetworkManager.instance.isConnected();
+      final isConnected = await _networkManager.isConnected();
       if (!isConnected) {
         FullscreenLoader.stopLoading();
         return;
       }
 
       // google Authentication
-      final userCredentials =
-          await AuthRepository.instance.signInWithFacebook();
+      final userCredentials = await _authRepository.signInWithFacebook();
 
       var token = FirebaseAuth.instance.currentUser;
       final idToken = await token!.getIdToken();
@@ -261,7 +253,7 @@ class LoginController extends GetxController {
       FullscreenLoader.stopLoading();
 
       // AuthRepository.instance.screenRedirect();
-      Get.to(() => const BottomNavigationMenu());
+      Get.to(() => const HomeScreen());
 
       DLoader.successSnackBar(
           title: 'Congratulation', message: 'Your are login in');
@@ -274,14 +266,14 @@ class LoginController extends GetxController {
   Future<void> verifySmsCode(String smsCode) async {
     try {
       // Check Internet Connectivity
-      final isConnected = await NetworkManager.instance.isConnected();
+      final isConnected = await _networkManager.isConnected();
       if (!isConnected) return;
       // Start Loading
       FullscreenLoader.openDialog('Verifying code..',
           'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Verify the SMS code
-      await AuthRepository.instance.signInWithSmsCode(smsCode);
+      await _authRepository.signInWithSmsCode(smsCode);
 
       // User successfully signed in
       FullscreenLoader.stopLoading();
@@ -291,7 +283,7 @@ class LoginController extends GetxController {
       // AuthRepository.instance.screenRedirect();
 
       Future.delayed(const Duration(milliseconds: 100), () {
-        Get.offAll(() => const BottomNavigationMenu());
+        Get.offAll(() => const HomeScreen());
       });
 
       // Navigate to the home screen or wherever you want
@@ -309,7 +301,7 @@ class LoginController extends GetxController {
           'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Check Internet Connectivity
-      final isConnected = await NetworkManager.instance.isConnected();
+      final isConnected = await _networkManager.isConnected();
       if (!isConnected) return;
 
       if (emailRememberMe.value) {
@@ -318,8 +310,7 @@ class LoginController extends GetxController {
       }
 
       // login with backend
-      await AuthRepository.instance
-          .logOutBackend(localStorage.read('AUTH_TOKEN'));
+      await _authRepository.logOutBackend(localStorage.read('AUTH_TOKEN'));
       localStorage.remove('AUTH_TOKEN');
       localStorage.remove('USER_PROFILE');
       // localStorage.remove('FCM_TOKEN');

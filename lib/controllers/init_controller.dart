@@ -32,7 +32,7 @@ class InitController extends GetxController {
       status.value = 'Initialisation du stockage...';
 
       // Initialiser les contrôleurs de base
-      Get.put(LanguageController());
+      // Get.put(LanguageController()); // <-- SUPPRIMÉ pour éviter la double initialisation
       progress.value = 0.2;
       status.value = 'Chargement des paramètres de langue...';
 

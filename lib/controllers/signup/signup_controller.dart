@@ -1,4 +1,5 @@
 import 'package:country_code_picker/country_code_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:immolink_mobile/models/User.dart';
@@ -6,6 +7,7 @@ import 'package:immolink_mobile/repository/auth_repository.dart';
 import 'package:immolink_mobile/repository/user_repository.dart';
 import 'package:immolink_mobile/utils/network_manager.dart';
 import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
+import 'package:immolink_mobile/views/screens/home_screen.dart';
 import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
 import 'package:immolink_mobile/views/screens/phone_register_confirmation_screen.dart';
 import 'package:immolink_mobile/views/widgets/loaders/fullscreen_loader.dart';
@@ -15,6 +17,8 @@ class SignupController extends GetxController {
   static SignupController get instance => Get.find();
 
   // variables
+  final NetworkManager _networkManager = Get.put(NetworkManager());
+  final AuthRepository _authRepository = Get.put(AuthRepository());
   // Controllers should be initialized here
   final firstNameEmailController = TextEditingController();
   final lastNameEmailController = TextEditingController();
@@ -33,8 +37,6 @@ class SignupController extends GetxController {
   final phoneprivacyPolicy = true.obs;
   var verificationId = ''.obs;
 
-  final GlobalKey<FormState> phoneFormKey = GlobalKey<FormState>();
-
   @override
   void onInit() {
     super.onInit();
@@ -49,8 +51,53 @@ class SignupController extends GetxController {
 
   @override
   void dispose() {
+    // Nettoyer tous les contrôleurs de texte
+    firstNameEmailController.dispose();
+    lastNameEmailController.dispose();
+    lastNamePhoneController.dispose();
+    firstNamePhoneController.dispose();
+    emailController.dispose();
+    passwordEmailController.dispose();
+    passwordEmailConfirmController.dispose();
+    passwordPhoneController.dispose();
+    passwordPhoneConfirmController.dispose();
     phoneNumberController.dispose();
     super.dispose();
+  }
+
+  /// Réinitialise le formulaire et nettoie les données
+  void resetForm() {
+    firstNamePhoneController.clear();
+    lastNamePhoneController.clear();
+    phoneNumberController.clear();
+    passwordPhoneController.clear();
+    passwordPhoneConfirmController.clear();
+    // Ne pas réinitialiser le numéro de téléphone car il est nécessaire pour la vérification
+    // phoneNumber.value = '';
+    phoneprivacyPolicy.value = true;
+  }
+
+  /// Réinitialise complètement le formulaire (appelé après une inscription réussie)
+  void resetFormComplete() {
+    firstNamePhoneController.clear();
+    lastNamePhoneController.clear();
+    phoneNumberController.clear();
+    passwordPhoneController.clear();
+    passwordPhoneConfirmController.clear();
+    // Ne pas effacer le numéro de téléphone car il est nécessaire pour la vérification
+    // phoneNumber.value = '';
+    phoneprivacyPolicy.value = true;
+  }
+
+  /// Réinitialise complètement le formulaire après une inscription réussie
+  void resetFormAfterSuccess() {
+    firstNamePhoneController.clear();
+    lastNamePhoneController.clear();
+    phoneNumberController.clear();
+    passwordPhoneController.clear();
+    passwordPhoneConfirmController.clear();
+    phoneNumber.value = '';
+    phoneprivacyPolicy.value = true;
   }
 
   void onCountryChanged(CountryCode code) {
@@ -67,16 +114,37 @@ class SignupController extends GetxController {
     print('Current country code: ${countryCode.value?.dialCode}');
 
     if (countryCode.value != null) {
-      final fullNumber = countryCode.value!.dialCode! + number;
+      final fullNumber = countryCode.value!.dialCode! + number.trim();
       print('Setting full phone number to: $fullNumber');
       phoneNumber.value = fullNumber;
     } else {
       print('Warning: Country code is null, using default +222');
       // Utiliser le code pays par défaut si null
-      final fullNumber = '+222' + number;
+      final fullNumber = '+222' + number.trim();
       print('Setting full phone number with default code: $fullNumber');
       phoneNumber.value = fullNumber;
     }
+
+    print('Final phone number value: ${phoneNumber.value}');
+  }
+
+  /// Valide le format du numéro de téléphone
+  bool validatePhoneNumber(String phoneNumber) {
+    // Supprimer tous les caractères non numériques sauf le +
+    final cleanNumber = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+
+    // Vérifier que le numéro commence par + et a au moins 8 chiffres après
+    if (!cleanNumber.startsWith('+') || cleanNumber.length < 9) {
+      return false;
+    }
+
+    // Vérifier que le reste du numéro ne contient que des chiffres
+    final numberWithoutPlus = cleanNumber.substring(1);
+    if (!RegExp(r'^\d+$').hasMatch(numberWithoutPlus)) {
+      return false;
+    }
+
+    return true;
   }
 
   /// --- SIGNUP Phone Firebase
@@ -92,12 +160,12 @@ class SignupController extends GetxController {
         if (countryCode.value != null &&
             phoneNumberController.text.isNotEmpty) {
           final fullNumber =
-              countryCode.value!.dialCode! + phoneNumberController.text;
+              countryCode.value!.dialCode! + phoneNumberController.text.trim();
           print('Constructing phone number: $fullNumber');
           phoneNumber.value = fullNumber;
         } else {
           // Utiliser le code pays par défaut si nécessaire
-          final fullNumber = '+222' + phoneNumberController.text;
+          final fullNumber = '+222' + phoneNumberController.text.trim();
           print('Constructing phone number with default code: $fullNumber');
           phoneNumber.value = fullNumber;
         }
@@ -115,15 +183,37 @@ class SignupController extends GetxController {
           'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Check Internet Connectivity
-      final isConnected = await NetworkManager.instance.isConnected();
+      final isConnected = await _networkManager.isConnected();
       if (!isConnected) {
         FullscreenLoader.stopLoading();
+        DLoader.errorSnackBar(
+            title: 'Erreur de connexion',
+            message: 'Veuillez vérifier votre connexion internet');
         return;
       }
 
+      // Vérifier si l'utilisateur existe déjà
+      try {
+        final userExists =
+            await _authRepository.checkUserExists(phoneNumber.value);
+        if (userExists) {
+          FullscreenLoader.stopLoading();
+          DLoader.errorSnackBar(
+              title: 'Erreur',
+              message: 'Un compte existe déjà avec ce numéro de téléphone');
+          return;
+        }
+      } catch (e) {
+        print('Error checking user existence: $e');
+        // Continue with registration even if check fails
+      }
+
       //Form Validation
-      if (!phoneFormKey.currentState!.validate()) {
+      if (!validatePhoneNumber(phoneNumber.value)) {
         FullscreenLoader.stopLoading();
+        DLoader.errorSnackBar(
+            title: 'Erreur',
+            message: 'Veuillez entrer un numéro de téléphone valide');
         return;
       }
 
@@ -137,8 +227,12 @@ class SignupController extends GetxController {
         return;
       }
 
+      print('All validations passed, proceeding with Firebase registration...');
+
       // Register user in the Firebase Auth
-      await AuthRepository.instance.registerWithPhoneNumber(phoneNumber.value);
+      await _authRepository.registerWithPhoneNumber(phoneNumber.value);
+
+      print('Firebase registration completed successfully');
 
       //Remove Loader
       FullscreenLoader.stopLoading();
@@ -150,7 +244,7 @@ class SignupController extends GetxController {
               'Votre compte a été créé ! Veuillez vérifier votre numéro de téléphone.');
 
       // Navigate to confirmation screen
-      Get.to(() => PhoneRegisterConfirmationScreen(
+      Get.off(() => PhoneRegisterConfirmationScreen(
             phoneNumber: phoneNumber.value,
           ));
     } catch (e, stack) {
@@ -166,20 +260,73 @@ class SignupController extends GetxController {
 
   Future<void> verifySmsCode(String smsCode) async {
     try {
-      // Check Internet Connectivity
-      final isConnected = await NetworkManager.instance.isConnected();
-      if (!isConnected) return;
       // Start Loading
-      // FullscreenLoader.openDialog('Verifying code..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
+      FullscreenLoader.openDialog('Vérification du code SMS...',
+          'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
+
+      print('Starting SMS verification process...');
+      print('SMS Code: $smsCode');
+      print('Current phoneNumber.value: ${phoneNumber.value}');
+      print(
+          'Current phoneNumberController.text: ${phoneNumberController.text}');
+      print('Current countryCode.value: ${countryCode.value?.dialCode}');
+
+      // S'assurer que le numéro de téléphone est correctement défini
+      if (phoneNumber.value.isEmpty) {
+        print('Phone number is empty, attempting to reconstruct...');
+        if (countryCode.value != null &&
+            phoneNumberController.text.isNotEmpty) {
+          final fullNumber =
+              countryCode.value!.dialCode! + phoneNumberController.text.trim();
+          print('Constructing phone number from controller: $fullNumber');
+          phoneNumber.value = fullNumber;
+        } else {
+          print('ERROR: Phone number is empty and cannot be constructed');
+          print('countryCode.value: ${countryCode.value?.dialCode}');
+          print('phoneNumberController.text: "${phoneNumberController.text}"');
+
+          // Essayer de récupérer le numéro depuis le localStorage ou d'autres sources
+          // Pour l'instant, afficher un message d'erreur plus informatif
+          DLoader.errorSnackBar(
+              title: 'Erreur',
+              message:
+                  'Numéro de téléphone manquant. Veuillez redémarrer le processus d\'inscription.');
+          return;
+        }
+      }
+
+      print('Final Phone Number for verification: ${phoneNumber.value}');
+
+      // Check Internet Connectivity
+      final isConnected = await _networkManager.isConnected();
+      if (!isConnected) {
+        DLoader.errorSnackBar(
+            title: 'Erreur de connexion',
+            message: 'Veuillez vérifier votre connexion internet');
+        return;
+      }
+
+      print(
+          'Internet connection verified, proceeding with SMS verification...');
 
       // Verify the SMS code
-      await AuthRepository.instance.signInWithSmsCode(smsCode);
+      try {
+        await _authRepository.signInWithSmsCode(smsCode);
+        print('SMS verification successful, proceeding with user creation...');
+      } catch (smsError) {
+        print('SMS verification failed: $smsError');
+        throw smsError;
+      }
 
       // User successfully signed in
       FullscreenLoader.stopLoading();
       DLoader.successSnackBar(
           title: 'Félicitations',
           message: 'Votre compte a été créé avec succès !');
+
+      // Start Loading for account creation
+      FullscreenLoader.openDialog('Création de votre compte...',
+          'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       final newUser = UserModel(
           id: phoneNumber.value!,
@@ -191,47 +338,105 @@ class SignupController extends GetxController {
       final userRepository = Get.put(UserRepository());
       await userRepository.saveUserRecord(newUser);
 
+      print(
+          'User record saved locally, proceeding with backend registration...');
+
       // save to backend
-      final authRepository = Get.put(AuthRepository());
-      final backToken = await authRepository.registerWithPhone(
-          '${firstNamePhoneController.text.trim()} ${lastNamePhoneController.text.trim()}',
-          phoneNumber.value ?? '',
-          passwordPhoneController.text.trim(),
-          passwordPhoneConfirmController.text.trim(),
-          'customer');
+      try {
+        final backToken = await _authRepository.registerWithPhone(
+            '${firstNamePhoneController.text.trim()} ${lastNamePhoneController.text.trim()}',
+            phoneNumber.value ?? '',
+            passwordPhoneController.text.trim(),
+            passwordPhoneConfirmController.text.trim(),
+            'customer');
 
-      print('======= token created ===========');
-      print(backToken);
+        print('======= token created ===========');
+        print(backToken);
 
-      // Rediriger vers la page de connexion
-      Future.delayed(const Duration(milliseconds: 100), () {
-        // Nettoyer les contrôleurs avant la navigation
-        firstNamePhoneController.clear();
-        lastNamePhoneController.clear();
-        phoneNumberController.clear();
-        passwordPhoneController.clear();
-        passwordPhoneConfirmController.clear();
+        // Stop loading before navigation
+        FullscreenLoader.stopLoading();
 
-        // Naviguer vers l'écran de connexion
+        // Rediriger vers la page de connexion
         Get.offAll(() => const LoginPhoneScreen());
-      });
-    } catch (e) {
-      DLoader.errorSnackBar(title: 'Erreur', message: e.toString());
-    } finally {
+      } catch (backendError) {
+        print('Backend registration failed: $backendError');
+
+        // Déconnecter de Firebase si la connexion au backend échoue
+        try {
+          await _authRepository.logout();
+          print('Firebase logout successful after backend failure');
+        } catch (firebaseLogoutError) {
+          print('Firebase logout error: $firebaseLogoutError');
+        }
+
+        FullscreenLoader.stopLoading();
+        DLoader.errorSnackBar(
+            title: 'Erreur de connexion au serveur',
+            message:
+                'Impossible de créer votre compte. Veuillez réessayer plus tard.');
+
+        // Rediriger vers la page de connexion
+        Get.offAll(() => const LoginPhoneScreen());
+      }
+
+      // Réinitialiser le formulaire seulement après une inscription réussie
+      resetFormAfterSuccess();
+    } on FirebaseAuthException catch (e) {
+      print(
+          'FirebaseAuthException during SMS verification: ${e.code} - ${e.message}');
       FullscreenLoader.stopLoading();
+
+      String errorMessage = 'Erreur de vérification du code SMS';
+      if (e.code == 'invalid-verification-code') {
+        errorMessage = 'Code SMS incorrect. Veuillez réessayer.';
+      } else if (e.code == 'session-expired') {
+        errorMessage = 'Session expirée. Veuillez demander un nouveau code.';
+      } else if (e.code == 'too-many-requests') {
+        errorMessage =
+            'Trop de tentatives. Veuillez attendre avant de réessayer.';
+      } else if (e.code == 'invalid-verification-id') {
+        errorMessage =
+            'Session de vérification invalide. Veuillez redémarrer le processus.';
+      }
+
+      DLoader.errorSnackBar(title: 'Erreur', message: errorMessage);
+      // Ne pas réinitialiser le formulaire en cas d'erreur de code SMS
+      // resetFormComplete();
+    } catch (e) {
+      print('Error during SMS verification: $e');
+      print('Error type: ${e.runtimeType}');
+      FullscreenLoader.stopLoading();
+
+      String errorMessage = 'Une erreur est survenue lors de la vérification';
+      if (e.toString().contains('Verification ID is missing')) {
+        errorMessage =
+            'Erreur de session. Veuillez redémarrer le processus d\'inscription.';
+      } else if (e.toString().contains('Something went wrong')) {
+        errorMessage =
+            'Erreur de connexion avec Firebase. Veuillez vérifier votre connexion et réessayer.';
+      } else if (e.toString().contains('network')) {
+        errorMessage =
+            'Erreur de réseau. Veuillez vérifier votre connexion internet.';
+      } else if (e.toString().contains('timeout')) {
+        errorMessage = 'Délai d\'attente dépassé. Veuillez réessayer.';
+      }
+
+      DLoader.errorSnackBar(title: 'Erreur', message: errorMessage);
+      // Ne pas réinitialiser le formulaire en cas d'erreur
+      // resetFormComplete();
     }
   }
 
   Future<void> loginVerifySmsCode(String smsCode) async {
     try {
       // Check Internet Connectivity
-      final isConnected = await NetworkManager.instance.isConnected();
+      final isConnected = await _networkManager.isConnected();
       if (!isConnected) return;
       // Start Loading
       // FullscreenLoader.openDialog('Verifying code..', 'https://lottie.host/43dea365-1147-49a8-9a82-ea03cce809c9/1IDp8Ubc18.json');
 
       // Verify the SMS code
-      await AuthRepository.instance.signInWithSmsCode(smsCode);
+      await _authRepository.signInWithSmsCode(smsCode);
 
       // User successfully signed in
       FullscreenLoader.stopLoading();
@@ -239,7 +444,7 @@ class SignupController extends GetxController {
           title: 'Congratulation', message: 'Your account has been verified!');
 
       Future.delayed(const Duration(milliseconds: 100), () {
-        Get.offAll(() => const BottomNavigationMenu());
+        Get.offAll(() => const HomeScreen());
       });
 
       // Navigate to the home screen or wherever you want

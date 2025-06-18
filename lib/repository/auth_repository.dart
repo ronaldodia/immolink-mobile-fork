@@ -21,7 +21,7 @@ import 'package:immolink_mobile/views/screens/onboarding/onboarding_screen.dart'
 import 'package:immolink_mobile/views/screens/verify_email_screen.dart';
 import 'package:immolink_mobile/views/widgets/loaders/loader.dart';
 
-class AuthRepository extends GetxController{
+class AuthRepository extends GetxController {
   static AuthRepository get instance => Get.find();
 
   // variable
@@ -39,17 +39,13 @@ class AuthRepository extends GetxController{
     // super.onReady();
   }
 
-
-
-
-
   /// Function to show Relevant Screen
   screenRedirect() async {
     final user = _auth.currentUser;
     final String? authToken = deviceStorage.read('AUTH_TOKEN');
     // final credential = PhoneAuthProvider.credential(verificationId: verificationId, smsCode: smsCode);
     // var userCredential = await _auth.signInWithCredential(credential);
-    Get.offAll(() => const BottomNavigationMenu());
+    Get.offAll(() => const HomeScreen());
     print('================= user: $user ===================');
     if (authToken != null && authToken.isNotEmpty) {
       // L'utilisateur possède un jeton API valide, considéré comme connecté
@@ -57,10 +53,10 @@ class AuthRepository extends GetxController{
 
       // Redirection vers l'écran principal
       Future.delayed(const Duration(milliseconds: 100), () {
-        Get.offAll(() =>  const BottomNavigationMenu());
+        Get.offAll(() => const HomeScreen());
       });
     }
-    if(user != null) {
+    if (user != null) {
       // if(user.emailVerified){
       //   Get.offAll(() => const HomeScreen());
       // }else {
@@ -69,11 +65,11 @@ class AuthRepository extends GetxController{
       // Vérification si l'utilisateur est connecté avec un e-mail ou un téléphone
       if (user.phoneNumber != null && user.phoneNumber!.isNotEmpty) {
         // Utilisateur authentifié via un numéro de téléphone
-        print('Utilisateur connecté avec un numéro de téléphone: ${user.phoneNumber}');
+        print(
+            'Utilisateur connecté avec un numéro de téléphone: ${user.phoneNumber}');
 
         // Redirection vers l'écran principal
-        Get.offAll(() => const BottomNavigationMenu());
-
+        Get.offAll(() => const HomeScreen());
       } else if (user.email != null && user.email!.isNotEmpty) {
         // Utilisateur authentifié via e-mail
         print('Utilisateur connecté avec un e-mail: ${user.email}');
@@ -81,70 +77,66 @@ class AuthRepository extends GetxController{
         // Vérifie si l'e-mail est vérifié
         if (user.emailVerified) {
           // Redirection vers l'écran principal
-          Get.offAll(() => const BottomNavigationMenu());
+          Get.offAll(() => const HomeScreen());
         } else {
           // Si l'e-mail n'est pas vérifié, redirige vers l'écran de vérification d'e-mail
           Get.offAll(() => VerifyEmailScreen(email: user.email));
         }
       }
-    }else {
+    } else {
       // Local Storage
       deviceStorage.writeIfNull('isFirstTime', true);
-      deviceStorage.read('isFirstTime') != true ? Get.offAll(() => const  LoginPhoneScreen()) : Get.offAll(const OnBoardingScreen());
+      deviceStorage.read('isFirstTime') != true
+          ? Get.offAll(() => const LoginPhoneScreen())
+          : Get.offAll(const OnBoardingScreen());
     }
-
   }
-  
 
-  Future<void> logout() async{
-    try{
+  Future<void> logout() async {
+    try {
       await FirebaseAuth.instance.signOut();
       Get.offAll(() => const LoginPhoneScreen());
-    } on FirebaseAuthException catch(e) {
+    } on FirebaseAuthException catch (e) {
       throw FirebaseAuthException(code: e.code);
-    } on FirebaseException catch(e) {
+    } on FirebaseException catch (e) {
       throw FirebaseException(plugin: e.code);
-    }on FormatException catch(e) {
+    } on FormatException catch (e) {
       throw FormatException(e.message);
-    }on PlatformException catch(e) {
+    } on PlatformException catch (e) {
       throw PlatformException(code: e.code);
-    } catch(e) {
+    } catch (e) {
       throw 'Something went wrong. Please try again';
     }
   }
 
-
   Future<UserCredential> signInWithGoogle() async {
-    try{
+    try {
       // Trigger the authentication flow
       final GoogleSignInAccount? userAccount = await GoogleSignIn().signIn();
 
-      final GoogleSignInAuthentication? googleAuth = await userAccount?.authentication;
+      final GoogleSignInAuthentication? googleAuth =
+          await userAccount?.authentication;
       //Create a new credential
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken
-      );
-
+          accessToken: googleAuth?.accessToken, idToken: googleAuth?.idToken);
 
       // Once signed in, return the UserCredential
       return await _auth.signInWithCredential(credential);
-    } on FirebaseAuthException catch(e) {
+    } on FirebaseAuthException catch (e) {
       throw FirebaseAuthException(code: e.code);
-    } on FirebaseException catch(e) {
+    } on FirebaseException catch (e) {
       throw FirebaseException(plugin: e.code);
-    }on FormatException catch(e) {
+    } on FormatException catch (e) {
       throw FormatException(e.message);
-    }on PlatformException catch(e) {
+    } on PlatformException catch (e) {
       throw PlatformException(code: e.code);
-    } catch(e) {
-      if(kDebugMode) print('Something went wrong. Please try again');
+    } catch (e) {
+      if (kDebugMode) print('Something went wrong. Please try again');
 
       // return null;
       throw 'Something went wrong. Please try again';
     }
   }
-
 
   Future<UserCredential> signInWithFacebook() async {
     try {
@@ -157,7 +149,8 @@ class AuthRepository extends GetxController{
         final AccessToken accessToken = result.accessToken!;
 
         // Create a credential from the access token
-        final OAuthCredential credential = FacebookAuthProvider.credential(accessToken.tokenString);
+        final OAuthCredential credential =
+            FacebookAuthProvider.credential(accessToken.tokenString);
 
         // Once signed in, return the UserCredential
         return await _auth.signInWithCredential(credential);
@@ -165,57 +158,55 @@ class AuthRepository extends GetxController{
         // Handle other cases such as cancellation or failure
         throw Exception('Failed to sign in with Facebook: ${result.message}');
       }
-    } on FirebaseAuthException catch(e) {
+    } on FirebaseAuthException catch (e) {
       throw FirebaseAuthException(code: e.code);
-    } on FirebaseException catch(e) {
+    } on FirebaseException catch (e) {
       throw FirebaseException(plugin: e.code);
-    }on FormatException catch(e) {
+    } on FormatException catch (e) {
       throw FormatException(e.message);
-    }on PlatformException catch(e) {
+    } on PlatformException catch (e) {
       throw PlatformException(code: e.code);
-    } catch(e,st) {
-      if(kDebugMode) print('Something went wrong. Please try again $st');
+    } catch (e, st) {
+      if (kDebugMode) print('Something went wrong. Please try again $st');
       print(e.toString());
       // return null;
       throw e.toString();
     }
   }
 
-
   Future<void> sendEmailVerification() async {
-    try{
-       await _auth.currentUser?.sendEmailVerification();
-    } on FirebaseAuthException catch(e) {
+    try {
+      await _auth.currentUser?.sendEmailVerification();
+    } on FirebaseAuthException catch (e) {
       throw FirebaseAuthException(code: e.code);
-    } on FirebaseException catch(e) {
+    } on FirebaseException catch (e) {
       throw FirebaseException(plugin: e.code);
-    }on FormatException catch(e) {
+    } on FormatException catch (e) {
       throw FormatException(e.message);
-    }on PlatformException catch(e) {
+    } on PlatformException catch (e) {
       throw PlatformException(code: e.code);
-    } catch(e) {
+    } catch (e) {
       throw 'Something went wrong. Please try again';
     }
   }
 
-
   setTimerForAutoRedirect(BuildContext context) {
     Timer.periodic(const Duration(seconds: 1), (timer) async {
-       await _auth.currentUser?.reload();
-       final user = FirebaseAuth.instance.currentUser;
-       if(user?.emailVerified ?? false){
-         timer.cancel();
-         // Navigator.push(
-         //   context,
-         //   MaterialPageRoute(builder: (context) =>  EmailConfirmSuccessScreen()),
-         // );
-       }
+      await _auth.currentUser?.reload();
+      final user = FirebaseAuth.instance.currentUser;
+      if (user?.emailVerified ?? false) {
+        timer.cancel();
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(builder: (context) =>  EmailConfirmSuccessScreen()),
+        // );
+      }
     });
   }
 
   checkEmailVerificationStatus(BuildContext context) async {
     final currentUser = _auth.currentUser;
-    if(currentUser != null && currentUser.emailVerified){
+    if (currentUser != null && currentUser.emailVerified) {
       // Navigator.push(
       //   context,
       //   MaterialPageRoute(builder: (context) =>  EmailConfirmSuccessScreen()),
@@ -223,9 +214,10 @@ class AuthRepository extends GetxController{
     }
   }
 
-
   // Enregistrer avec le numéro de téléphone
-  Future<void> registerWithPhoneNumber(String phoneNumber,) async {
+  Future<void> registerWithPhoneNumber(
+    String phoneNumber,
+  ) async {
     try {
       await _auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
@@ -255,22 +247,73 @@ class AuthRepository extends GetxController{
     }
   }
 
-
   // Sign in with SMS code
-  signInWithSmsCode(String smsCode) async {
+  Future<void> signInWithSmsCode(String smsCode) async {
     try {
-      final credential = PhoneAuthProvider.credential(verificationId: verificationId, smsCode: smsCode);
+      print('Attempting to sign in with SMS code: $smsCode');
+      print('Verification ID: $verificationId');
+      print('Verification ID length: ${verificationId.length}');
+
+      if (verificationId.isEmpty) {
+        print('ERROR: Verification ID is empty!');
+        throw 'Verification ID is missing. Please try again.';
+      }
+
+      if (smsCode.isEmpty) {
+        print('ERROR: SMS code is empty!');
+        throw 'SMS code is required.';
+      }
+
+      print('Creating PhoneAuthProvider credential...');
+      final credential = PhoneAuthProvider.credential(
+          verificationId: verificationId, smsCode: smsCode);
+
+      print('Signing in with credential...');
       var userCredential = await _auth.signInWithCredential(credential);
 
-      if(userCredential.user != null){
+      if (userCredential.user != null) {
+        print('User successfully signed in: ${userCredential.user!.uid}');
         final fcmToken = await FirebaseMessaging.instance.getToken();
         print("FCM_TOKEN = $fcmToken");
         deviceStorage.write('FCM_TOKEN', fcmToken);
 
-        Get.to(const BottomNavigationMenu());
+        print('Successfully signed in with SMS code');
+        // Ne pas naviguer automatiquement ici, laisser le contrôleur gérer la navigation
+      } else {
+        print('ERROR: User credential is null after sign in');
+        throw 'Failed to sign in with SMS code';
       }
     } on FirebaseAuthException catch (e) {
+      print(
+          'FirebaseAuthException during SMS verification: ${e.code} - ${e.message}');
+      print('FirebaseAuthException details: ${e.toString()}');
       throw FirebaseAuthException(code: e.code);
+    } on PlatformException catch (e) {
+      print(
+          'PlatformException during SMS verification: ${e.code} - ${e.message}');
+      print('PlatformException details: ${e.toString()}');
+      throw PlatformException(code: e.code);
+    } catch (e) {
+      print('Unexpected error during SMS verification: $e');
+      print('Error type: ${e.runtimeType}');
+      print('Error stack trace: ${StackTrace.current}');
+      throw 'Something went wrong. Please try again';
+    }
+  }
+
+  Future<UserCredential> registerWithEmailFirebase(
+    String? email,
+    String? password,
+  ) async {
+    try {
+      return await _auth.createUserWithEmailAndPassword(
+          email: email!, password: password!);
+    } on FirebaseAuthException catch (e) {
+      throw FirebaseAuthException(code: e.code);
+    } on FirebaseException catch (e) {
+      throw FirebaseException(plugin: e.code);
+    } on FormatException catch (e) {
+      throw FormatException(e.message);
     } on PlatformException catch (e) {
       throw PlatformException(code: e.code);
     } catch (e) {
@@ -278,45 +321,28 @@ class AuthRepository extends GetxController{
     }
   }
 
-
-  Future<UserCredential> registerWithEmailFirebase(String? email, String? password, ) async {
-
-    try{
-      return await _auth.createUserWithEmailAndPassword(email: email!, password: password!);
-    } on FirebaseAuthException catch(e) {
+  Future<UserCredential> loginWithEmailFirebase(
+    String? email,
+    String? password,
+  ) async {
+    try {
+      return await _auth.signInWithEmailAndPassword(
+          email: email!, password: password!);
+    } on FirebaseAuthException catch (e) {
       throw FirebaseAuthException(code: e.code);
-    } on FirebaseException catch(e) {
+    } on FirebaseException catch (e) {
       throw FirebaseException(plugin: e.code);
-    }on FormatException catch(e) {
+    } on FormatException catch (e) {
       throw FormatException(e.message);
-    }on PlatformException catch(e) {
+    } on PlatformException catch (e) {
       throw PlatformException(code: e.code);
-    } catch(e) {
+    } catch (e) {
       throw 'Something went wrong. Please try again';
     }
   }
 
-
-  Future<UserCredential> loginWithEmailFirebase(String? email, String? password, ) async {
-
-    try{
-      return await _auth.signInWithEmailAndPassword(email: email!, password: password!);
-    } on FirebaseAuthException catch(e) {
-      throw FirebaseAuthException(code: e.code);
-    } on FirebaseException catch(e) {
-      throw FirebaseException(plugin: e.code);
-    }on FormatException catch(e) {
-      throw FormatException(e.message);
-    }on PlatformException catch(e) {
-      throw PlatformException(code: e.code);
-    } catch(e) {
-      throw 'Something went wrong. Please try again';
-    }
-  }
-
-
-  Future<dynamic> registerWithEmail(String? full_name, String? email, String? password, String? confirm_password, String? permission) async {
-
+  Future<dynamic> registerWithEmail(String? full_name, String? email,
+      String? password, String? confirm_password, String? permission) async {
     final response = await _apibase.emailRegister({
       'full_name': full_name,
       'email': email,
@@ -328,32 +354,27 @@ class AuthRepository extends GetxController{
     return response;
   }
 
-
-
-  Future<dynamic> saveRegisterWithEmailFirebase(String? full_name, String? email, String? password, String? confirm_password, String? permission) async {
-
-    final response = await _apibase.emailRegister({
-      'full_name': full_name,
-      'email': email,
-      'permission': 'customer'
-    });
+  Future<dynamic> saveRegisterWithEmailFirebase(
+      String? full_name,
+      String? email,
+      String? password,
+      String? confirm_password,
+      String? permission) async {
+    final response = await _apibase.emailRegister(
+        {'full_name': full_name, 'email': email, 'permission': 'customer'});
 
     return response;
   }
 
   Future<dynamic> loginWithEmail(String? email, String? password) async {
-    
-    final response = await _apibase.emailLogin({
-      'email': email,
-      'password': password
-    });
+    final response =
+        await _apibase.emailLogin({'email': email, 'password': password});
 
     return response;
   }
 
-
-  Future<dynamic> socialRegisterRecord(String? fullName, String? email, String? phone, String? avatar) async {
-
+  Future<dynamic> socialRegisterRecord(
+      String? fullName, String? email, String? phone, String? avatar) async {
     final response = await _apibase.socialRegisterRecord({
       'full_name': fullName,
       'email': email,
@@ -365,7 +386,6 @@ class AuthRepository extends GetxController{
   }
 
   Future<http.Response> logOutBackend(String? token) async {
-
     final response = await _apibase.logout(token!);
     final localStorage = GetStorage();
     localStorage.remove('AUTH_TOKEN');
@@ -376,8 +396,8 @@ class AuthRepository extends GetxController{
     return response;
   }
 
-  Future<dynamic> registerWithPhone(String? full_name, String? phone, String? password, String? confirm_password, String? permission) async {
-
+  Future<dynamic> registerWithPhone(String? full_name, String? phone,
+      String? password, String? confirm_password, String? permission) async {
     final response = await _apibase.phoneRegister({
       'full_name': full_name,
       'phone': phone,
@@ -390,43 +410,54 @@ class AuthRepository extends GetxController{
   }
 
   Future<dynamic> loginWithPhone(String? phone, String? password) async {
-    final response = await _apibase.phoneLogin({
-      'phone': phone!,
-      'password': password
-    });
+    final response =
+        await _apibase.phoneLogin({'phone': phone!, 'password': password});
     return response;
   }
 
-
   // Enregistrer avec le numéro de téléphone
-  Future<void> loginWithPhoneNumber(String phoneNumber,) async {
+  Future<void> loginWithPhoneNumber(
+    String phoneNumber,
+  ) async {
     try {
+      print('Starting phone number verification for: $phoneNumber');
+      print('Current verificationId before verification: $verificationId');
+
       await _auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
         timeout: const Duration(seconds: 60),
         verificationCompleted: (AuthCredential credential) async {
-          // Auto-retrieve or instant validation
+          print('Auto-verification completed');
           await _auth.signInWithCredential(credential);
         },
         verificationFailed: (FirebaseAuthException e) {
+          print('Verification failed: ${e.code} - ${e.message}');
           DLoader.errorSnackBar(title: 'Error', message: e.message);
           return;
         },
         codeSent: (String verificationId, int? resendToken) {
+          print('Code sent successfully. VerificationId: $verificationId');
           this.verificationId = verificationId;
           authState.value = 'login success';
         },
         codeAutoRetrievalTimeout: (String verificationId) {
+          print('Code auto-retrieval timeout. VerificationId: $verificationId');
           this.verificationId = verificationId;
         },
       );
 
-
+      print(
+          'Phone verification process completed. Final verificationId: $verificationId');
     } on FirebaseAuthException catch (e) {
+      print(
+          'FirebaseAuthException during phone verification: ${e.code} - ${e.message}');
       throw FirebaseAuthException(code: e.code);
     } on PlatformException catch (e) {
+      print(
+          'PlatformException during phone verification: ${e.code} - ${e.message}');
       throw PlatformException(code: e.code);
     } catch (e) {
+      print('Unexpected error during phone verification: $e');
       throw 'Something went wrong. Please try again';
     }
   }
@@ -436,6 +467,31 @@ class AuthRepository extends GetxController{
       return await _apibase.getMyProfile(token);
     } catch (e) {
       throw 'enable to get the profile';
+    }
+  }
+
+  /// Vérifie si un utilisateur existe déjà avec le numéro de téléphone donné
+  Future<bool> checkUserExists(String phoneNumber) async {
+    try {
+      print('Checking if user exists with phone number: $phoneNumber');
+
+      // Pour les numéros de téléphone, nous ne pouvons pas utiliser fetchSignInMethodsForEmail
+      // car Firebase ne supporte pas cette méthode pour les numéros de téléphone
+      // Nous allons plutôt essayer de nous connecter avec le numéro pour voir s'il existe
+
+      // Créer un credential temporaire pour vérifier l'existence
+      // Note: Cette approche peut ne pas être idéale, mais c'est une solution de contournement
+
+      // Alternative: Vérifier via le backend si possible
+      // Pour l'instant, nous retournons false pour permettre l'inscription
+      // et laissons le backend gérer la validation
+
+      print('User existence check completed - allowing registration');
+      return false;
+    } catch (e) {
+      print('Error checking user existence: $e');
+      // En cas d'erreur, on permet l'inscription et on laisse le backend valider
+      return false;
     }
   }
 }

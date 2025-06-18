@@ -4,6 +4,7 @@ import 'package:immolink_mobile/models/Currency.dart';
 import 'package:immolink_mobile/utils/config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:collection/collection.dart';
 
 class CurrencyController extends GetxController {
   final GetStorage _box = GetStorage();
@@ -45,9 +46,20 @@ class CurrencyController extends GetxController {
           currencies.value =
               currenciesJson.map((json) => Currency.fromJson(json)).toList();
 
-          // Si aucune devise n'est sélectionnée, sélectionner la première
-          if (selectedCurrency.value == null && currencies.isNotEmpty) {
-            selectedCurrency.value = currencies.first;
+          // Si une devise sauvegardée existe, la sélectionner via changeCurrency
+          final savedCurrencyJson = _box.read('selected_currency');
+          if (savedCurrencyJson != null) {
+            final savedCurrency = Currency.fromJson(savedCurrencyJson);
+            final found =
+                currencies.firstWhereOrNull((c) => c.id == savedCurrency.id);
+            if (found != null) {
+              changeCurrency(
+                  found); // <-- Utilise le setter pour tout mettre à jour
+            } else {
+              changeCurrency(currencies.first);
+            }
+          } else if (selectedCurrency.value == null && currencies.isNotEmpty) {
+            changeCurrency(currencies.first);
           }
         } else {
           error.value = 'Erreur lors du chargement des devises';

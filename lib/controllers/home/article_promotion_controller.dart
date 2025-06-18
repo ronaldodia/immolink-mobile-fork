@@ -11,17 +11,48 @@ class ArticlePromotionController extends GetxController {
   var promotionProperties = <ArticlePromotion>[].obs;
   var featuredProperties = <Article>[].obs;
   var isLoading = true.obs;
+  var error = ''.obs;
+  bool _isInitialized = false;
 
   @override
   void onInit() {
     super.onInit();
-    fetchPromotionProperties();
-    fetchFeaturedProperties();
+    if (!_isInitialized) {
+      _isInitialized = true;
+      _initializeData();
+    }
+  }
+
+  Future<void> _initializeData() async {
+    try {
+      await Future.wait([
+        fetchPromotionProperties(),
+        fetchFeaturedProperties(),
+      ]);
+    } catch (e) {
+      _showError("Une erreur est survenue lors du chargement des données");
+    }
+  }
+
+  void _showError(String message) {
+    if (Get.isSnackbarOpen) {
+      Get.closeCurrentSnackbar();
+    }
+    Future.microtask(() {
+      Get.snackbar(
+        "Error",
+        message,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+      );
+    });
   }
 
   Future<void> fetchPromotionProperties() async {
     try {
       isLoading(true);
+      error.value = '';
+
       final response = await http.get(
         Uri.parse('${Config.baseUrlApp}/home/promotion_properties'),
         headers: {
@@ -31,118 +62,76 @@ class ArticlePromotionController extends GetxController {
       );
 
       if (response.statusCode == 200) {
-        print('Réponse brute de l\'API: ${response.body}');
         final jsonData = jsonDecode(response.body);
-        print('Données JSON décodées: $jsonData');
-
         List<dynamic> articlesData = [];
 
-        // Vérifier si la réponse est un tableau
         if (jsonData is List && jsonData.isNotEmpty) {
-          print('La réponse est un tableau avec ${jsonData.length} éléments');
-          // Prendre le premier élément qui contient les données paginées
           final paginatedData = jsonData[0];
-          print('Données paginées: $paginatedData');
-
           if (paginatedData is Map && paginatedData.containsKey('data')) {
             articlesData = paginatedData['data'] as List<dynamic>;
-            print(
-                '${articlesData.length} articles trouvés dans la réponse paginée');
-            print(
-                'Premier article: ${articlesData.isNotEmpty ? articlesData[0] : 'aucun'}');
-          } else {
-            print('Les données paginées ne contiennent pas de clé \'data\'');
           }
-        } else {
-          print('La réponse n\'est pas un tableau ou est vide');
         }
 
-        // Traiter chaque article
         final properties = <ArticlePromotion>[];
-
-        print('Nombre d\'articles à traiter: ${articlesData.length}');
-
         for (var item in articlesData) {
           try {
-            print('\n=== Début du traitement d\'un article ===');
-            print('Données brutes de l\'article: $item');
-
-            // Vérifier la structure de l'article
-            if (item is! Map<String, dynamic>) {
-              print('Erreur: L\'article n\'est pas un Map');
+            if (item is! Map<String, dynamic> ||
+                !item.containsKey('article') ||
+                item['article'] == null) {
               continue;
             }
 
-            // Vérifier si l'article a les données nécessaires
-            if (!item.containsKey('article') || item['article'] == null) {
-              print('Article sans données d\'article associées');
-              continue;
-            }
-
-            print('Données de l\'article: ${item['article']}');
-
-            // Créer l'objet ArticlePromotion
             final articlePromo = ArticlePromotion.fromJson(item);
-
-            // Vérifier si l'article a été correctement créé
             if (articlePromo.article != null) {
               properties.add(articlePromo);
-              print(
-                  'Article ajouté à la liste des propriétés: ${articlePromo.id}');
-              print(
-                  'Titre de l\'article: ${articlePromo.article?.getPropertyByLanguage("fr", propertyType: "name")}');
-            } else {
-              print('Article sans données valides: $item');
             }
-
-            print('=== Fin du traitement de l\'article ===\n');
-          } catch (e, stackTrace) {
+          } catch (e) {
             print('Erreur lors du traitement d\'un article: $e');
-            print('Stack trace: $stackTrace');
-            // Continuer avec les articles suivants même si un échoue
           }
         }
 
-        if (properties.isNotEmpty) {
-          promotionProperties.value = properties;
-          print('${properties.length} articles chargés avec succès');
-        } else {
-          print('Aucun article valide trouvé dans la réponse');
-          promotionProperties.clear();
-        }
+        promotionProperties.value = properties;
       } else {
-        print('Erreur HTTP: ${response.statusCode}');
-        print('Corps de la réponse: ${response.body}');
         throw Exception('Échec du chargement des propriétés promotionnelles');
       }
-    } catch (e, stacktrace) {
-      if (kDebugMode) {
-        print('Exception: $e');
-        print('Stacktrace: $stacktrace');
-      }
-      Get.snackbar("Error", "Failed to load promotion properties");
+    } catch (e) {
+      error.value = e.toString();
+      _showError("Échec du chargement des propriétés promotionnelles");
     } finally {
       isLoading(false);
     }
   }
 
-  void fetchFeaturedProperties() async {
+  Future<void> fetchFeaturedProperties() async {
     try {
       isLoading(true);
-      final response = await http
-          .get(Uri.parse('${Config.baseUrlApp}/home/featured_properties'));
+      error.value = '';
+
+      final response = await http.get(
+        Uri.parse('${Config.baseUrlApp}/home/featured_properties'),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      );
+
       if (response.statusCode == 200) {
-        var jsonData = json.decode(response.body);
-        print(jsonData[0]);
-        var article = (jsonData[0] as List)
-            .map((item) => Article.fromJson(item))
-            .toList();
-        featuredProperties.addAll(article);
+        final jsonData = json.decode(response.body);
+        if (jsonData is List && jsonData.isNotEmpty && jsonData[0] is List) {
+          final articles = (jsonData[0] as List)
+              .map((item) => Article.fromJson(item))
+              .where((article) => article != null)
+              .toList();
+          featuredProperties.value = articles;
+        } else {
+          featuredProperties.clear();
+        }
+      } else {
+        throw Exception('Échec du chargement des propriétés en vedette');
       }
-    } catch (e, stackTrace) {
-      // En cas d'erreur
-      print(stackTrace);
-      Get.snackbar("Error", "$e", snackPosition: SnackPosition.BOTTOM);
+    } catch (e) {
+      error.value = e.toString();
+      _showError("Échec du chargement des propriétés en vedette");
     } finally {
       isLoading(false);
     }

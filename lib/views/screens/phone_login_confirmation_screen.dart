@@ -16,7 +16,7 @@ class PhoneLoginConfirmationScreen extends StatelessWidget {
   PhoneLoginConfirmationScreen({super.key, required this.phoneNumber});
 
   final TextEditingController _codeController = TextEditingController();
-  final LoginController controller = Get.put(LoginController());
+  final LoginController controller = Get.find<LoginController>();
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,9 @@ class PhoneLoginConfirmationScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         actions: [
-          IconButton(onPressed: () =>  AuthRepository.instance.logout(), icon: const Icon(Icons.clear))
+          IconButton(
+              onPressed: () => AuthRepository.instance.logout(),
+              icon: const Icon(Icons.clear))
         ],
       ),
       body: SingleChildScrollView(
@@ -35,11 +37,17 @@ class PhoneLoginConfirmationScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image(image: const AssetImage(TImages.smsSendImage), width: Helper.getScreenWidth(context) * 0.5,),
-              const SizedBox(height: TSizes.spaceBtwSections,),
+              Image(
+                image: const AssetImage(TImages.smsSendImage),
+                width: Helper.getScreenWidth(context) * 0.5,
+              ),
+              const SizedBox(
+                height: TSizes.spaceBtwSections,
+              ),
               Text('A verification code has been sent to $phoneNumber.'),
-              const SizedBox(height: TSizes.spaceBtwItems,),
-
+              const SizedBox(
+                height: TSizes.spaceBtwItems,
+              ),
               PinCodeTextField(
                 appContext: context,
                 length: 6, // Nombre de cases pour le code OTP
@@ -73,15 +81,21 @@ class PhoneLoginConfirmationScreen extends StatelessWidget {
                   return true;
                 },
               ),
-              const SizedBox(height: TSizes.spaceBtwItems,),
+              const SizedBox(
+                height: TSizes.spaceBtwItems,
+              ),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => controller.verifySmsCode(_codeController.text.trim()),
+                  onPressed: () =>
+                      controller.verifySmsCode(_codeController.text.trim()),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
                   ),
-                  child: const Text('Verify', style: TextStyle(color: Colors.white),),
+                  child: const Text(
+                    'Verify',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
             ],

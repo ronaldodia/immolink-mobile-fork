@@ -132,15 +132,18 @@ class FilterController extends GetxController {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print(data);
-        filteredProperties.value = data['data'];
-        // Naviguer vers l'écran des résultats filtrés
-        Get.to(() => const FilteredPropertiesScreen());
+        print('Filter response: $data');
+        filteredProperties.value = data['data'] ?? [];
+        print('Filtered properties count: ${filteredProperties.length}');
+        // Ne pas naviguer automatiquement, laisser l'écran gérer l'affichage
+        // Get.to(() => const FilteredPropertiesScreen());
       } else {
-        Get.snackbar('Error', 'Failed to fetch properties.');
+        print('Filter API error: ${response.statusCode}');
+        Get.snackbar('Erreur', 'Impossible de récupérer les propriétés.');
       }
     } catch (e) {
-      Get.snackbar('Error', 'An error occurred: $e');
+      print('Filter API exception: $e');
+      Get.snackbar('Erreur', 'Une erreur est survenue: $e');
     } finally {
       isLoading.value = false;
     }

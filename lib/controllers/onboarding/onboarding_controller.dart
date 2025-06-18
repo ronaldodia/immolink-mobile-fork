@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:immolink_mobile/views/screens/bottom_navigation_menu.dart';
+import 'package:immolink_mobile/views/screens/home_screen.dart';
 
 class OnBoardingController extends GetxController {
-
   static OnBoardingController get instance => Get.find();
 
   // variables
@@ -13,28 +13,28 @@ class OnBoardingController extends GetxController {
   Rx<int> currentPageIndex = 0.obs;
 
   /// Update Current Index when Page Scroll
-   void updatePageIndicator(index) => currentPageIndex.value = index;
-
+  void updatePageIndicator(index) => currentPageIndex.value = index;
 
   // Jum to the specific dot selected page
-  void dotNavigationClick(index){
+  void dotNavigationClick(index) {
     currentPageIndex.value = index;
     pageController.jumpTo(index);
   }
 
   // Update Current Index & jum to next Page
-  void nextPage(){
-    if(currentPageIndex.value == 2){
+  void nextPage() {
+    if (currentPageIndex.value == 2) {
       final storage = GetStorage();
 
-      if(kDebugMode) {
-        print('======================= GET STORAGE NEXT BUTTON ====================');
+      if (kDebugMode) {
+        print(
+            '======================= GET STORAGE NEXT BUTTON ====================');
         print(storage.read('isFirstTime'));
       }
 
       storage.write('isFirstTime', false);
       // Get.to(const LoginScreen());
-      Get.to(const BottomNavigationMenu());
+      Get.to(const HomeScreen());
     } else {
       int page = currentPageIndex.value + 1;
       pageController.jumpToPage(page);
@@ -42,7 +42,7 @@ class OnBoardingController extends GetxController {
   }
 
   // Update Current Index & jum to the last Page
-  void skipPage(){
+  void skipPage() {
     currentPageIndex.value = 2;
     pageController.jumpToPage(2);
   }

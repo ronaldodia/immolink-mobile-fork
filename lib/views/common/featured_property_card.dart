@@ -204,18 +204,18 @@ class FeaturedPropertyCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           // Price
-                          Obx(() {
-                            double convertedPrice = price *
-                                currencyController
-                                    .selectedCurrency.value.exchangeRate;
-                            return Text(
-                              "${convertedPrice.toStringAsFixed(0)} ${currencyController.selectedCurrency.value.symbol}",
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16),
-                            );
-                          }),
+                          // Obx(() {
+                          //   // double convertedPrice = price *
+                          //   //     currencyController
+                          //   //         .selectedCurrency.value.exchangeRate!;
+                          //   // return Text(
+                          //   //   "${convertedPrice.toStringAsFixed(0)} ${currencyController.selectedCurrency.value.symbol}",
+                          //   //   style: const TextStyle(
+                          //   //       color: Colors.white,
+                          //   //       fontWeight: FontWeight.bold,
+                          //   //       fontSize: 16),
+                          //   // );
+                          // }),
                         ],
                       ),
                     ),
