@@ -4,13 +4,12 @@ import 'package:get/get.dart';
 import 'package:immolink_mobile/controllers/articles/article_controller.dart';
 import 'package:immolink_mobile/controllers/language/language_controller.dart';
 import 'package:immolink_mobile/controllers/login/check_auth_controller.dart';
+import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 import 'package:immolink_mobile/models/Article.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/views/common/d_search_bar_widget.dart';
 import 'package:immolink_mobile/views/screens/article/create_article_screen.dart';
 import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
-
-
 
 class ArticlesScreen extends StatelessWidget {
   ArticlesScreen({super.key});
@@ -37,7 +36,10 @@ class ArticlesScreen extends StatelessWidget {
               }
 
               return ListView.builder(
-                itemCount: controller.articles.length + (controller.hasMore.value ? 1 : 0), // +1 pour le loader seulement si nécessaire
+                itemCount: controller.articles.length +
+                    (controller.hasMore.value
+                        ? 1
+                        : 0), // +1 pour le loader seulement si nécessaire
                 itemBuilder: (context, index) {
                   if (index < controller.articles.length) {
                     final Article article = controller.articles[index];
@@ -48,13 +50,14 @@ class ArticlesScreen extends StatelessWidget {
                         height: 50,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.broken_image),
+                            const Icon(Icons.broken_image),
                       ),
                       title: Text(article.getPropertyByLanguage(
-                          languageController.locale.languageCode,
-                          propertyType: "name") ??
+                              languageController.locale.languageCode,
+                              propertyType: "name") ??
                           "Nom non spécifié"),
-                      subtitle: Text("Prix : ${article.price}"),
+                      subtitle: Text(
+                          "Prix : \\${Get.find<CurrencyController>().formatPrice(article.price)}"),
                       onTap: () {
                         // Logique pour ouvrir les détails de l'article
                       },
@@ -68,7 +71,6 @@ class ArticlesScreen extends StatelessWidget {
                   }
                 },
               );
-
             }),
           ),
         ],
@@ -77,7 +79,7 @@ class ArticlesScreen extends StatelessWidget {
         onPressed: () async {
           bool isAuthenticated = await authController.checkUserToken();
           if (isAuthenticated) {
-            Get.to(() =>  CreateArticleScreen());
+            Get.to(() => CreateArticleScreen());
           } else {
             Get.to(() => const LoginPhoneScreen());
           }

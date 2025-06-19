@@ -140,46 +140,136 @@ class _FilterScreenState extends State<FilterScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 4.0),
+                    Obx(() {
+                      final currentSymbol =
+                          currencyController.getCurrentSymbol();
+                      final isMRU = currentSymbol == 'MRU';
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Devise actuelle : $currentSymbol',
+                            style: TextStyle(
+                              fontSize: 13.0,
+                              color: Colors.blue[700],
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2.0),
+                          if (!isMRU) ...[
+                            if (currentSymbol == 'EUR' ||
+                                currentSymbol == 'USD') ...[
+                              Text(
+                                '💡 Saisissez votre budget en $currentSymbol. Il sera automatiquement converti en ouguiya (MRU) pour la recherche.',
+                                style: TextStyle(
+                                  fontSize: 11.0,
+                                  color: Colors.grey[600],
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                              const SizedBox(height: 2.0),
+                              Text(
+                                'Exemple : 1000 $currentSymbol ≈ ${currencyController.convertToMRU(1000).toStringAsFixed(0)} MRU',
+                                style: TextStyle(
+                                  fontSize: 10.0,
+                                  color: Colors.grey[500],
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                              const SizedBox(height: 2.0),
+                              Text(
+                                'ℹ️ Les prix des propriétés sont en ouguiya (MRU). Cette conversion vous aide à estimer votre budget.',
+                                style: TextStyle(
+                                  fontSize: 10.0,
+                                  color: Colors.orange[700],
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ] else ...[
+                              Text(
+                                '💡 Saisissez votre budget en $currentSymbol (converti automatiquement en MRU)',
+                                style: TextStyle(
+                                  fontSize: 11.0,
+                                  color: Colors.grey[600],
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ] else ...[
+                            Text(
+                              '💡 Saisissez votre budget en ouguiya (MRU)',
+                              style: TextStyle(
+                                fontSize: 11.0,
+                                color: Colors.grey[600],
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    }),
                     const SizedBox(height: 8.0),
                     Row(
                       children: [
                         Expanded(
-                          child: TextField(
-                            controller: filterController.minPriceController,
-                            onChanged: filterController.updateMinPrice,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              hintText: 'Min',
-                              border: const OutlineInputBorder(),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12.0,
-                                vertical: 8.0,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextField(
+                                controller: filterController.minPriceController,
+                                onChanged: filterController.updateMinPrice,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  hintText: 'Min',
+                                  border: const OutlineInputBorder(),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12.0,
+                                    vertical: 8.0,
+                                  ),
+                                  suffix: Obx(() => Text(
+                                        currencyController.getCurrentSymbol(),
+                                        style:
+                                            const TextStyle(color: Colors.grey),
+                                      )),
+                                ),
                               ),
-                              suffix: Obx(() => Text(
-                                    currencyController.getCurrentSymbol(),
-                                    style: const TextStyle(color: Colors.grey),
+                              Obx(() => _buildPriceConversion(
+                                    filterController.minPrice.value,
+                                    currencyController,
                                   )),
-                            ),
+                            ],
                           ),
                         ),
                         const SizedBox(width: 8.0),
                         Expanded(
-                          child: TextField(
-                            controller: filterController.maxPriceController,
-                            onChanged: filterController.updateMaxPrice,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              hintText: 'Max',
-                              border: const OutlineInputBorder(),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12.0,
-                                vertical: 8.0,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextField(
+                                controller: filterController.maxPriceController,
+                                onChanged: filterController.updateMaxPrice,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  hintText: 'Max',
+                                  border: const OutlineInputBorder(),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12.0,
+                                    vertical: 8.0,
+                                  ),
+                                  suffix: Obx(() => Text(
+                                        currencyController.getCurrentSymbol(),
+                                        style:
+                                            const TextStyle(color: Colors.grey),
+                                      )),
+                                ),
                               ),
-                              suffix: Obx(() => Text(
-                                    currencyController.getCurrentSymbol(),
-                                    style: const TextStyle(color: Colors.grey),
+                              Obx(() => _buildPriceConversion(
+                                    filterController.maxPrice.value,
+                                    currencyController,
                                   )),
-                            ),
+                            ],
                           ),
                         ),
                       ],
@@ -853,5 +943,57 @@ class _FilterScreenState extends State<FilterScreen> {
         );
       }
     });
+  }
+
+  // Méthode pour afficher la conversion de prix en temps réel
+  Widget _buildPriceConversion(
+      String price, CurrencyController currencyController) {
+    if (price.isEmpty) return const SizedBox.shrink();
+
+    try {
+      final priceValue = double.parse(price);
+      final currentSymbol = currencyController.getCurrentSymbol();
+      final isMRU = currentSymbol == 'MRU';
+
+      if (isMRU || (currentSymbol != 'EUR' && currentSymbol != 'USD')) {
+        return const SizedBox
+            .shrink(); // Pas de conversion si déjà en MRU ou autre devise
+      }
+
+      final priceInMRU = currencyController.convertToMRU(priceValue);
+
+      return Padding(
+        padding: const EdgeInsets.only(top: 4.0),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          decoration: BoxDecoration(
+            color: Colors.blue[50],
+            borderRadius: BorderRadius.circular(6.0),
+            border: Border.all(color: Colors.blue[200]!),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.currency_exchange,
+                size: 12.0,
+                color: Colors.blue[700],
+              ),
+              const SizedBox(width: 4.0),
+              Text(
+                '≈ ${priceInMRU.toStringAsFixed(0)} MRU',
+                style: TextStyle(
+                  fontSize: 11.0,
+                  color: Colors.blue[700],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } catch (e) {
+      return const SizedBox.shrink();
+    }
   }
 }

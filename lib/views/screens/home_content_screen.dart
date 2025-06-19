@@ -20,6 +20,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:immolink_mobile/utils/navigation_fix.dart';
 import 'package:immolink_mobile/views/common/property_card_widget.dart';
 import 'package:immolink_mobile/controllers/app_drawer_controller.dart';
+import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 
 // Fonction utilitaire pour gérer les couleurs de manière sécurisée
 Color getGreyColor(int shade) {
@@ -54,6 +55,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
   final LanguageController language = Get.find();
   Map<String, dynamic>? userProfile =
       AuthRepository.instance.deviceStorage.read('USER_PROFILE');
+  final CurrencyController currencyController = Get.put(CurrencyController());
 
   @override
   void initState() {
@@ -584,7 +586,9 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                                             children: [
                                               Expanded(
                                                 child: Text(
-                                                  '${article.price.toStringAsFixed(0)} MRU',
+                                                  currencyController
+                                                      .formatPrice(
+                                                          article.price),
                                                   style: Theme.of(context)
                                                       .textTheme
                                                       .titleMedium

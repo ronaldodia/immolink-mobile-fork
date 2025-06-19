@@ -96,13 +96,15 @@ class CurrencyController extends GetxController {
     if (selectedCurrency.value == null) {
       return '${price.toStringAsFixed(0)} MRU';
     }
-    return '${(price * currentExchangeRate.value).toStringAsFixed(0)} ${currentSymbol.value}';
+    final convertedPrice = price * currentExchangeRate.value;
+    return '${convertedPrice.toStringAsFixed(2)} ${currentSymbol.value}';
   }
 
   double convertPrice(double price) {
     if (selectedCurrency.value == null) {
       return price;
     }
+    // CORRECT : multiplier par le taux de change
     return price * currentExchangeRate.value;
   }
 
@@ -119,6 +121,7 @@ class CurrencyController extends GetxController {
     if (selectedCurrency.value == null) {
       return mruPrice;
     }
+    // Convertir de MRU vers la devise sélectionnée (multiplier)
     return mruPrice * selectedCurrency.value!.exchangeRate;
   }
 
@@ -127,6 +130,7 @@ class CurrencyController extends GetxController {
     if (selectedCurrency.value == null) {
       return price;
     }
+    // Convertir de la devise sélectionnée vers MRU (division)
     return price / selectedCurrency.value!.exchangeRate;
   }
 
@@ -135,6 +139,6 @@ class CurrencyController extends GetxController {
     if (selectedCurrency.value == null) {
       return '${price.toStringAsFixed(0)} MRU';
     }
-    return '${price.toStringAsFixed(0)} ${selectedCurrency.value!.symbol}';
+    return '${price.toStringAsFixed(2)} ${selectedCurrency.value!.symbol}';
   }
 }

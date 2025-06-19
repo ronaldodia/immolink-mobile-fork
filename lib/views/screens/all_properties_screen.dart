@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 import 'package:immolink_mobile/controllers/home/article_promotion_controller.dart';
 import 'package:immolink_mobile/utils/navigation_fix.dart';
+
 class AllPropertiesScreen extends StatelessWidget {
   const AllPropertiesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final ArticlePromotionController articlePromotionController = Get.find();
+    final CurrencyController currencyController = Get.find();
 
     return Scaffold(
       appBar: AppBar(
@@ -168,7 +171,8 @@ class AllPropertiesScreen extends StatelessWidget {
                                   // Prix
                                   Flexible(
                                     child: Text(
-                                      '${article.price.toStringAsFixed(0)} MRU',
+                                      currencyController
+                                          .formatPrice(article.price),
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.blue,
