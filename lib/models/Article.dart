@@ -25,7 +25,7 @@ class Article {
   final int? bathroom;
   final int? balcony;
   final int? area;
-  final String? video;
+  // final String? video;
   final String? floor_plan;
   final String location_latitude;
   final String location_longitude;
@@ -59,7 +59,7 @@ class Article {
     this.bathroom,
     this.balcony,
     this.area,
-    this.video,
+    // this.video,
     this.floor_plan,
     required this.location_latitude,
     required this.location_longitude,
@@ -120,7 +120,7 @@ class Article {
       bathroom: json['bathroom'],
       balcony: json['balcony'],
       area: json['area'],
-      video: json['video'],
+      // video: json['video'],
       floor_plan: json['floor_plan'],
       location_latitude: json['location_latitude'] ?? '',
       location_longitude: json['location_longitude'] ?? '',

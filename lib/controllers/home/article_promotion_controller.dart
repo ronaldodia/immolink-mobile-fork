@@ -85,7 +85,8 @@ class ArticlePromotionController extends GetxController {
             if (articlePromo.article != null) {
               properties.add(articlePromo);
             }
-          } catch (e) {
+          } catch (e, s) {
+            print(s);
             print('Erreur lors du traitement d\'un article: $e');
           }
         }

@@ -158,7 +158,7 @@ class AllPropertiesScreen extends StatelessWidget {
                                             false)
                                           const SizedBox(width: 4),
                                         Text(
-                                          article.category?.name ?? 'Catégorie',
+                                          article.category?.getName(Get.locale?.languageCode ?? 'fr') ?? 'Catégorie',
                                           style: TextStyle(
                                             color: Colors.blue[800],
                                             fontSize: 9.0,

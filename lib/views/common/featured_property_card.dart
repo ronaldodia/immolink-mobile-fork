@@ -4,13 +4,13 @@ import 'package:get/get.dart';
 import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/utils/t_sizes.dart';
 import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
+import 'package:immolink_mobile/models/Category.dart';
 
 class FeaturedPropertyCard extends StatelessWidget {
   final String? image;
   final String status;
   final bool isFeatured;
-  final String? categoryIcon;
-  final String categoryName;
+  final Category? category;
   final String name;
   final String location;
   final double price;
@@ -22,8 +22,7 @@ class FeaturedPropertyCard extends StatelessWidget {
     required this.image,
     required this.status,
     required this.isFeatured,
-    required this.categoryIcon,
-    required this.categoryName,
+    required this.category,
     required this.name,
     required this.location,
     required this.price,
@@ -174,13 +173,20 @@ class FeaturedPropertyCard extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (categoryIcon != null)
+                                if (category?.icon != null)
                                   SvgPicture.network(
-                                    categoryIcon!,
+                                    category!.icon!,
                                     height: 20,
                                     width: 20,
                                     colorFilter: const ColorFilter.mode(
                                         Colors.white, BlendMode.srcIn),
+                                  )
+                                else if (category?.image != null)
+                                  Image.network(
+                                    category!.image!,
+                                    height: 20,
+                                    width: 20,
+                                    fit: BoxFit.cover,
                                   )
                                 else
                                   Image.asset(
@@ -192,7 +198,9 @@ class FeaturedPropertyCard extends StatelessWidget {
                                 const SizedBox(width: 4),
                                 Flexible(
                                   child: Text(
-                                    categoryName,
+                                    category?.getName(
+                                            Get.locale?.languageCode ?? 'fr') ??
+                                        '',
                                     style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold),

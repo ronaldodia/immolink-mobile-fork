@@ -106,6 +106,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
   Widget build(BuildContext context) {
     final _scaffoldKey = GlobalKey<ScaffoldState>();
     Get.put(_scaffoldKey);
+    final locale = Get.locale?.languageCode ?? 'en';
 
     return Scaffold(
       key: _scaffoldKey,
@@ -251,8 +252,8 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                         itemBuilder: (_, index) {
                           var category = categoryController.categories[index];
                           return DHorizontalImageText(
-                            title: category['name'] ?? 'Unknown',
-                            image: category['image'] ??
+                            title: category.getName(locale) ?? 'Unknown',
+                            image: category.image ??
                                 'default_image.png', // Si l'image n'est pas présente
                             textColor: Colors.blueGrey,
                             backgroundColor: Colors.white,
@@ -353,7 +354,7 @@ class _HomeContentScreenState extends State<HomeContentScreen> {
                             image: property.image,
                             isFeatured: true,
                             status: purpose,
-                            category: property.category?.name ?? 'Autre',
+                            category: property.category,
                             price: property.price?.toDouble() ?? 0,
                             name: propertyName,
                             location: propertyLocation,

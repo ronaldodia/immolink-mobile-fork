@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:immolink_mobile/utils/config.dart';
-import 'package:immolink_mobile/views/screens/filtered_properties_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 
 class FilterController extends GetxController {
   // Variables existantes
@@ -108,13 +108,51 @@ class FilterController extends GetxController {
   Future<void> applyFilters() async {
     isLoading.value = true;
 
-    // Construire les paramètres de requête
+    // Récupérer le CurrencyController pour la conversion
+    final CurrencyController currencyController =
+        Get.find<CurrencyController>();
+
+    // Convertir les prix de la devise sélectionnée vers MRU
+    String? minPriceInMRU;
+    String? maxPriceInMRU;
+
+    if (minPrice.value.isNotEmpty) {
+      try {
+        final minPriceValue = double.parse(minPrice.value);
+        final minPriceConverted =
+            currencyController.convertToMRU(minPriceValue);
+        minPriceInMRU = minPriceConverted.toStringAsFixed(0);
+        print(
+            'Min price converted: ${minPrice.value} ${currencyController.getCurrentSymbol()} → $minPriceInMRU MRU');
+      } catch (e) {
+        print('Error converting min price: $e');
+        minPriceInMRU =
+            minPrice.value; // Garder la valeur originale en cas d'erreur
+      }
+    }
+
+    if (maxPrice.value.isNotEmpty) {
+      try {
+        final maxPriceValue = double.parse(maxPrice.value);
+        final maxPriceConverted =
+            currencyController.convertToMRU(maxPriceValue);
+        maxPriceInMRU = maxPriceConverted.toStringAsFixed(0);
+        print(
+            'Max price converted: ${maxPrice.value} ${currencyController.getCurrentSymbol()} → $maxPriceInMRU MRU');
+      } catch (e) {
+        print('Error converting max price: $e');
+        maxPriceInMRU =
+            maxPrice.value; // Garder la valeur originale en cas d'erreur
+      }
+    }
+
+    // Construire les paramètres de requête avec les prix convertis en MRU
     final queryParams = {
       'category_id': selectedPropertyType.value != 'All'
           ? selectedPropertyType.value
           : null,
-      'minprice': minPrice.value.isNotEmpty ? minPrice.value : null,
-      'maxprice': maxPrice.value.isNotEmpty ? maxPrice.value : null,
+      'minprice': minPriceInMRU,
+      'maxprice': maxPriceInMRU,
       'minarea': minArea.value.isNotEmpty ? minArea.value : null,
       'maxarea': maxArea.value.isNotEmpty ? maxArea.value : null,
       'purpose': isForSellSelected.value ? 'Sell' : 'Rent',

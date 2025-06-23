@@ -1,61 +1,126 @@
-class Category {
+class CategoryType {
   final int id;
   final String name;
   final String slug;
   final String language;
   final String? icon;
-  final String? image;
-  final String? details;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final DateTime? deletedAt;
-  final List<String> translatedLanguages;
+  final List<String>? translatedLanguages;
 
-  Category({
+  CategoryType({
     required this.id,
     required this.name,
     required this.slug,
     required this.language,
     this.icon,
-    this.image,
-    this.details,
-    required this.createdAt,
-    required this.updatedAt,
-    this.deletedAt,
-    required this.translatedLanguages,
+    this.translatedLanguages,
   });
 
-  // Factory constructor to create an instance from JSON
-  factory Category.fromJson(Map<String, dynamic> json) {
-    return Category(
+  factory CategoryType.fromJson(Map<String, dynamic> json) {
+    return CategoryType(
       id: json['id'],
       name: json['name'],
       slug: json['slug'],
       language: json['language'],
       icon: json['icon'],
+      translatedLanguages: json['translated_languages'] != null
+          ? List<String>.from(json['translated_languages'])
+          : null,
+    );
+  }
+}
+
+class Category {
+  final int id;
+  final String nameFr;
+  final String nameAr;
+  final String nameEn;
+  final String slug;
+  final String? icon;
+  final String? image;
+  final String? details;
+  final int? typeId;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final DateTime? deletedAt;
+  final CategoryType? type;
+
+  Category({
+    required this.id,
+    required this.nameFr,
+    required this.nameAr,
+    required this.nameEn,
+    required this.slug,
+    this.icon,
+    this.image,
+    this.details,
+    this.typeId,
+    this.createdAt,
+    this.updatedAt,
+    this.deletedAt,
+    this.type,
+  });
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      id: json['id'],
+      nameFr: json['name_fr'] ?? '',
+      nameAr: json['name_ar'] ?? '',
+      nameEn: json['name_en'] ?? '',
+      slug: json['slug'],
+      icon: json['icon'],
       image: json['image'],
       details: json['details'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
-      deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at']) : null,
-      translatedLanguages: List<String>.from(json['translated_languages']),
+      typeId: json['type_id'],
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'])
+          : null,
+      deletedAt: json['deleted_at'] != null
+          ? DateTime.tryParse(json['deleted_at'])
+          : null,
+      type: json['type'] != null ? CategoryType.fromJson(json['type']) : null,
     );
   }
 
-  // Method to convert instance to JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
+      'name_fr': nameFr,
+      'name_ar': nameAr,
+      'name_en': nameEn,
       'slug': slug,
-      'language': language,
       'icon': icon,
       'image': image,
       'details': details,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'type_id': typeId,
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
       'deleted_at': deletedAt?.toIso8601String(),
-      'translated_languages': translatedLanguages,
+      'type': type != null
+          ? {
+              'id': type!.id,
+              'name': type!.name,
+              'slug': type!.slug,
+              'language': type!.language,
+              'icon': type!.icon,
+              'translated_languages': type!.translatedLanguages,
+            }
+          : null,
     };
+  }
+
+  // Helper to get the name in the current locale
+  String getName(String locale) {
+    switch (locale) {
+      case 'ar':
+        return nameAr;
+      case 'en':
+        return nameEn;
+      case 'fr':
+      default:
+        return nameFr;
+    }
   }
 }

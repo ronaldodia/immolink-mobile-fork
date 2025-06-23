@@ -427,10 +427,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   itemCount: categoryController.categories.length,
                   itemBuilder: (_, index) {
-                    var category = categoryController.categories[index];
+                    final category = categoryController.categories[index];
+                    final locale = languageController.locale.languageCode;
                     return _buildCategoryItem(
-                      category['image'] as String,
-                      category['name'] as String,
+                      category.icon ?? category.image ?? '',
+                      category.getName(locale),
                     );
                   },
                 ),
@@ -504,12 +505,14 @@ class _HomeScreenState extends State<HomeScreen> {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: SvgPicture.network(
-                image,
-                width: 28.0,
-                height: 28.0,
-                fit: BoxFit.contain,
-              ),
+              child: image.isNotEmpty
+                  ? SvgPicture.network(
+                      image,
+                      width: 28.0,
+                      height: 28.0,
+                      fit: BoxFit.contain,
+                    )
+                  : const Icon(Icons.category, size: 28),
             ),
           ),
           const SizedBox(height: 4.0),
@@ -561,8 +564,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       return const SizedBox.shrink();
                     }
 
-                    final language = Get.locale?.languageCode ?? 'fr';
-                    final name = article.getPropertyByLanguage(language,
+                    final locale = Get.locale?.languageCode ?? 'fr';
+                    final name = article.getPropertyByLanguage(locale,
                         propertyType: 'name');
 
                     // Construire l'URL de l'image
@@ -839,7 +842,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 false)
                                               const SizedBox(width: 4),
                                             Text(
-                                              article.category?.name ??
+                                              article.category
+                                                      ?.getName(locale) ??
                                                   'Catégorie',
                                               style: TextStyle(
                                                 color: Colors.blue[800],
@@ -1006,8 +1010,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     return const SizedBox.shrink();
                   }
 
-                  final language = Get.locale?.languageCode ?? 'fr';
-                  final name = article.getPropertyByLanguage(language,
+                  final locale = Get.locale?.languageCode ?? 'fr';
+                  final name = article.getPropertyByLanguage(locale,
                       propertyType: 'name');
 
                   String imageUrl = '';
@@ -1108,7 +1112,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   false)
                                                 const SizedBox(width: 4),
                                               Text(
-                                                article.category?.name ??
+                                                article.category
+                                                        ?.getName(locale) ??
                                                     'Catégorie',
                                                 style: TextStyle(
                                                   color: Colors.blue[800],
@@ -1576,8 +1581,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                     filterController.selectPropertyType('All'),
                               ),
                               ...categoryController.categories.map((category) {
-                                final name = category['name'] as String;
-                                final id = category['id'].toString();
+                                final locale =
+                                    languageController.locale.languageCode;
+                                final name = category.getName(locale);
+                                final id = category.id.toString();
                                 return _buildFilterChip(
                                   name,
                                   filterController.selectedPropertyType.value ==

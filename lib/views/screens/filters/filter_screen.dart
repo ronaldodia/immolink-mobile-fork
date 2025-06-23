@@ -4,6 +4,8 @@ import 'package:immolink_mobile/controllers/articles/filter_controller.dart';
 import 'package:immolink_mobile/controllers/home/categories_controller.dart';
 import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 import 'package:immolink_mobile/l10n/app_localizations.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:immolink_mobile/models/Category.dart';
 
 class FilterScreen extends StatefulWidget {
   const FilterScreen({super.key});
@@ -119,8 +121,9 @@ class _FilterScreenState extends State<FilterScreen> {
                               () => filterController.selectPropertyType('All'),
                             ),
                             ...categoryController.categories.map((category) {
-                              final name = category['name'] as String;
-                              final id = category['id'].toString();
+                              final locale = Get.locale?.languageCode ?? 'fr';
+                              final name = category.getName(locale);
+                              final id = category.id.toString();
                               return _buildFilterChip(
                                 name,
                                 filterController.selectedPropertyType.value ==
@@ -677,30 +680,57 @@ class _FilterScreenState extends State<FilterScreen> {
                       final language = Get.locale?.languageCode ?? 'fr';
                       String name = '';
 
-                      if (propertyData['translations'] != null &&
+                      // 1. Prend d'abord le champ direct selon la langue
+                      if (propertyData['name_$language'] != null &&
+                          (propertyData['name_$language'] as String)
+                              .isNotEmpty) {
+                        name = propertyData['name_$language'];
+                      }
+
+                      // 2. Sinon, regarde dans translations
+                      if (name.isEmpty &&
+                          propertyData['translations'] != null &&
                           propertyData['translations']
                               is Map<String, dynamic>) {
                         final translations = propertyData['translations']
                             as Map<String, dynamic>;
                         if (translations[language] != null &&
                             translations[language] is Map<String, dynamic>) {
-                          name = translations[language]['name'] ?? '';
+                          final trans =
+                              translations[language] as Map<String, dynamic>;
+                          name = trans['name'] ?? '';
+                        }
+                        if (name.isEmpty) {
+                          name = translations['name_$language'] ?? '';
                         }
                       }
 
+                      // 3. Sinon, fallback sur 'name'
                       if (name.isEmpty) {
-                        name = propertyData['name'] ?? 'Propriété sans nom';
+                        name = propertyData['name'] ?? '';
                       }
 
-                      String categoryName = 'Catégorie';
-                      String categoryImage = '';
-                      if (propertyData['category'] != null &&
-                          propertyData['category'] is Map<String, dynamic>) {
-                        final category =
-                            propertyData['category'] as Map<String, dynamic>;
-                        categoryName = category['name'] ?? 'Catégorie';
-                        categoryImage = category['image'] ?? '';
+                      // 4. Si toujours vide, affiche "Nom non disponible"
+                      if (name.isEmpty) {
+                        name = 'Nom non disponible';
                       }
+
+                      final nameFr = propertyData['name_fr'] ?? '';
+                      final nameEn = propertyData['name_en'] ?? '';
+                      final nameAr = propertyData['name_ar'] ?? '';
+                      List<String> nameVariants = [];
+                      if (nameFr.isNotEmpty) nameVariants.add('fr: $nameFr');
+                      if (nameEn.isNotEmpty) nameVariants.add('en: $nameEn');
+                      if (nameAr.isNotEmpty) nameVariants.add('ar: $nameAr');
+                      final nameVariantsText = nameVariants.join(' | ');
+
+                      Category? catObj;
+                      if (propertyData['categories'] != null &&
+                          propertyData['categories'] is Map<String, dynamic>) {
+                        catObj = Category.fromJson(propertyData['categories']);
+                      }
+                      final categoryName = catObj?.getName(language) ?? '';
+                      final categoryIcon = catObj?.icon ?? catObj?.image ?? '';
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12.0),
@@ -777,13 +807,22 @@ class _FilterScreenState extends State<FilterScreen> {
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  if (categoryImage.isNotEmpty)
+                                                  if (categoryIcon.isNotEmpty &&
+                                                      categoryIcon
+                                                          .endsWith('.svg'))
+                                                    SvgPicture.network(
+                                                      categoryIcon,
+                                                      height: 12,
+                                                      width: 12,
+                                                    )
+                                                  else if (categoryIcon
+                                                      .isNotEmpty)
                                                     Image.network(
-                                                      categoryImage,
+                                                      categoryIcon,
                                                       height: 12,
                                                       width: 12,
                                                     ),
-                                                  if (categoryImage.isNotEmpty)
+                                                  if (categoryIcon.isNotEmpty)
                                                     const SizedBox(width: 4),
                                                   Text(
                                                     categoryName,

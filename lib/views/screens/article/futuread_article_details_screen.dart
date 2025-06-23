@@ -167,7 +167,7 @@ class _FutureadArticleDetailsScreenState
                           colorFilter: const ColorFilter.mode(
                               Colors.green, BlendMode.srcIn)),
                       const SizedBox(width: 8),
-                      Text(widget.property.category!.name ?? 'Category'),
+                      Text(widget.property.category!.getName(Get.locale?.languageCode ?? 'fr') ?? 'Category'),
                     ],
                   ),
                   const Spacer(),

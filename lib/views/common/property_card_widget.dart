@@ -3,13 +3,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 import 'package:immolink_mobile/utils/t_sizes.dart';
+import 'package:immolink_mobile/models/Category.dart';
 
 class PropertyCardWidget extends StatelessWidget {
   final String image;
   final bool isFeatured;
   final String status; // "rent", "sell", etc.
-  final String category;
-  final String? categoryIcon;
+  final Category? category;
   final double price;
   final String name;
   final String location;
@@ -29,7 +29,6 @@ class PropertyCardWidget extends StatelessWidget {
     this.onFavoriteTap,
     this.onTap,
     this.favoriteIcon = Icons.favorite_border,
-    this.categoryIcon,
   });
 
   @override
@@ -120,8 +119,8 @@ class PropertyCardWidget extends StatelessWidget {
                           // Category
                           Row(
                             children: [
-                              categoryIcon != null
-                                  ? SvgPicture.network(categoryIcon!,
+                              category?.icon != null
+                                  ? SvgPicture.network(category!.icon!,
                                       height: 20,
                                       width: 20,
                                       colorFilter: const ColorFilter.mode(
@@ -134,7 +133,9 @@ class PropertyCardWidget extends StatelessWidget {
                                     ),
                               const SizedBox(width: 8),
                               Text(
-                                category,
+                                category?.getName(
+                                        Get.locale?.languageCode ?? 'fr') ??
+                                    '',
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall!

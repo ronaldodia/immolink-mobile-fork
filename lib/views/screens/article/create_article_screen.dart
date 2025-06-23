@@ -7,15 +7,14 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:immolink_mobile/controllers/articles/article_form_controller.dart';
 import 'package:immolink_mobile/controllers/communes/commune_controller.dart';
-import 'package:immolink_mobile/controllers/communes/district_controller.dart';
 import 'package:immolink_mobile/controllers/home/categories_controller.dart';
 import 'package:immolink_mobile/models/Commune.dart';
 import 'package:immolink_mobile/utils/config.dart';
-import 'package:immolink_mobile/utils/image_constants.dart';
 import 'package:immolink_mobile/utils/t_sizes.dart';
 
 class CreateArticleScreen extends StatelessWidget {
-  final ArticleFormController articleController = Get.put(ArticleFormController());
+  final ArticleFormController articleController =
+      Get.put(ArticleFormController());
   final CategoryController categoryController = Get.put(CategoryController());
   // final DistrictController districtController = Get.put(DistrictController());
   final CommuneController communeController = Get.put(CommuneController());
@@ -31,12 +30,14 @@ class CreateArticleScreen extends StatelessWidget {
   Future<List<File>> pickMultipleImages() async {
     final picker = ImagePicker();
     final pickedFiles = await picker.pickMultiImage();
-    return pickedFiles != null ? pickedFiles.map((e) => File(e.path)).toList() : [];
+    return pickedFiles != null
+        ? pickedFiles.map((e) => File(e.path)).toList()
+        : [];
   }
 
   final StepStyle _stepStyle = StepStyle(
     connectorThickness: 10,
-    color:Colors.green,
+    color: Colors.green,
     connectorColor: Colors.green,
     indexStyle: const TextStyle(
       color: Colors.white,
@@ -50,8 +51,12 @@ class CreateArticleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = Get.locale?.languageCode ?? 'en';
     return Scaffold(
-      appBar: AppBar(title: const Text('Créer une annonce'), backgroundColor: Colors.white,),
+      appBar: AppBar(
+        title: const Text('Créer une annonce'),
+        backgroundColor: Colors.white,
+      ),
       backgroundColor: Colors.white,
       body: Obx(() {
         return Stepper(
@@ -83,8 +88,11 @@ class CreateArticleScreen extends StatelessWidget {
                     }
 
                     // Filtrage des catégories
-                    final filteredCategories = categoryController.categories.where((category) {
-                      final categoryName = category['name'].toLowerCase();
+                    final filteredCategories =
+                        categoryController.categories.where((category) {
+                      
+                      final categoryName =
+                          category.getName(locale).toLowerCase();
                       return categoryName != 'hostel' &&
                           categoryName != 'hôtel' &&
                           categoryName != 'الفندق';
@@ -95,30 +103,38 @@ class CreateArticleScreen extends StatelessWidget {
                       children: filteredCategories.map((category) {
                         return ElevatedButton(
                           onPressed: () {
-                            categoryController.selectCategory(category['name']);
-                            articleController.categoryId.value = category['id'];
+                            categoryController.selectCategory(category.getName(locale));
+                            articleController.categoryId.value = category.id;
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: categoryController.selectedCategory.value == category['name']
-                                ? Colors.green
-                                : Colors.white,
+                            backgroundColor:
+                                categoryController.selectedCategory.value ==
+                                        category.getName(locale)
+                                    ? Colors.green
+                                    : Colors.white,
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               SvgPicture.network(
-                                category['image'], // Chemin de l'image SVG
+                                category.image!, // Chemin de l'image SVG
                                 height: 20, // Hauteur de l'icône
-                                width: 20,  // Largeur de l'icône
-                                colorFilter: categoryController.selectedCategory.value == category['name']
-                                    ? const ColorFilter.mode(Colors.white, BlendMode.srcIn)
-                                    : const ColorFilter.mode(Colors.green, BlendMode.srcIn),
+                                width: 20, // Largeur de l'icône
+                                colorFilter:
+                                    categoryController.selectedCategory.value ==
+                                            category.getName(locale)
+                                        ? const ColorFilter.mode(
+                                            Colors.white, BlendMode.srcIn)
+                                        : const ColorFilter.mode(
+                                            Colors.green, BlendMode.srcIn),
                               ),
                               const SizedBox(height: TSizes.spaceBtwItems),
                               Text(
-                                category['name'],
+                                category.getName(locale),
                                 style: TextStyle(
-                                  color: categoryController.selectedCategory.value == category['name']
+                                  color: categoryController
+                                              .selectedCategory.value ==
+                                          category.getName(locale)
                                       ? Colors.white
                                       : Colors.green,
                                 ),
@@ -134,18 +150,34 @@ class CreateArticleScreen extends StatelessWidget {
                   const Text('Choisir une proposition :'),
                   Obx(() {
                     // Vérifie les catégories spécifiques
-                    final isBoutique =
-                        categoryController.selectedCategory.value.toLowerCase() == 'boutique' ||
-                            categoryController.selectedCategory.value.toLowerCase() == 'store' ||
-                            categoryController.selectedCategory.value.toLowerCase() == 'محل';
-                    final isBureau =
-                        categoryController.selectedCategory.value.toLowerCase() == 'bureau' ||
-                            categoryController.selectedCategory.value.toLowerCase() == 'office' ||
-                            categoryController.selectedCategory.value.toLowerCase() == 'مكتب';
-                    final isAppartement =
-                        categoryController.selectedCategory.value.toLowerCase() == 'appartement' ||
-                            categoryController.selectedCategory.value.toLowerCase() == 'apartment' ||
-                            categoryController.selectedCategory.value.toLowerCase() == 'شقة';
+                    final isBoutique = categoryController.selectedCategory.value
+                                .toLowerCase() ==
+                            'boutique' ||
+                        categoryController.selectedCategory.value
+                                .toLowerCase() ==
+                            'store' ||
+                        categoryController.selectedCategory.value
+                                .toLowerCase() ==
+                            'محل';
+                    final isBureau = categoryController.selectedCategory.value
+                                .toLowerCase() ==
+                            'bureau' ||
+                        categoryController.selectedCategory.value
+                                .toLowerCase() ==
+                            'office' ||
+                        categoryController.selectedCategory.value
+                                .toLowerCase() ==
+                            'مكتب';
+                    final isAppartement = categoryController
+                                .selectedCategory.value
+                                .toLowerCase() ==
+                            'appartement' ||
+                        categoryController.selectedCategory.value
+                                .toLowerCase() ==
+                            'apartment' ||
+                        categoryController.selectedCategory.value
+                                .toLowerCase() ==
+                            'شقة';
 
                     // Vérifie si la catégorie est Boutique, Appartement ou Bureau
                     final isRentOnly = isBoutique || isBureau || isAppartement;
@@ -159,66 +191,74 @@ class CreateArticleScreen extends StatelessWidget {
                               articleController.purpose.value = 'Rent';
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: categoryController.purpose.value == 'Rent'
-                                  ? Colors.green
-                                  : Colors.white,
+                              backgroundColor:
+                                  categoryController.purpose.value == 'Rent'
+                                      ? Colors.green
+                                      : Colors.white,
                             ),
                             child: Text(
                               'Rent',
                               style: TextStyle(
-                                color: categoryController.purpose.value == 'Rent'
-                                    ? Colors.white
-                                    : Colors.green,
+                                color:
+                                    categoryController.purpose.value == 'Rent'
+                                        ? Colors.white
+                                        : Colors.green,
                               ),
                             ),
                           ),
                         if (!isRentOnly) // Affiche Rent et Sell pour les autres catégories
                           ...[
-                            ElevatedButton(
-                              onPressed: () {
-                                categoryController.setPurpose('Rent');
-                                articleController.purpose.value = 'Rent';
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: categoryController.purpose.value == 'Rent'
-                                    ? Colors.green
-                                    : Colors.white,
-                              ),
-                              child: Text(
-                                'Rent',
-                                style: TextStyle(
-                                  color: categoryController.purpose.value == 'Rent'
-                                      ? Colors.white
-                                      : Colors.green,
-                                ),
+                          ElevatedButton(
+                            onPressed: () {
+                              categoryController.setPurpose('Rent');
+                              articleController.purpose.value = 'Rent';
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  categoryController.purpose.value == 'Rent'
+                                      ? Colors.green
+                                      : Colors.white,
+                            ),
+                            child: Text(
+                              'Rent',
+                              style: TextStyle(
+                                color:
+                                    categoryController.purpose.value == 'Rent'
+                                        ? Colors.white
+                                        : Colors.green,
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            ElevatedButton(
-                              onPressed: () {
-                                categoryController.setPurpose('Sell');
-                                articleController.purpose.value = 'Sell';
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: categoryController.purpose.value == 'Sell'
-                                    ? Colors.green
-                                    : Colors.white,
-                              ),
-                              child: Text(
-                                'Sell',
-                                style: TextStyle(
-                                  color: categoryController.purpose.value == 'Sell'
-                                      ? Colors.white
-                                      : Colors.green,
-                                ),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            onPressed: () {
+                              categoryController.setPurpose('Sell');
+                              articleController.purpose.value = 'Sell';
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  categoryController.purpose.value == 'Sell'
+                                      ? Colors.green
+                                      : Colors.white,
+                            ),
+                            child: Text(
+                              'Sell',
+                              style: TextStyle(
+                                color:
+                                    categoryController.purpose.value == 'Sell'
+                                        ? Colors.white
+                                        : Colors.green,
                               ),
                             ),
-                          ],
+                          ),
+                        ],
                       ],
                     );
                   }),
 
-                  const SizedBox(height: TSizes.spaceBtwItems,),
+                  const SizedBox(
+                    height: TSizes.spaceBtwItems,
+                  ),
                   // const Text(
                   //   "Sélectionnez une zone",
                   //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -226,8 +266,8 @@ class CreateArticleScreen extends StatelessWidget {
                   const SizedBox(height: 10),
 
                   Obx(
-                        () => DropdownButton<Commune>(
-                          hint: const Text('Selectionnez une zone'),
+                    () => DropdownButton<Commune>(
+                      hint: const Text('Selectionnez une zone'),
                       isExpanded: true,
                       value: communeController.selectedCommune.value,
                       items: communeController.communes.map((commune) {
@@ -238,7 +278,8 @@ class CreateArticleScreen extends StatelessWidget {
                       }).toList(),
                       onChanged: (value) {
                         communeController.selectedCommune.value = value;
-                        communeController.selectedDistrict.value = null; // Reset district
+                        communeController.selectedDistrict.value =
+                            null; // Reset district
                       },
                     ),
                   ),
@@ -246,8 +287,10 @@ class CreateArticleScreen extends StatelessWidget {
 
                   // Label pour le quartier
                   Obx(
-                        () {
-                      final districts = communeController.selectedCommune.value?.districts ?? [];
+                    () {
+                      final districts =
+                          communeController.selectedCommune.value?.districts ??
+                              [];
                       if (districts.isEmpty) {
                         return const SizedBox(); // Cacher si aucun quartier disponible
                       }
@@ -257,7 +300,8 @@ class CreateArticleScreen extends StatelessWidget {
                         children: [
                           const Text(
                             "Sélectionnez un quartier",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
                           DropdownButton<District>(
@@ -296,7 +340,8 @@ class CreateArticleScreen extends StatelessWidget {
               ),
               content: Obx(() {
                 // Vérifier la catégorie sélectionnée
-                final selectedCategory = categoryController.selectedCategory.value.toLowerCase();
+                final selectedCategory =
+                    categoryController.selectedCategory.value.toLowerCase();
                 final hideRoomsAndToilets = selectedCategory == 'terrain' ||
                     selectedCategory == 'land' ||
                     selectedCategory == 'أرض' ||
@@ -305,7 +350,7 @@ class CreateArticleScreen extends StatelessWidget {
                     selectedCategory == 'محل' ||
                     selectedCategory == 'bureau' ||
                     selectedCategory == 'office' ||
-                    selectedCategory == 'مكتب' ;
+                    selectedCategory == 'مكتب';
                 final hideSurface = selectedCategory == 'boutique' ||
                     selectedCategory == 'store' ||
                     selectedCategory == 'محل' ||
@@ -323,46 +368,58 @@ class CreateArticleScreen extends StatelessWidget {
                     TextFormField(
                       decoration: const InputDecoration(
                           labelText: 'Titre',
-                          suffixStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      onChanged: (value) => articleController.nameAr.value = value,
+                          suffixStyle: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      onChanged: (value) =>
+                          articleController.nameAr.value = value,
                     ),
                     const SizedBox(height: TSizes.spaceBtwItems),
                     TextFormField(
-                      decoration: const InputDecoration(labelText: 'Description'),
-                      onChanged: (value) => articleController.description.value = value,
+                      decoration:
+                          const InputDecoration(labelText: 'Description'),
+                      onChanged: (value) =>
+                          articleController.description.value = value,
                     ),
                     const SizedBox(height: TSizes.spaceBtwItems),
                     TextFormField(
                       decoration: const InputDecoration(labelText: 'Price'),
-                      onChanged: (value) => articleController.price.value = value,
+                      onChanged: (value) =>
+                          articleController.price.value = value,
                     ),
                     const SizedBox(height: TSizes.spaceBtwItems),
                     // Champs Nombre de Chambre (affiché uniquement si non caché)
                     if (!hideRoomsAndToilets)
                       TextFormField(
-                        decoration: const InputDecoration(labelText: 'Nombre de Chambre'),
-                        onChanged: (value) => articleController.bedroom.value = value,
+                        decoration: const InputDecoration(
+                            labelText: 'Nombre de Chambre'),
+                        onChanged: (value) =>
+                            articleController.bedroom.value = value,
                       ),
-                    if (!hideRoomsAndToilets) const SizedBox(height: TSizes.spaceBtwItems),
+                    if (!hideRoomsAndToilets)
+                      const SizedBox(height: TSizes.spaceBtwItems),
                     // Champs Nombre de Toilette (affiché uniquement si non caché)
                     if (!hideRoomsAndToilets)
                       TextFormField(
-                        decoration: const InputDecoration(labelText: 'Nombre de Toilette'),
-                        onChanged: (value) => articleController.bathroom.value = value,
+                        decoration: const InputDecoration(
+                            labelText: 'Nombre de Toilette'),
+                        onChanged: (value) =>
+                            articleController.bathroom.value = value,
                       ),
-                    if (!hideRoomsAndToilets) const SizedBox(height: TSizes.spaceBtwItems),
+                    if (!hideRoomsAndToilets)
+                      const SizedBox(height: TSizes.spaceBtwItems),
                     // Champs Surface m² (affiché uniquement si non caché)
                     if (!hideSurface)
                       TextFormField(
-                        decoration: const InputDecoration(labelText: 'Surface m²'),
-                        onChanged: (value) => articleController.area.value = value,
+                        decoration:
+                            const InputDecoration(labelText: 'Surface m²'),
+                        onChanged: (value) =>
+                            articleController.area.value = value,
                       ),
                   ],
                 );
               }),
               isActive: articleController.currentStep.value >= 1,
             ),
-
             Step(
               title: const Text('Image & Gallerie'),
               stepStyle: _stepStyle.copyWith(
@@ -399,7 +456,8 @@ class CreateArticleScreen extends StatelessWidget {
                                 top: 0,
                                 right: 0,
                                 child: IconButton(
-                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
                                   onPressed: () {
                                     articleController.removeImage();
                                   },
@@ -407,35 +465,44 @@ class CreateArticleScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                        const SizedBox(height: TSizes.fontSizeSm,),
+                        const SizedBox(
+                          height: TSizes.fontSizeSm,
+                        ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white.withOpacity(0.8)
-                          ),
+                              backgroundColor: Colors.white.withOpacity(0.8)),
                           onPressed: articleController.isLoadingImage.value
                               ? null
                               : () async {
-                            final file = await pickImage(); // Implémentez la méthode pickImage()
-                            if (file != null) {
-                              await articleController.uploadImageFile(file);
-                            }
-                          },
+                                  final file =
+                                      await pickImage(); // Implémentez la méthode pickImage()
+                                  if (file != null) {
+                                    await articleController
+                                        .uploadImageFile(file);
+                                  }
+                                },
                           child: Row(
                             children: [
-                             articleController.isLoadingImage.value
-                                  ? const CircularProgressIndicator(color: Colors.white)
-                                  : const Icon(Icons.upload, color: Colors.black54,),
-                            const Text('Ajouter une image ', style: TextStyle(color: Colors.black54),),
+                              articleController.isLoadingImage.value
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white)
+                                  : const Icon(
+                                      Icons.upload,
+                                      color: Colors.black54,
+                                    ),
+                              const Text(
+                                'Ajouter une image ',
+                                style: TextStyle(color: Colors.black54),
+                              ),
                             ],
                           ),
                         ),
-
                       ],
                     );
                   }),
 
                   const SizedBox(height: TSizes.spaceBtwItems),
-                const Divider(),
+                  const Divider(),
 
                   const SizedBox(height: TSizes.spaceBtwItems),
                   Obx(() {
@@ -447,62 +514,72 @@ class CreateArticleScreen extends StatelessWidget {
                           children: articleController.uploadGallery
                               .map(
                                 (image) => Stack(
-                              children: [
-                                Image.network(
-                                  '${Config.initUrl}${image['thumbnail']!}',
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
+                                  children: [
+                                    Image.network(
+                                      '${Config.initUrl}${image['thumbnail']!}',
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    ),
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: IconButton(
+                                        icon: const Icon(Icons.delete,
+                                            color: Colors.red),
+                                        onPressed: () {
+                                          articleController
+                                              .removeImageFromGallery(image);
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () {
-                                      articleController.removeImageFromGallery(image);
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
+                              )
                               .toList(),
                         ),
-                        const SizedBox(height: TSizes.fontSizeSm,),
+                        const SizedBox(
+                          height: TSizes.fontSizeSm,
+                        ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white.withOpacity(0.8)
-                          ),
+                              backgroundColor: Colors.white.withOpacity(0.8)),
                           onPressed: articleController.isLoadingGallery.value
                               ? null
                               : () async {
-                            final files = await pickMultipleImages(); // Implémentez la méthode pickMultipleImages()
-                            if (files != null && files.isNotEmpty) {
-                              await articleController.uploadGalleryImages(files);
-                            }
-                          },
-
+                                  final files =
+                                      await pickMultipleImages(); // Implémentez la méthode pickMultipleImages()
+                                  if (files != null && files.isNotEmpty) {
+                                    await articleController
+                                        .uploadGalleryImages(files);
+                                  }
+                                },
                           child: Row(
                             children: [
                               articleController.isLoadingGallery.value
-                                  ? const CircularProgressIndicator(color: Colors.white)
-                                  : const Icon(Icons.upload, color: Colors.black54,),
-                              const Text('Images de gallerie', style: TextStyle(color: Colors.black54,),),
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white)
+                                  : const Icon(
+                                      Icons.upload,
+                                      color: Colors.black54,
+                                    ),
+                              const Text(
+                                'Images de gallerie',
+                                style: TextStyle(
+                                  color: Colors.black54,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 8),
-
                       ],
                     );
                   }),
-
                 ],
               ),
               isActive: articleController.currentStep.value >= 2,
             ),
-
             Step(
               title: const Text('Localisation'),
               stepStyle: _stepStyle.copyWith(
@@ -520,12 +597,14 @@ class CreateArticleScreen extends StatelessWidget {
                 children: [
                   Obx(() {
                     if (articleController.locationData.isEmpty) {
-                      return const Text('Aucune donnée de localisation disponible.');
+                      return const Text(
+                          'Aucune donnée de localisation disponible.');
                     }
                     final location = articleController.locationData[0];
                     final properties = location['properties'];
                     final geometry = location['geometry']['coordinates'];
-                    final surface = _calculateSurface(geometry).toStringAsFixed(2);
+                    final surface =
+                        _calculateSurface(geometry).toStringAsFixed(2);
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.start,
@@ -537,11 +616,14 @@ class CreateArticleScreen extends StatelessWidget {
                       ],
                     );
                   }),
-                  const SizedBox(height: TSizes.spaceBtwItems,),
+                  const SizedBox(
+                    height: TSizes.spaceBtwItems,
+                  ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white.withOpacity(1.0),
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 10),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -567,10 +649,6 @@ class CreateArticleScreen extends StatelessWidget {
               ),
               isActive: articleController.currentStep.value >= 3,
             ),
-
-
-
-
           ],
         );
       }),
@@ -578,7 +656,6 @@ class CreateArticleScreen extends StatelessWidget {
   }
 
   void _showMapModal(BuildContext context, ArticleFormController controller) {
-
     bool isArabic = Get.locale?.languageCode == 'ar';
     showModalBottomSheet(
       backgroundColor: Colors.white,
@@ -602,46 +679,50 @@ class CreateArticleScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Obx(() => DropdownButtonFormField<String>(
-                          isExpanded: true,
-                          value: controller.selectedMoughataa.value.isEmpty
-                              ? null
-                              : controller.selectedMoughataa.value,
-                          hint: const Text('Moughataa'),
-                          onChanged: (value) {
-                            if (value != null) {
-                              controller.selectMoughataa(value);
-                            }
-                          },
-                          items: controller.moughataas.map((moughataa) {
-                            final arabicName = controller.addressData[moughataa]['arabicName'];
-                            final saxonName = controller.addressData[moughataa]['name'];
-                            return DropdownMenuItem(
-                              value: moughataa,
-                              child: Text(isArabic ? arabicName : saxonName),
-                            );
-                          }).toList(),
-                        )),
+                              isExpanded: true,
+                              value: controller.selectedMoughataa.value.isEmpty
+                                  ? null
+                                  : controller.selectedMoughataa.value,
+                              hint: const Text('Moughataa'),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  controller.selectMoughataa(value);
+                                }
+                              },
+                              items: controller.moughataas.map((moughataa) {
+                                final arabicName = controller
+                                    .addressData[moughataa]['arabicName'];
+                                final saxonName =
+                                    controller.addressData[moughataa]['name'];
+                                return DropdownMenuItem(
+                                  value: moughataa,
+                                  child:
+                                      Text(isArabic ? arabicName : saxonName),
+                                );
+                              }).toList(),
+                            )),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Obx(() => DropdownButtonFormField<String>(
-                          isExpanded: true,
-                          value: controller.selectedLotissement.value.isEmpty
-                              ? null
-                              : controller.selectedLotissement.value,
-                          hint: const Text('Lotissement'),
-                          onChanged: (value) {
-                            if (value != null) {
-                              controller.selectLotissement(value);
-                            }
-                          },
-                          items: controller.lotissements.map((lotissement) {
-                            return DropdownMenuItem(
-                              value: lotissement,
-                              child: Text(lotissement),
-                            );
-                          }).toList(),
-                        )),
+                              isExpanded: true,
+                              value:
+                                  controller.selectedLotissement.value.isEmpty
+                                      ? null
+                                      : controller.selectedLotissement.value,
+                              hint: const Text('Lotissement'),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  controller.selectLotissement(value);
+                                }
+                              },
+                              items: controller.lotissements.map((lotissement) {
+                                return DropdownMenuItem(
+                                  value: lotissement,
+                                  child: Text(lotissement),
+                                );
+                              }).toList(),
+                            )),
                       ),
                     ],
                   ),
@@ -663,7 +744,6 @@ class CreateArticleScreen extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () async {
                           await controller.fetchFeatures();
-
                         },
                         child: const Text('Rechercher'),
                       ),
@@ -676,57 +756,56 @@ class CreateArticleScreen extends StatelessWidget {
                         return const Center(child: CircularProgressIndicator());
                       }
                       return GoogleMap(
-                        mapType: MapType.satellite,
-                        myLocationEnabled: true,
-                        myLocationButtonEnabled: true,
-                        mapToolbarEnabled: false,
-                        initialCameraPosition: CameraPosition(
-                          target: controller.currentLocation.value,
-                          zoom: 19,
-                        ),
-                        polygons: Set<Polygon>.of(controller.polygons),
-                        onMapCreated: (GoogleMapController mapController) {
-                          controller.currentLocation.listen((location) {
-                            mapController.animateCamera(
-                              CameraUpdate.newLatLng(location),
-                            );
-
-                          });
-
-                        },
+                          mapType: MapType.satellite,
+                          myLocationEnabled: true,
+                          myLocationButtonEnabled: true,
+                          mapToolbarEnabled: false,
+                          initialCameraPosition: CameraPosition(
+                            target: controller.currentLocation.value,
+                            zoom: 19,
+                          ),
+                          polygons: Set<Polygon>.of(controller.polygons),
+                          onMapCreated: (GoogleMapController mapController) {
+                            controller.currentLocation.listen((location) {
+                              mapController.animateCamera(
+                                CameraUpdate.newLatLng(location),
+                              );
+                            });
+                          },
                           onTap: (LatLng location) async {
-                            await controller.fetchLocationData(location.latitude, location.longitude);
+                            await controller.fetchLocationData(
+                                location.latitude, location.longitude);
                             controller.setCurrentLocation(location);
-                          }
-                      );
+                          });
                     }),
                   ),
-
-
                   Obx(() {
                     if (controller.locationData.isEmpty) {
-                      return const Text('Aucune donnée de localisation disponible.');
+                      return const Text(
+                          'Aucune donnée de localisation disponible.');
                     }
                     final location = controller.locationData[0];
                     final properties = location['properties'];
                     final geometry = location['geometry']['coordinates'];
-                    final surface = _calculateSurface(geometry).toStringAsFixed(2);
+                    final surface =
+                        _calculateSurface(geometry).toStringAsFixed(2);
 
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Moughataa: ${properties['moughataa'] ?? 'N/A'}'),
-                                Text('Lotissement: ${properties['lts'] ?? 'N/A'}'),
-                                Text('Surface: $surface m²'),
-                                Text('Numero de lot: ${properties['l'] ?? 'N/A'}'),
-                              ],
-                            ),
-                          ),
-                        );
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                                'Moughataa: ${properties['moughataa'] ?? 'N/A'}'),
+                            Text('Lotissement: ${properties['lts'] ?? 'N/A'}'),
+                            Text('Surface: $surface m²'),
+                            Text('Numero de lot: ${properties['l'] ?? 'N/A'}'),
+                          ],
+                        ),
+                      ),
+                    );
                   }),
                   ElevatedButton(
                     onPressed: () => Navigator.pop(context),
@@ -740,8 +819,6 @@ class CreateArticleScreen extends StatelessWidget {
       },
     );
   }
-
-
 
   double _calculateSurface(List coordinates) {
     // Calcul approximatif de surface en m² pour un polygone
@@ -760,6 +837,4 @@ class CreateArticleScreen extends StatelessWidget {
     total = total.abs() / 2.0;
     return total * 111319.9 * 111319.9; // Conversion en mètres carrés
   }
-
-
 }

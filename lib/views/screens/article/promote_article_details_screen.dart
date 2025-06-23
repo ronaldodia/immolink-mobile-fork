@@ -382,9 +382,9 @@ class _PromoteArticleDetailsScreenState
                   const SizedBox(height: 8.0),
                   Text(
                     widget.property.getPropertyByLanguage(
-                            languageController.locale.languageCode,
-                            propertyType: "description") ??
-                        'No description available.',
+                        languageController.locale.languageCode,
+                        propertyType:
+                            "description_${languageController.locale.languageCode}"),
                     style: TextStyle(
                       fontSize: 14.0,
                       color: Colors.grey[800],
