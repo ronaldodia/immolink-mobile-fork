@@ -335,13 +335,22 @@ class _ChatScreenState extends State<ChatScreen> {
       final parsedMessage = json.decode(message);
 
       if (parsedMessage['type'] == 'new_message') {
-        print("Got new message: ${parsedMessage} and currentConverstion is $currentConversationId");
+        print("Got WebSocket message: ${parsedMessage} and currentConversation is $currentConversationId");
+
         if (parsedMessage['message']['conversation'] == currentConversationId) {
-          if(parsedMessage['message']['sender_name']!= myName){
-            if (!messages.any((msg) => msg.id == parsedMessage['message']['id'])) {
+          if(parsedMessage['message']['sender_name'] != myName) {
+
+            // CORRECTION: Vérifier par ID unique du message
+            final messageId = parsedMessage['message']['_id'] ?? parsedMessage['message']['id'];
+            final messageExists = messages.any((msg) => msg.id == messageId);
+
+            if (!messageExists) {
               setState(() {
                 messages.insert(0, ChatModel.fromJson(parsedMessage['message']));
               });
+              print('✅ Message WebSocket ajouté: $messageId');
+            } else {
+              print('🔄 Message WebSocket ignoré (déjà existant): $messageId');
             }
           }
         }

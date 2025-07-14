@@ -6,6 +6,8 @@ import 'dart:convert';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:immolink_mobile/utils/config.dart';
 
+import 'notification/notification_services.dart';
+
 class ChatService {
   ChatService() {
     connectWebSocket(); // Call the method to connect to WebSocket
@@ -16,15 +18,38 @@ class ChatService {
   final localStorage = GetStorage();
   WebSocketChannel? _channel;
 
+
   Map<String, String> get _headers {
     final token = localStorage.read('AUTH_TOKEN');
-    String fcmToken = localStorage.read("FCM_TOKEN");
+    final fcmTokenRaw = localStorage.read("FCM_TOKEN");
+
+    String fcmToken = '';
+
+    if (fcmTokenRaw != null && fcmTokenRaw.toString().isNotEmpty) {
+      fcmToken = fcmTokenRaw.toString();
+    } else {
+      // CORRECTION: Si FCM token manquant, déclencher régénération
+      print('⚠️ FCM_TOKEN manquant, régénération en cours...');
+      _regenerateFCMToken();
+      fcmToken = ''; // Temporaire, sera régénéré
+    }
+
     return {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
       'Fcm-Token': fcmToken,
       if (token != null) 'Authorization': 'Bearer $token',
     };
+  }
+
+  // NOUVELLE MÉTHODE: Régénération FCM token
+  Future<void> _regenerateFCMToken() async {
+    try {
+      await NotificationServices.instance.getCurrentFCMToken();
+      print('✅ FCM Token régénéré');
+    } catch (e) {
+      print('❌ Erreur régénération FCM: $e');
+    }
   }
 
 

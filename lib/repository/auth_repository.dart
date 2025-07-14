@@ -384,9 +384,9 @@ class AuthRepository extends GetxController {
     final response = await _apibase.logout(token!);
     final localStorage = GetStorage();
     localStorage.remove('AUTH_TOKEN');
-    localStorage.remove('FCM_TOKEN');
+    //localStorage.remove('FCM_TOKEN'); faut pas l'enlever, il est unique par appareil, pas rapport avec le user
     print('AUTH_TOKEN:  ${localStorage.read('AUTH_TOKEN')}');
-    print('FCM_TOKEN_REMOVE: ${localStorage.read('FCM_TOKEN')}');
+
 
     return response;
   }
