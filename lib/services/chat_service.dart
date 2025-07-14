@@ -65,24 +65,38 @@ class ChatService {
     String? title,
   }) async {
     try {
+      print('ChatService.createConversation appelé avec:');
+      print('- PropertyId: $propertyId');
+      print('- AgentId: $agentId');
+      print('- Title: $title');
+      print('- Participants: $participants');
+
+      final body = {
+        'participants': participants,
+        'propertyId': propertyId,
+        'agentId': agentId,
+        'title': title ?? 'Conversation',
+      };
+
+      print('Corps de la requête: $body');
+
       final response = await http.post(
         Uri.parse('$baseUrl/conversations'),
         headers: _headers,
-        body: json.encode({
-          'participants': participants,
-          'propertyId': propertyId,
-          'agentId': agentId,
-          'title': title,
-        }),
+        body: json.encode(body),
       );
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
+      print('Réponse du serveur: ${response.statusCode}');
+      print('Corps de la réponse: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(response.body);
       } else {
-        throw Exception('Failed to create conversation: ${response.body}');
+        throw Exception('Échec de création de conversation: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      throw Exception('Failed to create conversation: $e');
+      print('Erreur détaillée dans ChatService.createConversation: $e');
+      throw Exception('Échec de création de conversation: $e');
     }
   }
 

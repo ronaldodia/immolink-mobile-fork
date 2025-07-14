@@ -1,15 +1,21 @@
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, User;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:immolink_mobile/controllers/chat/chat_controller.dart';
 import 'package:immolink_mobile/controllers/currency/currency_controller.dart';
 import 'package:immolink_mobile/controllers/language/language_controller.dart';
 import 'package:immolink_mobile/controllers/login/check_auth_controller.dart';
 import 'package:immolink_mobile/models/Article.dart';
 import 'package:immolink_mobile/views/screens/article/common/gallery_panel.dart';
 import 'package:immolink_mobile/views/screens/booking_screen.dart';
+import 'package:immolink_mobile/views/screens/chat_screen.dart';
 import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
 import 'package:immolink_mobile/utils/config.dart';
+
+import '../../../utils/image_constants.dart';
 
 class PromoteArticleDetailsScreen extends StatefulWidget {
   const PromoteArticleDetailsScreen({super.key, required this.property});
@@ -494,52 +500,126 @@ class _PromoteArticleDetailsScreenState
       ),
       bottomNavigationBar: widget.property.purpose == "Rent"
           ? Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 6,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: ElevatedButton(
-                onPressed: () async {
-                  bool isAuthenticated = await authController.checkUserToken();
-                  if (isAuthenticated) {
-                    Get.to(() => BookingScreen(
-                          articleId: widget.property.id,
-                          eventType: 'Mariage',
-                        ));
-                  } else {
-                    Get.to(() => const LoginPhoneScreen(), arguments: {
-                      'nextPage': BookingScreen(
-                        articleId: widget.property.id,
-                        eventType: 'Mariage',
-                      )
-                    });
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue[700],
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                ),
-                child: const Text(
-                  'Réserver maintenant',
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 6,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: () async {
+            bool isAuthenticated = await authController.checkUserToken();
+            if (isAuthenticated) {
+              Get.to(() => BookingScreen(
+                articleId: widget.property.id,
+                eventType: 'Mariage',
+              ));
+            } else {
+              Get.to(() => const LoginPhoneScreen(), arguments: {
+                'nextPage': BookingScreen(
+                  articleId: widget.property.id,
+                  eventType: 'Mariage',
+                )
+              });
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue[700],
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: const Text(
+            'Réserver maintenant',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+        ),
+      )
+          : widget.property.purpose?.toLowerCase() == 'sell'
+          ? Container(
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 6,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: () async {
+            final ChatController chatController = Get.put(ChatController());
+            final LanguageController languageController = Get.find();
+            bool isAuthenticated = await authController.checkUserToken();
+            User? user = FirebaseAuth.instance.currentUser;
+
+            final agentId = widget.property.structure != null
+                ? widget.property.structure!.owner_id
+                : widget.property.author_id;
+
+            final conversation = await chatController.getOrCreateConversation(
+              propertyId: widget.property.id,
+              propertyTitle: widget.property.getPropertyByLanguage(
+                  languageController.locale.languageCode,
+                  propertyType: "name") ??
+                  'Property Chat',
+              agentId: agentId,
+            );
+
+            if (isAuthenticated) {
+              Get.to(ChatScreen(
+                  conversationId: conversation.id, agentId: agentId));
+            } else if (user != null) {
+              Get.to(ChatScreen(
+                  conversationId: conversation.id, agentId: agentId));
+            } else {
+              Get.to(() => const LoginPhoneScreen(), arguments: {
+                'nextPage': ChatScreen(
+                  conversationId: conversation.id,
+                )
+              });
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Discutez',
                   style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18)),
+              const SizedBox(width: 8),
+              SvgPicture.asset(
+                TImages.inactiveChat,
+                colorFilter:
+                const ColorFilter.mode(Colors.white, BlendMode.srcIn),
               ),
-            )
+            ],
+          ),
+        ),
+      )
           : null,
     );
   }

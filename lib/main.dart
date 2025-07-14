@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:immolink_mobile/controllers/language/language_controller.dart';
 import 'package:immolink_mobile/firebase_options.dart';
 import 'package:immolink_mobile/l10n/app_localizations.dart';
+import 'package:immolink_mobile/services/notification/notification_services.dart';
 import 'package:immolink_mobile/utils/iteneray.dart';
 import 'package:immolink_mobile/views/screens/splash_screen.dart';
 
@@ -22,13 +23,13 @@ void main() async {
   // Initialiser le contrôleur avec la locale lue
   Get.put(LanguageController(initialLocale));
 
+
+
   // Initialiser Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  // Demander les permissions de notification
-  requestPermission();
+  await NotificationServices.instance.initialize();
 
   runApp(const MyApp());
 }
@@ -64,22 +65,5 @@ class MyApp extends StatelessWidget {
           onGenerateRoute: CustomeRoute.allRoutes,
           home: const SplashScreen(),
         ));
-  }
-}
-
-void requestPermission() async {
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
-
-  NotificationSettings settings = await messaging.requestPermission(
-    alert: true,
-    badge: true,
-    provisional: false,
-    sound: true,
-  );
-
-  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-    print('User granted permission');
-  } else {
-    print('User declined or has not accepted permission');
   }
 }

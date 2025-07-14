@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:immolink_mobile/repository/auth_repository.dart';
+import 'package:immolink_mobile/services/notification/notification_services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:uuid/uuid.dart';
@@ -19,13 +20,15 @@ class ChatScreen extends StatefulWidget {
   const ChatScreen({
     super.key,
     required this.conversationId,
-    this.propertyId,  // Add propertyId parameter
-    this.agentId=0,
+    this.propertyId,
+    this.agentId = 0,
+    this.fromNotification = false,  // NOUVEAU: Indicateur source notification
   });
 
   final String conversationId;
   final int? propertyId;
-  final int agentId;// Make it optional for existing conversations
+  final int agentId;
+  final bool fromNotification;  // NOUVEAU
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -41,7 +44,7 @@ class _ChatScreenState extends State<ChatScreen> {
   String? playingAudioId;
   List<ChatModel> messages = [];
   bool isLoading = true;
-  Timer? _recordingTimer; // Timer to track recording duration
+  Timer? _recordingTimer;
   int _recordingDuration = 0;
   late AudioPlayer audioPlayer;
   File? file;
@@ -51,9 +54,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final recorder = AudioRecorder();
   bool isPause = false;
   bool isAudioLoading = false;
-  // Add a map to store positions for each audio message
   final Map<String, Duration> audioPositions = {};
-  // Add a map to store durations for each audio message
   final Map<String, Duration> audioDurations = {};
   final Duration defaultDuration = const Duration(seconds: 1);
   final Map<String, AudioPlayer> audioPlayers = {};
@@ -62,46 +63,239 @@ class _ChatScreenState extends State<ChatScreen> {
   final Map<String, bool> isLoadingMap = {};
   final localStorage = GetStorage();
   var userProfile = AuthRepository.instance.deviceStorage.read('USER_PROFILE');
+
   @override
   void initState() {
     super.initState();
     audioPlayer = AudioPlayer();
     _initializeChat();
     _setupFirebaseMessaging();
+
+    // NOUVEAU: Si vient d'une notification, marquer comme lu
+    if (widget.fromNotification) {
+      _markConversationAsRead();
+      _logNotificationOpen();
+    }
   }
+
+  // NOUVELLE MÉTHODE: Marquer conversation comme lue
+  Future<void> _markConversationAsRead() async {
+    try {
+      await NotificationServices.instance.markNotificationAsRead(widget.conversationId);
+      print('📖 Conversation marquée comme lue: ${widget.conversationId}');
+    } catch (e) {
+      print('❌ Erreur marquage lecture: $e');
+    }
+  }
+
+  // NOUVELLE MÉTHODE: Logger l'ouverture depuis notification
+  void _logNotificationOpen() {
+    print('📱 ChatScreen ouvert depuis notification');
+    print('ConversationId: ${widget.conversationId}');
+    print('AgentId: ${widget.agentId}');
+    print('PropertyId: ${widget.propertyId}');
+  }
+
+  // MÉTHODE AMÉLIORÉE: Setup Firebase Messaging avec gestion intelligente
   void _setupFirebaseMessaging() {
-    // Request permission for iOS
     _firebaseMessaging.requestPermission();
 
-    // Handle foreground messages
+    // Handle foreground messages - Gestion intelligente selon la conversation
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      // Show a notification or update the UI
-      if (message.notification != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message.notification!.title ?? 'New message'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+      print('📱 Message reçu en foreground: ${message.data}');
+
+      if (message.data['conversationId'] == widget.conversationId) {
+        // Si le message est pour cette conversation, l'ajouter directement
+        _handleNewMessageInCurrentChat(message);
+      } else {
+        // Sinon, afficher une notification in-app
+        _showInAppNotification(message);
       }
     });
 
-    // Handle background messages
+    // NOUVEAU: Gestion tap sur notification depuis cette screen
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      // Navigate to the chat screen or update the UI
-      // Assuming you have a method to navigate to the chat screen
-      _navigateToChatScreen(message.data);
+      _handleNotificationTapInChat(message);
     });
+  }
+
+  // NOUVELLE MÉTHODE: Gestion message dans chat actuel
+  void _handleNewMessageInCurrentChat(RemoteMessage message) {
+    try {
+      // Ne pas afficher si c'est notre propre message
+      final senderName = message.data['senderName'] ?? 'Utilisateur';
+      if (senderName == myName) {
+        print('🔇 Message ignoré (propre message)');
+        return;
+      }
+
+      // Créer un ChatModel depuis les données de notification
+      final chatModel = ChatModel(
+        message.data['content'] ?? message.notification?.body ?? '',
+        senderName,
+        int.tryParse(message.data['senderId'] ?? '0') ?? 0,
+        message.data['messageType'] ?? 'text',
+        '', // image
+        '', // audio
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+      );
+
+      // Vérifier que le message n'existe pas déjà
+      if (!messages.any((msg) => msg.text == chatModel.text && msg.sender_name == chatModel.sender_name)) {
+        setState(() {
+          messages.insert(0, chatModel);
+        });
+
+        print('✅ Message ajouté en temps réel');
+        _showMessageReceivedFeedback();
+      }
+    } catch (e) {
+      print('❌ Erreur ajout message temps réel: $e');
+    }
+  }
+
+  // NOUVELLE MÉTHODE: Feedback visuel pour nouveau message
+  void _showMessageReceivedFeedback() {
+    // Vibration légère et scroll vers le bas
+    // HapticFeedback.lightImpact(); // Décommentez si vous voulez de la vibration
+
+    // Scroll automatique vers le dernier message
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        // Le ListView est en reverse, donc on scroll vers le haut pour voir le nouveau message
+      }
+    });
+  }
+
+  // NOUVELLE MÉTHODE: Notification in-app pour autres conversations
+  void _showInAppNotification(RemoteMessage message) {
+    if (message.notification != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(Icons.chat_bubble, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        message.notification!.title ?? '💬 Nouveau message',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        message.notification!.body ?? '',
+                        style: const TextStyle(fontSize: 12),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          backgroundColor: Colors.green.shade600,
+          duration: const Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          action: SnackBarAction(
+            label: 'Voir',
+            textColor: Colors.white,
+            backgroundColor: Colors.white.withOpacity(0.2),
+            onPressed: () {
+              _navigateToOtherChat(message.data);
+            },
+          ),
+        ),
+      );
+    }
+  }
+
+  // NOUVELLE MÉTHODE: Navigation vers autre chat
+  void _navigateToOtherChat(Map<String, dynamic> data) {
+    String conversationId = data['conversationId'] ?? '';
+    int agentId = int.tryParse(data['senderId'] ?? '0') ?? 0;
+    int? propertyId = data['propertyId'] != null ? int.tryParse(data['propertyId']) : null;
+
+    if (conversationId.isNotEmpty) {
+      Get.off(() => ChatScreen(
+        conversationId: conversationId,
+        agentId: agentId,
+        propertyId: propertyId,
+        fromNotification: true,
+      ));
+    }
+  }
+
+  // NOUVELLE MÉTHODE: Gestion tap notification dans chat
+  void _handleNotificationTapInChat(RemoteMessage message) {
+    String conversationId = message.data['conversationId'] ?? '';
+
+    if (conversationId != widget.conversationId) {
+      // Si c'est une autre conversation, proposer de naviguer
+      _showNavigationDialog(message);
+    }
+    // Si c'est la même conversation, ne rien faire
+  }
+
+  // NOUVELLE MÉTHODE: Dialog pour navigation vers autre conversation
+  void _showNavigationDialog(RemoteMessage message) {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.chat_bubble_outline, color: Colors.green),
+            SizedBox(width: 8),
+            Text('Nouvelle conversation'),
+          ],
+        ),
+        content: Text(
+          'Vous avez reçu un message dans une autre conversation. Voulez-vous y accéder ?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Rester ici'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _navigateToOtherChat(message.data);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text('Aller au chat', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _initializeChat() async {
     myName = userProfile['full_name'];
 
     if (widget.conversationId.isEmpty && widget.propertyId != null) {
-      // Create new conversation if we have propertyId but no conversationId
       await _createNewConversation();
     } else {
-      // Load existing conversation
       await loadMessages();
     }
     setupWebSocket();
@@ -116,11 +310,9 @@ class _ChatScreenState extends State<ChatScreen> {
         title: 'New Chat',
       );
 
-      // Update the widget's conversationId using GetX
       Get.delete<String>(tag: 'conversationId');
       Get.put(response['id'], tag: 'conversationId');
 
-      // Now load messages for the new conversation
       await loadMessages();
     } catch (e) {
       print('Error creating new conversation: $e');
@@ -133,7 +325,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   String get currentConversationId {
-    // Get either the widget's conversationId or the newly created one
     return widget.conversationId.isNotEmpty
         ? widget.conversationId
         : Get.find<String>(tag: 'conversationId');
@@ -141,12 +332,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void setupWebSocket() {
     _chatService.messageStream?.listen((message) {
-      // Parse the message from JSON
       final parsedMessage = json.decode(message);
 
-      // Check the type of the message
       if (parsedMessage['type'] == 'new_message') {
-        // Check if the conversationId matches
         print("Got new message: ${parsedMessage} and currentConverstion is $currentConversationId");
         if (parsedMessage['message']['conversation'] == currentConversationId) {
           if(parsedMessage['message']['sender_name']!= myName){
@@ -158,11 +346,9 @@ class _ChatScreenState extends State<ChatScreen> {
           }
         }
       } else if (parsedMessage['type'] == 'connection_established') {
-        // Handle connection established message if needed
         print('Connection established with user: ${parsedMessage['user']}');
         _chatService.joinRoom(currentConversationId);
       } else {
-        // Handle other message types if necessary
         print('Received other message type: ${parsedMessage['type']}');
       }
     });
@@ -188,13 +374,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
       if (filePath != null) {
         mediaFile = File(filePath);
-        // Set a default content for media messages
         messageContent = type == 'image' ? '📷 Image' : '🎵 Audio';
       }
 
       final response = await _chatService.sendMessage(
         conversationId: currentConversationId,
-        content: messageContent,  // Use the messageContent instead of content
+        content: messageContent,
         type: type,
         media: mediaFile,
         duration: Duration(seconds: _recordingDuration),
@@ -218,23 +403,165 @@ class _ChatScreenState extends State<ChatScreen> {
     textController.dispose();
     audioPlayer.dispose();
     _timer?.cancel();
+    _recordingTimer?.cancel();
+
+    // Nettoyer les audio players
+    for (var player in audioPlayers.values) {
+      player.dispose();
+    }
+
     super.dispose();
+  }
+
+  // MÉTHODE AMÉLIORÉE: AppBar avec informations et actions
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.green.shade600,
+      elevation: 2,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "💬 Chat ImmoLink",
+            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          if (widget.fromNotification)
+            const Text(
+              "📱 Depuis notification",
+              style: TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+        ],
+      ),
+      actions: [
+        // NOUVEAU: Bouton info conversation
+        IconButton(
+          icon: const Icon(Icons.info_outline, color: Colors.white),
+          onPressed: _showChatInfo,
+        ),
+        // NOUVEAU: Menu d'actions
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, color: Colors.white),
+          onSelected: _handleMenuAction,
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'clear_notifications',
+              child: Row(
+                children: [
+                  Icon(Icons.notifications_off),
+                  SizedBox(width: 8),
+                  Text('Effacer notifications'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'refresh',
+              child: Row(
+                children: [
+                  Icon(Icons.refresh),
+                  SizedBox(width: 8),
+                  Text('Actualiser'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // NOUVELLE MÉTHODE: Gestion des actions du menu
+  void _handleMenuAction(String action) {
+    switch (action) {
+      case 'clear_notifications':
+        _markConversationAsRead();
+        Get.snackbar('✅', 'Notifications effacées', duration: const Duration(seconds: 2));
+        break;
+      case 'refresh':
+        loadMessages();
+        Get.snackbar('🔄', 'Messages actualisés', duration: const Duration(seconds: 2));
+        break;
+    }
+  }
+
+  // NOUVELLE MÉTHODE: Afficher infos du chat
+  void _showChatInfo() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.info, color: Colors.green),
+            SizedBox(width: 8),
+            Text('Information du Chat'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInfoRow('💬 ID Conversation', widget.conversationId),
+              _buildInfoRow('👤 Agent ID', widget.agentId.toString()),
+              if (widget.propertyId != null)
+                _buildInfoRow('🏠 Propriété ID', widget.propertyId.toString()),
+              _buildInfoRow('📱 Depuis notification', widget.fromNotification ? "Oui" : "Non"),
+              _buildInfoRow('💬 Nombre de messages', messages.length.toString()),
+              _buildInfoRow('👨‍💼 Mon nom', myName),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 120, child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold))),
+          Expanded(child: Text(value)),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.lightBlueAccent,
-        title: const Text("Conversation"),
-        elevation: 0,
-      ),
+      appBar: _buildAppBar(),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Container(
-        color: Colors.white,
+        color: Colors.grey.shade50,
         child: Column(
           children: [
+            // NOUVEAU: Indicateur si vient d'une notification
+            if (widget.fromNotification)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(8),
+                color: Colors.green.shade100,
+                child: const Row(
+                  children: [
+                    Icon(Icons.notifications_active, color: Colors.green, size: 16),
+                    SizedBox(width: 8),
+                    Text('Chat ouvert depuis une notification',
+                        style: TextStyle(color: Colors.green, fontSize: 12)),
+                  ],
+                ),
+              ),
             Expanded(
               child: ListView.builder(
                 reverse: true,
@@ -301,96 +628,103 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildInputArea(BuildContext context) {
     return Container(
-      color: Colors.black12,
-      height: 100,
-      padding: const EdgeInsets.all(5),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => showBottomSheet(context),
-            icon: const Icon(Icons.add, color: Colors.green),
-          ),
-          Expanded(
-            child: TextField(
-              cursorColor: Colors.black,
-              controller: textController,
-              style: const TextStyle(color: Colors.black),
-              decoration: InputDecoration(
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(50),
-                  borderSide: const BorderSide(color: Colors.black),
+      color: Colors.white,
+      padding: const EdgeInsets.all(8),
+      child: SafeArea(
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: () => showBottomSheet(context),
+              icon: const Icon(Icons.add_circle, color: Colors.green, size: 30),
+            ),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(color: Colors.grey.shade300),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(50),
-                  borderSide: const BorderSide(color: Colors.green),
+                child: TextField(
+                  cursorColor: Colors.green,
+                  controller: textController,
+                  style: const TextStyle(color: Colors.black),
+                  decoration: const InputDecoration(
+                    hintText: 'Tapez votre message...',
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  onChanged: (text) {
+                    setState(() {});
+                  },
                 ),
               ),
-              onChanged: (text) {
-                setState(() {
-                  // This will trigger a rebuild when the text changes
-                });
-              },
             ),
-          ),
-          const SizedBox(width: 8),
-          textController.text.isEmpty
-              ? CircleAvatar(
-            backgroundColor: Colors.green,
-            child: IconButton(
-              onPressed: () {
-                setState(() {
-                  if (!isRecording) {
-                    startRecording();
-                  } else {
-                    stopRecording();
+            const SizedBox(width: 8),
+            textController.text.isEmpty
+                ? Container(
+              decoration: const BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                onPressed: () {
+                  setState(() {
+                    if (!isRecording) {
+                      startRecording();
+                    } else {
+                      stopRecording();
+                    }
+                  });
+                },
+                icon: Icon(
+                  isRecording ? Icons.stop : Icons.mic,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            )
+                : Container(
+              decoration: const BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                onPressed: () {
+                  if (textController.text.trim().isNotEmpty) {
+                    sendMessage(textController.text.trim(), 'text');
+                    textController.clear();
                   }
-                });
-              },
-              icon: Icon(
-                isRecording ? Icons.stop : Icons.mic,
-                color: Colors.white,
+                },
+                icon: const Icon(Icons.send, color: Colors.white, size: 24),
               ),
             ),
-          )
-              : IconButton(
-            onPressed: () {
-              if (textController.text.trim().isNotEmpty) {
-                sendMessage(textController.text.trim(), 'text');
-                textController.clear();
-              }
-            },
-            icon: const Icon(Icons.send, color: Colors.green),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
+  // Toutes les autres méthodes restent identiques...
   Future<void> _playAudio(String audioPath, String audioId) async {
-    // Create a new audio player if it doesn't exist for this message
     if (!audioPlayers.containsKey(audioId)) {
       audioPlayers[audioId] = AudioPlayer();
 
-      // Set up duration listener for this specific player
       audioPlayers[audioId]!.onDurationChanged.listen((Duration duration) {
         setState(() {
           audioDurations[audioId] = duration;
         });
       });
 
-      // Set up position listener for this specific player
       audioPlayers[audioId]!.onPositionChanged.listen((Duration p) {
         setState(() {
           audioPositions[audioId] = p;
 
-          // Check if audio has finished playing
           if (p >= (audioDurations[audioId] ?? Duration.zero)) {
             _resetAudioState(audioId);
           }
         });
       });
 
-      // Add completion listener
       audioPlayers[audioId]!.onPlayerComplete.listen((_) {
         _resetAudioState(audioId);
       });
@@ -399,14 +733,12 @@ class _ChatScreenState extends State<ChatScreen> {
     final player = audioPlayers[audioId]!;
 
     if (isPlayingMap[audioId] == true) {
-      // Pause the currently playing audio
       await player.pause();
       setState(() {
         isPlayingMap[audioId] = false;
         isPauseMap[audioId] = true;
       });
     } else {
-      // Stop all other playing audio first
       for (var entry in audioPlayers.entries) {
         if (entry.key != audioId && isPlayingMap[entry.key] == true) {
           await entry.value.stop();
@@ -468,13 +800,12 @@ class _ChatScreenState extends State<ChatScreen> {
         isRecording = true;
         _recordingDuration = 0;
       });
-      // Start a timer to track the recording duration
+
       _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
         setState(() {
           _recordingDuration++;
         });
 
-        // Stop recording if it exceeds 3 minutes (180 seconds)
         if (_recordingDuration >= 180) {
           stopRecording();
           Get.snackbar(
@@ -502,35 +833,41 @@ class _ChatScreenState extends State<ChatScreen> {
   void showBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder: (c) => IntrinsicHeight(
-        child: Container(
-          color: Colors.black,
-          child: Column(
-            children: [
-              Card(
-                color: Colors.grey.shade900,
-                child: ListTile(
-                  onTap: () {
-                    openImageCamera(context);
-                  },
-                  leading: const Icon(Icons.camera_alt, color: Colors.white),
-                  title: const Text('Camera',
-                      style: TextStyle(color: Colors.white)),
-                ),
+      backgroundColor: Colors.transparent,
+      builder: (c) => Container(
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              height: 4,
+              width: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
               ),
-              Card(
-                color: Colors.grey.shade900,
-                child: ListTile(
-                  onTap: () {
-                    openImageGallery(context);
-                  },
-                  leading: const Icon(Icons.photo, color: Colors.white),
-                  title: const Text('Gallery',
-                      style: TextStyle(color: Colors.white)),
-                ),
-              ),
-            ],
-          ),
+            ),
+            ListTile(
+              onTap: () {
+                openImageCamera(context);
+              },
+              leading: const Icon(Icons.camera_alt, color: Colors.green),
+              title: const Text('Appareil photo'),
+            ),
+            ListTile(
+              onTap: () {
+                openImageGallery(context);
+              },
+              leading: const Icon(Icons.photo_library, color: Colors.green),
+              title: const Text('Galerie'),
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );
@@ -552,15 +889,19 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // MÉTHODE CONSERVÉE MAIS SIMPLIFIÉE: Navigation vers autre chat
   void _navigateToChatScreen(Map<String, dynamic> data) {
-    // Extract necessary data from the notification payload
     String conversationId = data['conversationId'] ?? '';
     int? propertyId = data['propertyId'] != null ? int.tryParse(data['propertyId']) : null;
+    int agentId = int.tryParse(data['senderId'] ?? '0') ?? 0;
 
-    // Navigate to the ChatScreen with the conversationId and propertyId
-    Get.to(() => ChatScreen(
-      conversationId: conversationId,
-      propertyId: propertyId,
-    ));
+    if (conversationId.isNotEmpty) {
+      Get.off(() => ChatScreen(
+        conversationId: conversationId,
+        propertyId: propertyId,
+        agentId: agentId,
+        fromNotification: true,
+      ));
+    }
   }
 }

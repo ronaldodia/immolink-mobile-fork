@@ -18,6 +18,7 @@ import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
 
 class FutureadArticleDetailsScreen extends StatefulWidget {
   const FutureadArticleDetailsScreen({super.key, required this.property});
+
   final Article property;
 
   @override
@@ -133,7 +134,8 @@ class _FutureadArticleDetailsScreenState
                         borderRadius: BorderRadius.circular(16.0),
                         child: FadeInImage(
                           placeholder: const AssetImage(
-                              'assets/images/loading_placeholder.png'), // Image de chargement local
+                              'assets/images/loading_placeholder.png'),
+                          // Image de chargement local
                           image: NetworkImage(
                               '${Config.initUrl}${image.original}'),
                           fit: BoxFit.cover,
@@ -167,7 +169,9 @@ class _FutureadArticleDetailsScreenState
                           colorFilter: const ColorFilter.mode(
                               Colors.green, BlendMode.srcIn)),
                       const SizedBox(width: 8),
-                      Text(widget.property.category!.getName(Get.locale?.languageCode ?? 'fr') ?? 'Category'),
+                      Text(widget.property.category!
+                              .getName(Get.locale?.languageCode ?? 'fr') ??
+                          'Category'),
                     ],
                   ),
                   const Spacer(),
@@ -393,20 +397,20 @@ class _FutureadArticleDetailsScreenState
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text('Réservez Maintenant',
-                    style: TextStyle(fontSize: 20, color: Colors.white)),
+                child: const Text('Réservez Maintenant!',
+                    style:  TextStyle(fontSize: 20, color: Colors.white)),
               ),
             )
           : Container(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-              color: Colors.white,
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
               child: ElevatedButton(
                 onPressed: () async {
+                  final CheckAuthController authController =
+                      Get.put(CheckAuthController());
                   bool isAuthenticated = await authController.checkUserToken();
-                  // Vérifier si l'utilisateur est connecté via Firebase ou backend
                   User? user = FirebaseAuth.instance.currentUser;
-                  //var conversation = chatController.filteredConversations[0];
+
                   print(isAuthenticated);
                   final conversation =
                       await chatController.getOrCreateConversation(
@@ -417,16 +421,14 @@ class _FutureadArticleDetailsScreenState
                         'Property Chat',
                     agentId: agentId,
                   );
+
                   if (isAuthenticated) {
                     Get.to(ChatScreen(
                         conversationId: conversation.id, agentId: agentId));
                   } else if (user != null) {
-                    // Si l'utilisateur est connecté, naviguer vers la page de réservation
-                    // Naviguer vers l'écran de détails de la conversation
                     Get.to(ChatScreen(
                         conversationId: conversation.id, agentId: agentId));
                   } else {
-                    // Sinon, naviguer vers la page de connexion et sauvegarder l'intention
                     Get.to(() => const LoginPhoneScreen(), arguments: {
                       'nextPage': ChatScreen(
                         conversationId: conversation.id,
@@ -442,15 +444,13 @@ class _FutureadArticleDetailsScreenState
                   ),
                 ),
                 child: Row(
-                  mainAxisSize: MainAxisSize
-                      .min, // Adapter la taille du bouton à son contenu
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text('Discutez',
                         style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: 20)),
-                    // Icône de discussion
                     const SizedBox(width: 8),
                     SvgPicture.asset(
                       TImages.inactiveChat,

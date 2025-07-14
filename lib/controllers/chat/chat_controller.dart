@@ -27,28 +27,42 @@ import 'package:immolink_mobile/models/Conversation.dart';class ChatController e
   List<Conversation> get filteredConversations => conversations.where((conv) {
     return conv.title.toLowerCase().contains(searchQuery.value.toLowerCase());
   }).toList();
-
   Future<Conversation> getOrCreateConversation({
     required int propertyId,
     required String propertyTitle,
     required int agentId,
   }) async {
     try {
-      // First, check if a conversation already exists for this property
-      Conversation? existingConversation;
+      // Validation des paramètres
+      if (propertyId <= 0) {
+        throw Exception('ID de propriété invalide: $propertyId');
+      }
 
+      if (agentId <= 0) {
+        throw Exception('ID d\'agent invalide: $agentId');
+      }
+
+      if (propertyTitle.isEmpty) {
+        throw Exception('Titre de propriété vide');
+      }
+
+      print('Création/récupération de conversation - PropertyId: $propertyId, AgentId: $agentId, Title: $propertyTitle');
+
+      // Recherche d'une conversation existante
+      Conversation? existingConversation;
       try {
         existingConversation = conversations.firstWhere(
               (conv) => conv.propertyId == propertyId,
         );
+        print('Conversation existante trouvée: ${existingConversation.id}');
         return existingConversation;
       } catch (e) {
-        // No existing conversation found, continue to create new one
+        print('Aucune conversation existante trouvée, création d\'une nouvelle...');
       }
 
-      // If no conversation exists, create a new one
+      // Création d'une nouvelle conversation
       final response = await _chatService.createConversation(
-        participants: [], // Backend will add current user automatically
+        participants: [], // Backend ajoute automatiquement l'utilisateur actuel
         propertyId: propertyId,
         title: propertyTitle,
         agentId: agentId,
@@ -56,11 +70,14 @@ import 'package:immolink_mobile/models/Conversation.dart';class ChatController e
 
       final newConversation = Conversation.fromJson(response);
       conversations.add(newConversation);
+      print('Nouvelle conversation créée: ${newConversation.id}');
 
       return newConversation;
     } catch (e) {
-      print('Error in getOrCreateConversation: $e');
-      throw Exception('Failed to create conversation');
+      print('Erreur détaillée dans getOrCreateConversation: $e');
+      print('PropertyId: $propertyId, AgentId: $agentId, Title: $propertyTitle');
+      throw Exception('Échec de création de conversation: ${e.toString()}');
     }
   }
+
 }
