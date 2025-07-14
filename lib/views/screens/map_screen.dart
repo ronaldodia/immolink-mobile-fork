@@ -9,7 +9,7 @@ import 'package:immolink_mobile/views/screens/article/create_article_by_map_scre
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'dart:math' as math;
-import 'package:immolink_mobile/l10n/app_localizations.dart'; 
+import 'package:immolink_mobile/l10n/app_localizations.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -191,11 +191,11 @@ class _MapScreenState extends State<MapScreen>
               String areaText = area.toStringAsFixed(2); // Format area
 
               panelInfo =
-                  'Lot: ${properties['l']}\nSuperficie: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}${properties['lts']} \nAltitude: ${properties['el'] }m';
+                  'Lot: ${properties['l']}\nSuperficie: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}${properties['lts']} \nAltitude: ${properties['el']}m';
               panelInfoAr =
                   'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']} \nارتفاع: ${properties['el']} m';
               panelInfoEn =
-                  'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}${properties['lts']} \nAltitude: ${properties['el'] }m';
+                  'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}${properties['lts']} \nAltitude: ${properties['el']}m';
               screenArea = area;
               screenLotissement = properties['lts'];
               screenLotNumber = properties['l'];
@@ -315,11 +315,11 @@ class _MapScreenState extends State<MapScreen>
               polygons = newPolygons;
               selectedPolygon = polygon;
               panelInfo =
-                  'Lot: ${properties['l']}\nSuperficie: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts'] }\nAltitude: ${properties['el']} m';
+                  'Lot: ${properties['l']}\nSuperficie: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']}\nAltitude: ${properties['el']} m';
               panelInfoAr =
                   'القطعة: ${properties['l']}\nالمساحة: $areaText م²\nالمؤشر: ${properties['i']}\nالمقاطعة: ${properties['moughataa']}\nالتقسيم: ${properties['lts']} \nارتفاع: ${properties['el']} m';
               panelInfoEn =
-                  'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']} \nAltitude: ${properties['el'] }m';
+                  'Lot: ${properties['l']}\nArea: $areaText m²\nIndex: ${properties['i']}\nMoughataa: ${properties['moughataa']}\nLotissement: ${properties['lts']} \nAltitude: ${properties['el']}m';
               screenArea = area;
               screenLotissement = properties['lts'];
               screenLotNumber = properties['l'];
@@ -364,13 +364,16 @@ class _MapScreenState extends State<MapScreen>
             child: currentPosition == null
                 ? const Center(child: CircularProgressIndicator())
                 : GoogleMap(
-                    mapToolbarEnabled: false,
+                    mapToolbarEnabled: true,
                     myLocationButtonEnabled: false,
                     onMapCreated: (GoogleMapController controller) {
                       mapController = controller;
                     },
                     initialCameraPosition:
                         CameraPosition(target: currentPosition!, zoom: 18),
+                    zoomControlsEnabled: true,
+                    zoomGesturesEnabled: true,
+                    scrollGesturesEnabled: true,
                     mapType: MapType.satellite,
                     myLocationEnabled:
                         true, // Disabled here to customize button
@@ -575,7 +578,12 @@ class _MapScreenState extends State<MapScreen>
                           ),
                           ElevatedButton(
                             onPressed: () {
-                              Get.to(CreateArticleByMapScreen(area: screenArea, lotNumber: screenLotNumber, lotissement: screenLotissement, moughataa: screenMoughataa,));
+                              Get.to(CreateArticleByMapScreen(
+                                area: screenArea,
+                                lotNumber: screenLotNumber,
+                                lotissement: screenLotissement,
+                                moughataa: screenMoughataa,
+                              ));
                             },
                             child: const Text('Ajouter'),
                           ),

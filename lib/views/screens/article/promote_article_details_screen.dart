@@ -13,6 +13,7 @@ import 'package:immolink_mobile/views/screens/article/common/gallery_panel.dart'
 import 'package:immolink_mobile/views/screens/booking_screen.dart';
 import 'package:immolink_mobile/views/screens/chat_screen.dart';
 import 'package:immolink_mobile/views/screens/login_phone_screen.dart';
+import 'package:immolink_mobile/views/screens/chat_screen.dart';
 import 'package:immolink_mobile/utils/config.dart';
 
 import '../../../utils/image_constants.dart';
@@ -49,6 +50,11 @@ class _PromoteArticleDetailsScreenState
     } else if (widget.property.image.isNotEmpty) {
       imageUrl = widget.property.image;
     }
+
+    print("promote article screen");
+
+    final isMeuble = widget.property.purpose == 'Rent' &&
+        (widget.property.bookable_type?.toLowerCase() == 'daily');
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -498,8 +504,9 @@ class _PromoteArticleDetailsScreenState
           ],
         ),
       ),
-      bottomNavigationBar: widget.property.purpose == "Rent"
+      bottomNavigationBar: isMeuble
           ? Container(
+<<<<<<< HEAD
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -606,6 +613,25 @@ class _PromoteArticleDetailsScreenState
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text('Discutez',
+=======
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  Get.to(() => BookingScreen(
+                        articleId: widget.property.id,
+                        eventType: 'Réservation',
+                      ));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[700],
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
+                child: const Text(
+                  'Réserver maintenant',
+>>>>>>> e2e00dc (fix)
                   style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -616,11 +642,41 @@ class _PromoteArticleDetailsScreenState
                 colorFilter:
                 const ColorFilter.mode(Colors.white, BlendMode.srcIn),
               ),
+<<<<<<< HEAD
             ],
           ),
         ),
       )
           : null,
+=======
+            )
+          : Container(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  Get.to(() => ChatScreen(
+                        conversationId: '',
+                        propertyId: widget.property.id,
+                      ));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[700],
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
+                child: const Text(
+                  'Contacter',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+>>>>>>> e2e00dc (fix)
     );
   }
 

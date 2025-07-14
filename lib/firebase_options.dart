@@ -46,26 +46,27 @@ class DefaultFirebaseOptions {
     messagingSenderId: '487656917571',
     projectId: 'immoplace-de022',
     authDomain: 'immoplace-de022.firebaseapp.com',
-    storageBucket: 'immoplace-de022.appspot.com',
+    storageBucket: 'immoplace-de022.firebasestorage.app',
     measurementId: 'G-SSE4SVW8QX',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDs_Mi4SKQel06xGscvRMPi1EyFpdsH3IE',
-    appId: '1:487656917571:android:0026c6c192c867689422f6',
+    appId: '1:487656917571:android:a066152dc32b1c8c9422f6',
     messagingSenderId: '487656917571',
     projectId: 'immoplace-de022',
-    storageBucket: 'immoplace-de022.appspot.com',
+    storageBucket: 'immoplace-de022.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyB1faYD--tsSnFebYuuM68sioEI6nV-u6o',
-    appId: '1:487656917571:ios:59b77d2548cb87b79422f6',
+    appId: '1:487656917571:ios:459fa16cffdea2fd9422f6',
     messagingSenderId: '487656917571',
     projectId: 'immoplace-de022',
-    storageBucket: 'immoplace-de022.appspot.com',
-    iosClientId: '487656917571-i1i355qmcc6afikoshlj8uigh7rb5hf2.apps.googleusercontent.com',
-    iosBundleId: 'com.example.immolinkMobile',
+    storageBucket: 'immoplace-de022.firebasestorage.app',
+    androidClientId: '487656917571-bsjo3jtoouat3cnqtpopqfupfl4ig3av.apps.googleusercontent.com',
+    iosClientId: '487656917571-l2ja0gvf8cgpe45nvhjsm38n24fo88si.apps.googleusercontent.com',
+    iosBundleId: 'app.immoplace.mr',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +74,8 @@ class DefaultFirebaseOptions {
     appId: '1:487656917571:ios:59b77d2548cb87b79422f6',
     messagingSenderId: '487656917571',
     projectId: 'immoplace-de022',
-    storageBucket: 'immoplace-de022.appspot.com',
+    storageBucket: 'immoplace-de022.firebasestorage.app',
+    androidClientId: '487656917571-bsjo3jtoouat3cnqtpopqfupfl4ig3av.apps.googleusercontent.com',
     iosClientId: '487656917571-i1i355qmcc6afikoshlj8uigh7rb5hf2.apps.googleusercontent.com',
     iosBundleId: 'com.example.immolinkMobile',
   );
@@ -84,7 +86,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '487656917571',
     projectId: 'immoplace-de022',
     authDomain: 'immoplace-de022.firebaseapp.com',
-    storageBucket: 'immoplace-de022.appspot.com',
+    storageBucket: 'immoplace-de022.firebasestorage.app',
     measurementId: 'G-MCBSSYEDWL',
   );
 
