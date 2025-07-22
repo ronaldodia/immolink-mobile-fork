@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:get/get.dart';
 import 'package:immolink_mobile/services/address_service.dart';
@@ -31,7 +33,6 @@ class ArticleFormController extends GetxController {
   var gallery = <Map<String, String>>[].obs;
   var image = "".obs;
 
-
   // addressage
   RxList<String> moughataas = <String>[].obs;
   RxList<String> lotissements = <String>[].obs;
@@ -39,7 +40,8 @@ class ArticleFormController extends GetxController {
   RxString selectedLotissement = ''.obs;
   RxString selectedLot = ''.obs;
   RxList<dynamic> locationData = <dynamic>[].obs;
-  Rx<LatLng> currentLocation = const LatLng(0.0, 0.0).obs; // Exemple pour Nouakchott
+  Rx<LatLng> currentLocation =
+      const LatLng(0.0, 0.0).obs; // Exemple pour Nouakchott
   GoogleMapController? mapController;
   final Location location = Location();
 
@@ -105,19 +107,29 @@ class ArticleFormController extends GetxController {
   Future<void> uploadImageFile(File file) async {
     isLoadingImage.value = true;
     try {
+      // Compression avant upload
+      final compressed = await compressImage(file);
+      if (compressed == null) {
+        DLoader.errorSnackBar(
+            title: 'Erreur', message: 'Impossible de compresser l\'image.');
+        return;
+      }
+      if (await compressed.length() > 2 * 1024 * 1024) {
+        DLoader.errorSnackBar(
+            title: 'Image trop lourde',
+            message: 'Veuillez choisir une image de moins de 2 Mo.');
+        return;
+      }
       var request = http.MultipartRequest('POST', Uri.parse(apiUrl))
         ..headers['Accept'] = 'application/json'
-        ..files
-            .add(await http.MultipartFile.fromPath('attachment[]', file.path));
-
+        ..files.add(
+            await http.MultipartFile.fromPath('attachment[]', compressed.path));
       var response = await request.send();
-
       if (response.statusCode == 200) {
         var responseBody = await response.stream.bytesToString();
         var responseData = json.decode(responseBody);
-
-        if (responseData.isNotEmpty) {
-          uploadImage.value = responseData[0]['thumbnail'];
+        if (responseData.isNotEmpty && responseData[0]['original'] != null) {
+          uploadImage.value = responseData[0]['original'];
         }
       } else {
         print(
@@ -132,46 +144,65 @@ class ArticleFormController extends GetxController {
 
   // Méthode pour uploader plusieurs images (galerie)
   Future<void> uploadGalleryImages(List<File> files) async {
-    isLoadingGallery.value = true; // Affiche le chargement
+    isLoadingGallery.value = true;
     try {
+      List<File> compressedFiles = [];
+      for (var file in files) {
+        final compressed = await compressImage(file);
+        if (compressed == null) {
+          DLoader.errorSnackBar(
+              title: 'Erreur', message: 'Impossible de compresser une image.');
+          continue;
+        }
+        if (await compressed.length() > 2 * 1024 * 1024) {
+          DLoader.errorSnackBar(
+              title: 'Image trop lourde',
+              message: 'Une image de la galerie dépasse 2 Mo.');
+          continue;
+        }
+        compressedFiles.add(compressed);
+      }
+      if (compressedFiles.isEmpty) return;
       var request = http.MultipartRequest('POST', Uri.parse(apiUrl))
         ..headers['Accept'] = 'application/json';
-
-      for (var file in files) {
+      for (var file in compressedFiles) {
         request.files
             .add(await http.MultipartFile.fromPath('attachment[]', file.path));
       }
-
       var response = await request.send();
-
       if (response.statusCode == 200) {
         var responseBody = await response.stream.bytesToString();
         var responseData = json.decode(responseBody);
-
         if (responseData is List) {
           uploadGallery.addAll(responseData.map<Map<String, String>>((image) {
-            // Vérifie si chaque élément contient bien les clés nécessaires
             if (image is Map &&
                 image.containsKey('thumbnail') &&
                 image.containsKey('original')) {
               return {
                 'thumbnail': image['thumbnail']?.toString() ?? '',
                 'original': image['original']?.toString() ?? '',
+                'id': image['id']?.toString() ?? '',
               };
             } else {
               return {};
             }
           }).toList());
         }
+      } else if (response.statusCode == 413) {
+        DLoader.errorSnackBar(
+            title: 'Erreur', message: 'Une image de la galerie dépasse 2 Mo.');
       } else {
         print(
-            'Erreur lors du téléchargement des images : ${response
-                .statusCode}');
+            'Erreur lors du téléchargement des images : ${response.statusCode}');
+        DLoader.errorSnackBar(
+            title: 'Erreur',
+            message:
+                'Une erreur est survenue lors du téléchargement des images.');
       }
     } catch (e) {
       print('Exception lors du téléchargement des images : $e');
     } finally {
-      isLoadingGallery.value = false; // Cache le chargement
+      isLoadingGallery.value = false;
     }
   }
 
@@ -179,7 +210,7 @@ class ArticleFormController extends GetxController {
     isLoading.value = true; // Active le chargement
     try {
       final url =
-          'https://gis.digissimmo.org/api/location?longitude=$longitude&latitude=$latitude';
+          '${Config.baseUrlSIG}/location?longitude=$longitude&latitude=$latitude';
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -230,7 +261,6 @@ class ArticleFormController extends GetxController {
     isPanelOpen.value = !isPanelOpen.value;
   }
 
-
   // Méthode pour supprimer une image de la galerie
   void removeImageFromGallery(Map<String, String> image) {
     uploadGallery.remove(image);
@@ -240,7 +270,6 @@ class ArticleFormController extends GetxController {
   void removeImage() {
     uploadImage.value = '';
   }
-
 
   void setCurrentLocation(LatLng location) async {
     currentLocation.value = location;
@@ -256,12 +285,12 @@ class ArticleFormController extends GetxController {
 
       if (polygonPoints.isNotEmpty) {
         final bounds = LatLngBounds(
-          southwest: polygonPoints.reduce((a, b) =>
-              LatLng(a.latitude < b.latitude ? a.latitude : b.latitude,
-                  a.longitude < b.longitude ? a.longitude : b.longitude)),
-          northeast: polygonPoints.reduce((a, b) =>
-              LatLng(a.latitude > b.latitude ? a.latitude : b.latitude,
-                  a.longitude > b.longitude ? a.longitude : b.longitude)),
+          southwest: polygonPoints.reduce((a, b) => LatLng(
+              a.latitude < b.latitude ? a.latitude : b.latitude,
+              a.longitude < b.longitude ? a.longitude : b.longitude)),
+          northeast: polygonPoints.reduce((a, b) => LatLng(
+              a.latitude > b.latitude ? a.latitude : b.latitude,
+              a.longitude > b.longitude ? a.longitude : b.longitude)),
         );
 
         mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
@@ -274,7 +303,6 @@ class ArticleFormController extends GetxController {
       CameraUpdate.newLatLng(location),
     );
   }
-
 
   void searchLocation(String query) {
     // Implémentez une recherche personnalisée pour trouver des endroits.
@@ -294,12 +322,12 @@ class ArticleFormController extends GetxController {
     // Charger les nouveaux lotissements
     var rawLotissements = addressData[moughataa]['lotissements'] ?? [];
     if (rawLotissements is List<dynamic>) {
-      lotissements.value = rawLotissements.map((item) => item.toString()).toList();
+      lotissements.value =
+          rawLotissements.map((item) => item.toString()).toList();
     } else {
       lotissements.value = [];
     }
   }
-
 
   void selectLotissement(String lotissement) {
     selectedLotissement.value = lotissement;
@@ -313,7 +341,7 @@ class ArticleFormController extends GetxController {
     isLoading.value = true;
     try {
       final response = await GetConnect().get(
-        'https://gis.digissimmo.org/api/features',
+        '${Config.baseUrlSIG}/features',
         query: {
           'lot': selectedLot.value,
           'lotissement': selectedLotissement.value,
@@ -396,7 +424,8 @@ class ArticleFormController extends GetxController {
 
       // Obtenez la localisation actuelle
       final userLocation = await location.getLocation();
-      currentLocation.value = LatLng(userLocation.latitude!, userLocation.longitude!);
+      currentLocation.value =
+          LatLng(userLocation.latitude!, userLocation.longitude!);
     } catch (e) {
       print("Erreur lors de la récupération de la localisation : $e");
     } finally {
@@ -404,4 +433,19 @@ class ArticleFormController extends GetxController {
     }
   }
 
+  Future<File?> compressImage(File file) async {
+    final result = await FlutterImageCompress.compressWithFile(
+      file.absolute.path,
+      minWidth: 1024,
+      minHeight: 1024,
+      quality: 80, // Ajuste la qualité si besoin
+    );
+    if (result == null) return null;
+    final tempDir = await getTemporaryDirectory();
+    final targetPath =
+        '${tempDir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
+    final compressed = File(targetPath);
+    await compressed.writeAsBytes(result);
+    return compressed;
+  }
 }

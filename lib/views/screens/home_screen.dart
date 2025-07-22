@@ -580,6 +580,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     final status = promotion.status ?? 'publish';
                     final isFeatured = status == 'publish';
 
+                    final isMeuble = article.purpose == 'Rent' &&
+                        (article.bookable_type == 'Daily');
+
                     return Container(
                       width: 220.0,
                       margin: const EdgeInsets.symmetric(
@@ -619,88 +622,61 @@ class _HomeScreenState extends State<HomeScreen> {
                                     topLeft: Radius.circular(16.0),
                                     topRight: Radius.circular(16.0),
                                   ),
-                                  child: imageUrl.isNotEmpty
-                                      ? Image.network(
-                                          imageUrl,
-                                          height: 140.0,
-                                          width: double.infinity,
-                                          fit: BoxFit.cover,
-                                          loadingBuilder: (context, child,
-                                              loadingProgress) {
-                                            if (loadingProgress == null) {
-                                              return child;
-                                            }
-                                            return Container(
-                                              height: 140.0,
-                                              color: Colors.grey[200],
-                                              child: Center(
-                                                child:
-                                                    CircularProgressIndicator(
-                                                  value: loadingProgress
-                                                              .expectedTotalBytes !=
-                                                          null
-                                                      ? loadingProgress
-                                                              .cumulativeBytesLoaded /
-                                                          loadingProgress
-                                                              .expectedTotalBytes!
-                                                      : null,
-                                                  valueColor:
-                                                      AlwaysStoppedAnimation<
-                                                              Color>(
-                                                          Colors.blue[400]!),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                            return Container(
-                                              height: 140.0,
-                                              color: Colors.grey[200],
-                                              child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  const Icon(
-                                                      Icons
-                                                          .photo_library_outlined,
-                                                      size: 40.0,
-                                                      color: Colors.grey),
-                                                  const SizedBox(height: 8.0),
-                                                  Text(
-                                                    'Image non disponible',
-                                                    style: TextStyle(
-                                                      color: Colors.grey[600],
-                                                      fontSize: 12.0,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        )
-                                      : Container(
-                                          height: 140.0,
-                                          color: Colors.grey[200],
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              const Icon(
-                                                  Icons.photo_library_outlined,
-                                                  size: 40.0,
-                                                  color: Colors.grey),
-                                              const SizedBox(height: 8.0),
-                                              Text(
-                                                'Aucune image',
-                                                style: TextStyle(
-                                                  color: Colors.grey[600],
-                                                  fontSize: 12.0,
-                                                ),
-                                              ),
-                                            ],
+                                  child: Image.network(
+                                    imageUrl,
+                                    height: 140.0,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    loadingBuilder:
+                                        (context, child, loadingProgress) {
+                                      if (loadingProgress == null) {
+                                        return child;
+                                      }
+                                      return Container(
+                                        height: 140.0,
+                                        color: Colors.grey[200],
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            value: loadingProgress
+                                                        .expectedTotalBytes !=
+                                                    null
+                                                ? loadingProgress
+                                                        .cumulativeBytesLoaded /
+                                                    loadingProgress
+                                                        .expectedTotalBytes!
+                                                : null,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.blue[400]!),
                                           ),
                                         ),
+                                      );
+                                    },
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        height: 140.0,
+                                        color: Colors.grey[200],
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(
+                                                Icons.photo_library_outlined,
+                                                size: 40.0,
+                                                color: Colors.grey),
+                                            const SizedBox(height: 8.0),
+                                            Text(
+                                              'Image non disponible',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 12.0,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                                 if (isFeatured)
                                   Positioned(
@@ -752,50 +728,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ),
                                   ),
-                                if (article.bookable_type!.contains('Daily'))
+                                if (isMeuble)
                                   Positioned(
-                                    top: 12.0,
-                                    left: 12.0,
+                                    top: 8,
+                                    right: 150,
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 8.0, vertical: 4.0),
+                                          horizontal: 8, vertical: 2),
                                       decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Colors.amber, Colors.orange],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(12.0),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.amber
-                                                .withValues(alpha: 0.3),
-                                            spreadRadius: 1,
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
+                                        color: Colors.orange[100],
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                            color: Colors.orange[300]!),
                                       ),
-                                      child: const Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.chair_alt,
-                                            color: Colors.white,
-                                            size: 12.0,
-                                          ),
-                                          SizedBox(width: 4.0),
-                                          Text(
-                                            'MEUBLÉ',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 10.0,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 0.5,
-                                            ),
-                                          ),
-                                        ],
+                                      child: const Text(
+                                        'Meublé',
+                                        style: TextStyle(
+                                          color: Colors.orange,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 10,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -1021,6 +973,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     imageUrl = article.image;
                   }
 
+                  final isMeuble = article.purpose == 'Rent' &&
+                      (article.bookable_type?.toLowerCase() == 'daily');
+
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12.0),
                     height: 110.0, // Hauteur fixe
@@ -1047,25 +1002,58 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Row(
                           children: [
                             // Image à gauche
-                            ClipRRect(
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(12.0),
-                                bottomLeft: Radius.circular(12.0),
-                              ),
-                              child: Image.network(
-                                imageUrl,
-                                width: 110.0,
-                                height: 110.0,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  width: 110.0,
-                                  height: 110.0,
-                                  color: Colors.grey[100],
-                                  child: const Icon(
-                                      Icons.photo_library_outlined,
-                                      color: Colors.grey),
-                                ),
+                            SizedBox(
+                              width: 110.0,
+                              height: 110.0,
+                              child: Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(12.0),
+                                      bottomLeft: Radius.circular(12.0),
+                                    ),
+                                    child: Image.network(
+                                      imageUrl,
+                                      width: 110.0,
+                                      height: 110.0,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              Container(
+                                        width: 110.0,
+                                        height: 110.0,
+                                        color: Colors.grey[100],
+                                        child: const Icon(
+                                            Icons.photo_library_outlined,
+                                            color: Colors.grey),
+                                      ),
+                                    ),
+                                  ),
+                                  if (isMeuble)
+                                    Positioned(
+                                      top: 8,
+                                      right: 50,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange[100],
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                              color: Colors.orange[300]!),
+                                        ),
+                                        child: const Text(
+                                          'Meublé',
+                                          style: TextStyle(
+                                            color: Colors.orange,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                             // Détails à droite
@@ -1350,6 +1338,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       } else if (article.image.isNotEmpty) {
                         imageUrl = article.image;
                       }
+
+                      final isMeuble = article.purpose == 'Rent' &&
+                          (article.bookable_type?.toLowerCase() == 'daily');
 
                       return GestureDetector(
                         onTap: () {

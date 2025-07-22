@@ -16,6 +16,7 @@ class FeaturedPropertyCard extends StatelessWidget {
   final double price;
   final List<IconData> amenities;
   final void Function()? onTap;
+  final bool isMeuble;
 
   const FeaturedPropertyCard({
     super.key,
@@ -28,6 +29,7 @@ class FeaturedPropertyCard extends StatelessWidget {
     required this.price,
     required this.amenities,
     this.onTap,
+    this.isMeuble = false,
   });
 
   String _getStatusColor(String status) {
@@ -103,6 +105,29 @@ class FeaturedPropertyCard extends StatelessWidget {
                             height: 180,
                             fit: BoxFit.cover,
                           ),
+                    // Badge Meublé
+                    if (isMeuble)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.orange[100],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.orange[300]!),
+                          ),
+                          child: const Text(
+                            'Meublé',
+                            style: TextStyle(
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      ),
                     // Gradient overlay
                     Container(
                       width: double.infinity,
