@@ -78,7 +78,6 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // NOUVELLE MÉTHODE: Marquer conversation comme lue
   Future<void> _markConversationAsRead() async {
     try {
       await NotificationServices.instance.markNotificationAsRead(widget.conversationId);
@@ -96,73 +95,57 @@ class _ChatScreenState extends State<ChatScreen> {
     print('PropertyId: ${widget.propertyId}');
   }
 
-  // MÉTHODE AMÉLIORÉE: Setup Firebase Messaging avec gestion intelligente
+
   void _setupFirebaseMessaging() {
     _firebaseMessaging.requestPermission();
 
-    // Handle foreground messages - Gestion intelligente selon la conversation
+    // Handle foreground messages - ONLY for OTHER conversations
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print('📱 Message reçu en foreground: ${message.data}');
 
-      if (message.data['conversationId'] == widget.conversationId) {
-        // Si le message est pour cette conversation, l'ajouter directement
-        _handleNewMessageInCurrentChat(message);
-      } else {
-        // Sinon, afficher une notification in-app
+      // FIXED: Only handle messages from OTHER conversations
+      if (message.data['conversationId'] != widget.conversationId) {
         _showInAppNotification(message);
       }
+
     });
 
-    // NOUVEAU: Gestion tap sur notification depuis cette screen
+    // Handle notification taps
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       _handleNotificationTapInChat(message);
     });
   }
 
-  // NOUVELLE MÉTHODE: Gestion message dans chat actuel
-  void _handleNewMessageInCurrentChat(RemoteMessage message) {
-    try {
-      // Ne pas afficher si c'est notre propre message
-      final senderName = message.data['senderName'] ?? 'Utilisateur';
-      if (senderName == myName) {
-        print('🔇 Message ignoré (propre message)');
-        return;
-      }
+// Keep WebSocket handling as is - this is the primary real-time mechanism
+  void setupWebSocket() {
+    _chatService.messageStream?.listen((message) {
+      final parsedMessage = json.decode(message);
 
-      // Créer un ChatModel depuis les données de notification
-      final chatModel = ChatModel(
-        message.data['content'] ?? message.notification?.body ?? '',
-        senderName,
-        int.tryParse(message.data['senderId'] ?? '0') ?? 0,
-        message.data['messageType'] ?? 'text',
-        '', // image
-        '', // audio
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-      );
+      if (parsedMessage['type'] == 'new_message') {
+        print("Got WebSocket message: ${parsedMessage} and currentConversation is $currentConversationId");
 
-      // Vérifier que le message n'existe pas déjà
-      if (!messages.any((msg) => msg.text == chatModel.text && msg.sender_name == chatModel.sender_name)) {
-        setState(() {
-          messages.insert(0, chatModel);
-        });
+        if (parsedMessage['message']['conversation'] == currentConversationId) {
+          if(parsedMessage['message']['sender_name'] != myName) {
+            // Check by unique message ID to prevent duplicates
+            final messageId = parsedMessage['message']['_id'] ??
+                parsedMessage['message']['id'];
+            final messageExists = messages.any((msg) => msg.id == messageId);
 
-        print('✅ Message ajouté en temps réel');
-        _showMessageReceivedFeedback();
-      }
-    } catch (e) {
-      print('❌ Erreur ajout message temps réel: $e');
-    }
-  }
-
-  // NOUVELLE MÉTHODE: Feedback visuel pour nouveau message
-  void _showMessageReceivedFeedback() {
-    // Vibration légère et scroll vers le bas
-    // HapticFeedback.lightImpact(); // Décommentez si vous voulez de la vibration
-
-    // Scroll automatique vers le dernier message
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        // Le ListView est en reverse, donc on scroll vers le haut pour voir le nouveau message
+            if (!messageExists) {
+              setState(() {
+                messages.insert(0, ChatModel.fromJson(parsedMessage['message']));
+              });
+              print('✅ Message WebSocket ajouté: $messageId');
+            } else {
+              print('🔄 Message WebSocket ignoré (déjà existant): $messageId');
+            }
+          }
+        }
+      } else if (parsedMessage['type'] == 'connection_established') {
+        print('Connection established with user: ${parsedMessage['user']}');
+        _chatService.joinRoom(currentConversationId);
+      } else {
+        print('Received other message type: ${parsedMessage['type']}');
       }
     });
   }
@@ -328,39 +311,6 @@ class _ChatScreenState extends State<ChatScreen> {
     return widget.conversationId.isNotEmpty
         ? widget.conversationId
         : Get.find<String>(tag: 'conversationId');
-  }
-
-  void setupWebSocket() {
-    _chatService.messageStream?.listen((message) {
-      final parsedMessage = json.decode(message);
-
-      if (parsedMessage['type'] == 'new_message') {
-        print("Got WebSocket message: ${parsedMessage} and currentConversation is $currentConversationId");
-
-        if (parsedMessage['message']['conversation'] == currentConversationId) {
-          if(parsedMessage['message']['sender_name'] != myName) {
-
-            // CORRECTION: Vérifier par ID unique du message
-            final messageId = parsedMessage['message']['_id'] ?? parsedMessage['message']['id'];
-            final messageExists = messages.any((msg) => msg.id == messageId);
-
-            if (!messageExists) {
-              setState(() {
-                messages.insert(0, ChatModel.fromJson(parsedMessage['message']));
-              });
-              print('✅ Message WebSocket ajouté: $messageId');
-            } else {
-              print('🔄 Message WebSocket ignoré (déjà existant): $messageId');
-            }
-          }
-        }
-      } else if (parsedMessage['type'] == 'connection_established') {
-        print('Connection established with user: ${parsedMessage['user']}');
-        _chatService.joinRoom(currentConversationId);
-      } else {
-        print('Received other message type: ${parsedMessage['type']}');
-      }
-    });
   }
 
   Future<void> loadMessages() async {
