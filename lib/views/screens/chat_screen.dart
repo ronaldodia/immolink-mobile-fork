@@ -22,13 +22,13 @@ class ChatScreen extends StatefulWidget {
     required this.conversationId,
     this.propertyId,
     this.agentId = 0,
-    this.fromNotification = false,  // NOUVEAU: Indicateur source notification
+    this.fromNotification = false, // NOUVEAU: Indicateur source notification
   });
 
   final String conversationId;
   final int? propertyId;
   final int agentId;
-  final bool fromNotification;  // NOUVEAU
+  final bool fromNotification; // NOUVEAU
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -81,7 +81,8 @@ class _ChatScreenState extends State<ChatScreen> {
   // NOUVELLE MÉTHODE: Marquer conversation comme lue
   Future<void> _markConversationAsRead() async {
     try {
-      await NotificationServices.instance.markNotificationAsRead(widget.conversationId);
+      await NotificationServices.instance
+          .markNotificationAsRead(widget.conversationId);
       print('📖 Conversation marquée comme lue: ${widget.conversationId}');
     } catch (e) {
       print('❌ Erreur marquage lecture: $e');
@@ -141,7 +142,9 @@ class _ChatScreenState extends State<ChatScreen> {
       );
 
       // Vérifier que le message n'existe pas déjà
-      if (!messages.any((msg) => msg.text == chatModel.text && msg.sender_name == chatModel.sender_name)) {
+      if (!messages.any((msg) =>
+          msg.text == chatModel.text &&
+          msg.sender_name == chatModel.sender_name)) {
         setState(() {
           messages.insert(0, chatModel);
         });
@@ -179,12 +182,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Icon(Icons.chat_bubble, color: Colors.white, size: 20),
+                  child: const Icon(Icons.chat_bubble,
+                      color: Colors.white, size: 20),
                 ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,11 +213,12 @@ class _ChatScreenState extends State<ChatScreen> {
               ],
             ),
           ),
-          backgroundColor: Colors.green.shade600,
+          backgroundColor: Colors.blueGrey,
           duration: const Duration(seconds: 4),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           action: SnackBarAction(
             label: 'Voir',
             textColor: Colors.white,
@@ -232,15 +236,16 @@ class _ChatScreenState extends State<ChatScreen> {
   void _navigateToOtherChat(Map<String, dynamic> data) {
     String conversationId = data['conversationId'] ?? '';
     int agentId = int.tryParse(data['senderId'] ?? '0') ?? 0;
-    int? propertyId = data['propertyId'] != null ? int.tryParse(data['propertyId']) : null;
+    int? propertyId =
+        data['propertyId'] != null ? int.tryParse(data['propertyId']) : null;
 
     if (conversationId.isNotEmpty) {
       Get.off(() => ChatScreen(
-        conversationId: conversationId,
-        agentId: agentId,
-        propertyId: propertyId,
-        fromNotification: true,
-      ));
+            conversationId: conversationId,
+            agentId: agentId,
+            propertyId: propertyId,
+            fromNotification: true,
+          ));
     }
   }
 
@@ -269,7 +274,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Text('Nouvelle conversation'),
           ],
         ),
-        content: Text(
+        content: const Text(
           'Vous avez reçu un message dans une autre conversation. Voulez-vous y accéder ?',
         ),
         actions: [
@@ -283,7 +288,8 @@ class _ChatScreenState extends State<ChatScreen> {
               _navigateToOtherChat(message.data);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Aller au chat', style: TextStyle(color: Colors.white)),
+            child: const Text('Aller au chat',
+                style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -335,18 +341,20 @@ class _ChatScreenState extends State<ChatScreen> {
       final parsedMessage = json.decode(message);
 
       if (parsedMessage['type'] == 'new_message') {
-        print("Got WebSocket message: ${parsedMessage} and currentConversation is $currentConversationId");
+        print(
+            "Got WebSocket message: ${parsedMessage} and currentConversation is $currentConversationId");
 
         if (parsedMessage['message']['conversation'] == currentConversationId) {
-          if(parsedMessage['message']['sender_name'] != myName) {
-
+          if (parsedMessage['message']['sender_name'] != myName) {
             // CORRECTION: Vérifier par ID unique du message
-            final messageId = parsedMessage['message']['_id'] ?? parsedMessage['message']['id'];
+            final messageId = parsedMessage['message']['_id'] ??
+                parsedMessage['message']['id'];
             final messageExists = messages.any((msg) => msg.id == messageId);
 
             if (!messageExists) {
               setState(() {
-                messages.insert(0, ChatModel.fromJson(parsedMessage['message']));
+                messages.insert(
+                    0, ChatModel.fromJson(parsedMessage['message']));
               });
               print('✅ Message WebSocket ajouté: $messageId');
             } else {
@@ -376,7 +384,8 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> sendMessage(String content, String type, {String? filePath, Duration? duration}) async {
+  Future<void> sendMessage(String content, String type,
+      {String? filePath, Duration? duration}) async {
     try {
       File? mediaFile;
       String messageContent = content;
@@ -425,7 +434,7 @@ class _ChatScreenState extends State<ChatScreen> {
   // MÉTHODE AMÉLIORÉE: AppBar avec informations et actions
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.green.shade600,
+      backgroundColor: Colors.blueGrey,
       elevation: 2,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -435,8 +444,9 @@ class _ChatScreenState extends State<ChatScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "💬 Chat ImmoLink",
-            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            "💬 Immo Place",
+            style: TextStyle(
+                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           if (widget.fromNotification)
             const Text(
@@ -487,11 +497,13 @@ class _ChatScreenState extends State<ChatScreen> {
     switch (action) {
       case 'clear_notifications':
         _markConversationAsRead();
-        Get.snackbar('✅', 'Notifications effacées', duration: const Duration(seconds: 2));
+        Get.snackbar('✅', 'Notifications effacées',
+            duration: const Duration(seconds: 2));
         break;
       case 'refresh':
         loadMessages();
-        Get.snackbar('🔄', 'Messages actualisés', duration: const Duration(seconds: 2));
+        Get.snackbar('🔄', 'Messages actualisés',
+            duration: const Duration(seconds: 2));
         break;
     }
   }
@@ -517,8 +529,10 @@ class _ChatScreenState extends State<ChatScreen> {
               _buildInfoRow('👤 Agent ID', widget.agentId.toString()),
               if (widget.propertyId != null)
                 _buildInfoRow('🏠 Propriété ID', widget.propertyId.toString()),
-              _buildInfoRow('📱 Depuis notification', widget.fromNotification ? "Oui" : "Non"),
-              _buildInfoRow('💬 Nombre de messages', messages.length.toString()),
+              _buildInfoRow('📱 Depuis notification',
+                  widget.fromNotification ? "Oui" : "Non"),
+              _buildInfoRow(
+                  '💬 Nombre de messages', messages.length.toString()),
               _buildInfoRow('👨‍💼 Mon nom', myName),
             ],
           ),
@@ -539,7 +553,10 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 120, child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold))),
+          SizedBox(
+              width: 120,
+              child: Text(label,
+                  style: const TextStyle(fontWeight: FontWeight.bold))),
           Expanded(child: Text(value)),
         ],
       ),
@@ -553,85 +570,95 @@ class _ChatScreenState extends State<ChatScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Container(
-        color: Colors.grey.shade50,
-        child: Column(
-          children: [
-            // NOUVEAU: Indicateur si vient d'une notification
-            if (widget.fromNotification)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(8),
-                color: Colors.green.shade100,
-                child: const Row(
-                  children: [
-                    Icon(Icons.notifications_active, color: Colors.green, size: 16),
-                    SizedBox(width: 8),
-                    Text('Chat ouvert depuis une notification',
-                        style: TextStyle(color: Colors.green, fontSize: 12)),
-                  ],
-                ),
-              ),
-            Expanded(
-              child: ListView.builder(
-                reverse: true,
-                itemCount: messages.length,
-                itemBuilder: (_, index) {
-                  var message = messages[index];
-
-                  if (message.kind == 'text') {
-                    return BubbleSpecialThree(
-                      isSender: message.sender_name == myName,
-                      text: message.text,
-                      color: message.sender_name == myName
-                          ? Colors.green
-                          : Colors.black45,
-                      tail: true,
-                      textStyle: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
+              color: Colors.grey.shade50,
+              child: Column(
+                children: [
+                  // NOUVEAU: Indicateur si vient d'une notification
+                  if (widget.fromNotification)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(8),
+                      color: Colors.green.shade100,
+                      child: const Row(
+                        children: [
+                          Icon(Icons.notifications_active,
+                              color: Colors.green, size: 16),
+                          SizedBox(width: 8),
+                          Text('Chat ouvert depuis une notification',
+                              style:
+                                  TextStyle(color: Colors.green, fontSize: 12)),
+                        ],
                       ),
-                    );
-                  } else if (message.kind == 'image') {
-                    return BubbleNormalImage(
-                      id: message.image,
-                      isSender: message.sender_name == myName,
-                      image: Image.network(message.image),
-                    );
-                  } else if (message.kind == 'audio') {
-                    final position = audioPositions[message.audio] ?? Duration.zero;
-                    final duration = audioDurations[message.audio] ?? defaultDuration;
-                    final isPlayingThis = isPlayingMap[message.audio] ?? false;
-                    final isPauseThis = isPauseMap[message.audio] ?? false;
-                    final isLoadingThis = isLoadingMap[message.audio] ?? false;
+                    ),
+                  Expanded(
+                    child: ListView.builder(
+                      reverse: true,
+                      itemCount: messages.length,
+                      itemBuilder: (_, index) {
+                        var message = messages[index];
 
-                    return GestureDetector(
-                      onTap: () => _playAudio(message.audio, message.audio),
-                      child: BubbleNormalAudio(
-                        color: message.sender_name == myName ? Colors.blue : Colors.green,
-                        isSender: message.sender_name == myName,
-                        duration: duration.inSeconds.toDouble(),
-                        position: position.inSeconds.toDouble(),
-                        isPlaying: isPlayingThis,
-                        isLoading: isLoadingThis,
-                        isPause: isPauseThis,
-                        onSeekChanged: (newPosition) {
-                          _changeSeek(newPosition, message.audio);
-                        },
-                        onPlayPauseButtonClick: () {
-                          _playAudio(message.audio, message.audio);
-                        },
-                        sent: message.sender_name == myName,
-                      ),
-                    );
-                  }
-                  return Container();
-                },
+                        if (message.kind == 'text') {
+                          return BubbleSpecialThree(
+                            isSender: message.sender_name == myName,
+                            text: message.text,
+                            color: message.sender_name == myName
+                                ? Colors.blueGrey
+                                : Colors.black45,
+                            tail: true,
+                            textStyle: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          );
+                        } else if (message.kind == 'image') {
+                          return BubbleNormalImage(
+                            id: message.image,
+                            isSender: message.sender_name == myName,
+                            image: Image.network(message.image),
+                          );
+                        } else if (message.kind == 'audio') {
+                          final position =
+                              audioPositions[message.audio] ?? Duration.zero;
+                          final duration =
+                              audioDurations[message.audio] ?? defaultDuration;
+                          final isPlayingThis =
+                              isPlayingMap[message.audio] ?? false;
+                          final isPauseThis =
+                              isPauseMap[message.audio] ?? false;
+                          final isLoadingThis =
+                              isLoadingMap[message.audio] ?? false;
+
+                          return GestureDetector(
+                            onTap: () =>
+                                _playAudio(message.audio, message.audio),
+                            child: BubbleNormalAudio(
+                              color: message.sender_name == myName
+                                  ? Colors.blue
+                                  : Colors.blueGrey,
+                              isSender: message.sender_name == myName,
+                              duration: duration.inSeconds.toDouble(),
+                              position: position.inSeconds.toDouble(),
+                              isPlaying: isPlayingThis,
+                              isLoading: isLoadingThis,
+                              isPause: isPauseThis,
+                              onSeekChanged: (newPosition) {
+                                _changeSeek(newPosition, message.audio);
+                              },
+                              onPlayPauseButtonClick: () {
+                                _playAudio(message.audio, message.audio);
+                              },
+                              sent: message.sender_name == myName,
+                            ),
+                          );
+                        }
+                        return Container();
+                      },
+                    ),
+                  ),
+                  _buildInputArea(context)
+                ],
               ),
             ),
-            _buildInputArea(context)
-          ],
-        ),
-      ),
     );
   }
 
@@ -660,7 +687,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   decoration: const InputDecoration(
                     hintText: 'Tapez votre message...',
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                   onChanged: (text) {
                     setState(() {});
@@ -671,42 +699,43 @@ class _ChatScreenState extends State<ChatScreen> {
             const SizedBox(width: 8),
             textController.text.isEmpty
                 ? Container(
-              decoration: const BoxDecoration(
-                color: Colors.green,
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                onPressed: () {
-                  setState(() {
-                    if (!isRecording) {
-                      startRecording();
-                    } else {
-                      stopRecording();
-                    }
-                  });
-                },
-                icon: Icon(
-                  isRecording ? Icons.stop : Icons.mic,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-            )
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          if (!isRecording) {
+                            startRecording();
+                          } else {
+                            stopRecording();
+                          }
+                        });
+                      },
+                      icon: Icon(
+                        isRecording ? Icons.stop : Icons.mic,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  )
                 : Container(
-              decoration: const BoxDecoration(
-                color: Colors.green,
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                onPressed: () {
-                  if (textController.text.trim().isNotEmpty) {
-                    sendMessage(textController.text.trim(), 'text');
-                    textController.clear();
-                  }
-                },
-                icon: const Icon(Icons.send, color: Colors.white, size: 24),
-              ),
-            ),
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      onPressed: () {
+                        if (textController.text.trim().isNotEmpty) {
+                          sendMessage(textController.text.trim(), 'text');
+                          textController.clear();
+                        }
+                      },
+                      icon:
+                          const Icon(Icons.send, color: Colors.white, size: 24),
+                    ),
+                  ),
           ],
         ),
       ),
@@ -789,7 +818,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _changeSeek(double value, String audioId) {
     final currentDuration = audioDurations[audioId] ?? defaultDuration;
-    if (value <= currentDuration.inSeconds && audioPlayers.containsKey(audioId)) {
+    if (value <= currentDuration.inSeconds &&
+        audioPlayers.containsKey(audioId)) {
       final newPosition = Duration(seconds: value.toInt());
       audioPlayers[audioId]!.seek(newPosition);
       setState(() {
@@ -835,7 +865,9 @@ class _ChatScreenState extends State<ChatScreen> {
         recordedAudioPath = finalPath;
         isRecording = false;
       });
-      await sendMessage('', 'audio', filePath: recordedAudioPath, duration: Duration(seconds: _recordingDuration));
+      await sendMessage('', 'audio',
+          filePath: recordedAudioPath,
+          duration: Duration(seconds: _recordingDuration));
     }
   }
 
@@ -901,16 +933,17 @@ class _ChatScreenState extends State<ChatScreen> {
   // MÉTHODE CONSERVÉE MAIS SIMPLIFIÉE: Navigation vers autre chat
   void _navigateToChatScreen(Map<String, dynamic> data) {
     String conversationId = data['conversationId'] ?? '';
-    int? propertyId = data['propertyId'] != null ? int.tryParse(data['propertyId']) : null;
+    int? propertyId =
+        data['propertyId'] != null ? int.tryParse(data['propertyId']) : null;
     int agentId = int.tryParse(data['senderId'] ?? '0') ?? 0;
 
     if (conversationId.isNotEmpty) {
       Get.off(() => ChatScreen(
-        conversationId: conversationId,
-        propertyId: propertyId,
-        agentId: agentId,
-        fromNotification: true,
-      ));
+            conversationId: conversationId,
+            propertyId: propertyId,
+            agentId: agentId,
+            fromNotification: true,
+          ));
     }
   }
 }
